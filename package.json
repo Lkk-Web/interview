@@ -11,23 +11,47 @@
     "prettier": "prettier --write \"**/*.{js,jsx,tsx,ts,less,md,json}\"",
     "test": "umi-test",
     "test:coverage": "umi-test --coverage",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "lint": "dumi g tmp && npm run lint:js && npm run lint:prettier",
+    "lint-staged:js": "eslint --fix --format=pretty",
+    "lint:js": "eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty",
+    "lint:prettier": "prettier --check \"src/**/*\" --end-of-line auto"
   },
   "files": [
     "dist"
   ],
   "module": "dist/esm/index.js",
   "typings": "dist/esm/index.d.ts",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged"
+    }
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint -e $HUSKY_GIT_PARAMS"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,tsx,ts,less,md,json}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "husky": "^8.0.1",
     "react": "^18.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.15.1",
+    "@testing-library/react": "^13.0.0",
     "@types/jest": "^27.0.3",
     "@umijs/fabric": "^2.8.1",
     "@umijs/test": "^3.0.5",
     "dumi": "^1.1.0",
     "father": "^4.0.0-rc.2",
     "gh-pages": "^3.0.0",
+    "lint-staged": "^10.0.7",
     "prettier": "^2.2.1",
     "yorkie": "^2.0.0"
   },
