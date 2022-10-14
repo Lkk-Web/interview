@@ -24,3 +24,6 @@
 # ide
 /.vscode
 /.idea
+
+# private
+/PRIVATE.md
