@@ -1,4 +1,5 @@
 import { defineConfig } from 'dumi';
+import { styles } from './app.style';
 
 export default {
   // ssr: {
@@ -8,6 +9,7 @@ export default {
   //  exportStatic: {}, // 预渲染
   //TODO docSearch
   hash: true,
+  styles, //全局样式
   metas: [
     {
       name: 'keywords',
@@ -19,7 +21,7 @@ export default {
       content: '关注前端技术学习交流，记录与分享自己前端学习历程',
     },
   ],
-  logo: false,
+  // logo: 'https://oss.kyingsoft.cn/import/logo.jpg',
   ...defineConfig({
     mode: 'site', //doc | site
     title: `每日一寄`,
@@ -32,8 +34,7 @@ export default {
       ['zh-CN', '中文'],
     ], // 不需要多语言
     // menus: {}, // 约定式 侧边导航
-    favicon:
-      'https://user-images.githubusercontent.com/9554297/83762004-a0761b00-a6a9-11ea-83b4-9c8ff721d4b8.png',
+    favicon: 'https://oss.kyingsoft.cn/import/logo.ico',
     navs: [
       null, // null 值代表保留约定式生成的导航，只做增量配置
       {
