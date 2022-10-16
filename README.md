@@ -1,33 +1,7 @@
 # interview
 
-## Getting Started
+Hi~ 👋 我是醒来就想躺，这是我的开源博客，欢迎提 PR😉
 
-Install dependencies,
-
-```bash
-$ npm i
-```
-
-Start the dev server,
-
-```bash
-$ npm start
-```
-
-Build documentation,
-
-```bash
-$ npm run docs:build
-```
-
-Run test,
-
-```bash
-$ npm test
-```
-
-Build library via `father`,
-
-```bash
-$ npm run build
-```
+正在持续维护... 
+                        
+                                ---2022.10.17
