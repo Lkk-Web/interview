@@ -21,6 +21,11 @@ export default {
       content: '关注前端技术学习交流，记录与分享自己前端学习历程',
     },
   ],
+  manifest: {
+    basePath: '/blog/',
+  },
+  history: { type: 'hash' },
+  publicPath: '/blog/',
   // logo: 'https://oss.kyingsoft.cn/import/logo.jpg',
   ...defineConfig({
     mode: 'site', //doc | site
