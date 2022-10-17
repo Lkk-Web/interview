@@ -36,7 +36,12 @@ open ~/.ssh 将 id_rsa.pub 文件内部的文本添加到 git 代码托管平台
 
 []为说明，实际不需要。
 
-拉取代码：git clone [gitUrl]
+拉取仓库：git clone [gitUrl]
+
+拉取代码：git pull <远程主机名> <远程分支名>:<本地分支名>
+
+    git pull 命令用于从远程获取代码并合并本地的版本。
+    相当于 git fetch 和 git merge FETCH_HEAD 的简写
 
 暂存代码：git add [filePath]
 
@@ -74,7 +79,7 @@ open ~/.ssh 将 id_rsa.pub 文件内部的文本添加到 git 代码托管平台
 
 #### 项目配置 commitlint
 
-#### 上传忽略 gitignore
+#### 上传忽略 .gitignore 文件
 
 该文件有用来屏蔽文件上传 git 的作用，一般放在根目录。用法是编辑改文件，以相对路径添加文件或文件夹。
 
