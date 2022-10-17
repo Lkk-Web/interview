@@ -22,10 +22,10 @@ export default {
     },
   ],
   manifest: {
-    basePath: '/blog/',
+    basePath: '/blog/', //SPA路径
   },
   history: { type: 'hash' },
-  publicPath: '/blog/',
+  publicPath: '/blog/', //导出路径
   // logo: 'https://oss.kyingsoft.cn/import/logo.jpg',
   ...defineConfig({
     mode: 'site', //doc | site
