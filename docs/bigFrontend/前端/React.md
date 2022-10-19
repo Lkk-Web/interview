@@ -46,9 +46,28 @@ componentWillUnmount
 
 ### 3.1 HOC
 
-### 3.2 可控组件和不可控组件
+### 3.2 受控组件和非受控组件
 
-一个表单组件，如果它的值是可以被 state 控制的，那就是受控组件。如果它的值不能 state 控制的，那就是不受控制组件
+- 受控组件
+
+一个表单组件，如果它的值是可以被 state 控制的，再通过 onChange 事件与 setState()结合更新 state 属性，那就是受控组件。
+
+- 非受控组件
+
+它的值只能由用户设置，而不是以编程方式设置。如果它的值不能 state 控制的，那就是不受控制组件。如：
+
+```html
+<input type="file" />
+```
+
+```tsx
+import React from 'react';
+import { Modal } from 'interview';
+
+export default () => (
+  <Modal title="Input file Demo" component={<input type="file" disable="true" />}></Modal>
+);
+```
 
 ## 4、HashRoute
 
