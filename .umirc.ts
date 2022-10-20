@@ -49,4 +49,26 @@ export default {
     ],
     // more config: https://d.umijs.org/config
   }),
+  chunks: ['vendors', 'umi'],
+  chainWebpack: function (config, { webpack }) {
+    config.merge({
+      optimization: {
+        splitChunks: {
+          chunks: 'all',
+          minSize: 30000,
+          minChunks: 3,
+          automaticNameDelimiter: '.', //默认情况下，webpack 将使用 chunk 的来源和名称生成名称（例如 vendors~main.js），定用于生成名称的分隔符
+          cacheGroups: {
+            vendor: {
+              name: 'vendors',
+              test({ resource }) {
+                return /[\\/]node_modules[\\/]/.test(resource);
+              },
+              priority: 10,
+            },
+          },
+        },
+      },
+    });
+  },
 };
