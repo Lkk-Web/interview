@@ -81,6 +81,11 @@ git pull 命令用于从远程获取代码并合并本地(某分支,默认为本
 ```bash
 git commmit -m [message]
 git commmit --amend --message=[message] --author=[author]   # 修改最近一次commit的message 或 author
+# 修改倒数第n次commit
+git rebase -i HEAD~n   #使用rebase变基
+# 按i进入编辑模式，将pick改为e|edit，然后ESC退出编辑，:wq保存。
+git commmit --amend --message=[message] --author=[author]
+git rebase --continue
 ```
 
 **查看状态**：
@@ -259,9 +264,16 @@ git rebase 命令在另一个分支基础之上重新应用，用于把一个分
 git rebase [<upstream> [<branch>]]
 ```
 
-git rebase 可以对某一段线性提交历史进行编辑、删除、复制、粘贴；因此，合理使用 rebase 命令可以使我们的提交历史干净.
+git rebase 的最大优点是它可以重写历史,可以对某一段线性提交历史进行编辑、删除、复制、粘贴；因此，合理使用 rebase 命令可以使我们的提交历史干净.
 
 #### 2.4.1、合并多个 commit 为一个完整 commit
+
+当你运行 git rebase -i 时，你会进入一个编辑器会话，其中列出了所有正在被变基的提交，以及可以对其执行的操作的多个选项。默认的选择是选择（Pick）。
+
+- Pick：会在你的历史记录中保留该提交。
+- Reword：允许你修改提交信息，可能是修复一个错别字或添加其它注释。
+- Edit：允许你在重放分支的过程中对提交进行修改。
+- Squash：可以将多个提交合并为一个。
 
 把功能相同的 commit，合成一个 commit，review 的时候就整洁许多。
 
