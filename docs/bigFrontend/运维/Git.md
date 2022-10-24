@@ -78,7 +78,10 @@ git pull 命令用于从远程获取代码并合并本地(某分支,默认为本
 
 **提交代码**：
 
-    git commmit -m [message]
+```bash
+git commmit -m [message]
+git commmit --amend --message=[message] --author=[author]   # 修改最近一次commit的message 或 author
+```
 
 **查看状态**：
 
