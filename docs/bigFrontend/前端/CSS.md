@@ -353,12 +353,55 @@ CSS 工程化是为了解决以下问题：
 
 PostCss 是如何工作的？我们在什么场景下会使用 PostCss？
 
-它和预处理器的不同就在于，预处理器处理的是 类 CSS，而 PostCss 处理的就是 CSS 本身。Babel 可以将高版本的 JS 代码转换为低版本的 JS 代码。PostCss 做的是类似的事情：它可以编译尚未被浏览器广泛支持的先进的 CSS 语法，还可以自动为一些需要额外兼容的语法增加前缀。更强的是，由于 PostCss 有着强大的插件机制，支持各种各样的扩展，极大地强化了 CSS 的能力。
+它和预处理器的不同就在于，预处理器处理的是类 CSS，而 PostCss 处理的就是 CSS 本身。Babel 可以将高版本的 JS 代码转换为低版本的 JS 代码。PostCss 做的是类似的事情：它可以编译尚未被浏览器广泛支持的先进的 CSS 语法，还可以自动为一些需要额外兼容的语法增加前缀。更强的是，由于 PostCss 有着强大的插件机制，支持各种各样的扩展，极大地强化了 CSS 的能力。
 
 PostCss 在业务中的使用场景非常多：
 
 - 提高 CSS 代码的可读性：PostCss 其实可以做类似预处理器能做的工作；
 - 当我们的 CSS 代码需要适配低版本浏览器时，PostCss 的 Autoprefixer 插件可以帮助我们自动增加浏览器前缀；
+
+使用：创建 postcss.config.js 文件，在给该文件中添加使用的 loader。这种方式更加简洁相较于第一种
+
+```ts
+module.exports = {
+  plugins: [require('autoprefixer'), require('postcss-preset-env')],
+};
+```
+
+**importLoaders**
+
+该选项用于处理一个 CSS 文件，通过 @import 的方式引入另一个 CSS 文件的情况
+
+```css
+/* index.css */
+@import "./test.css/"
+​
+/* test.css */
+:fullscreen {
+​
+}
+​
+.content {
+  user-select: none;
+}
+```
+
+在这种情况下，如果不添加 importLoaders 选项，那么 test.css 中的样式是不会被处理的。
+
+原因在于，当匹配到 css 文件时，首先使用 postcss-loader 处理 index.css 文件，它并不会根据 @import 语法去处理引入的 test.css 文件。然后使用 css-loader 进行处理，css-loader 可以根据 @import 处理引入的 test.css 文件，这就导致 test.css 中的文件其实并没有被 postcss 处理
+
+为了解决这种问题，可以在 css-loader 的 options 中添加一个 importLoaders 选项
+
+```ts
+ {
+  loader: 'css-loader', options: {
+    importloaders: 1  // 该数字代表需要前面几个 loader 再次处理;
+  }
+}
+```
+
+其意思是，当使用 css-loader 时，再使用 css-loader 之前的若干个 loader 处理一次
+
 - 允许我们编写面向未来的 CSS：PostCss 能够帮助我们编译 CSS next 代码；
 
 ## 16.移动端
