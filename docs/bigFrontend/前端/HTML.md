@@ -112,13 +112,126 @@ img 元素的 srcset 属性用于浏览器根据宽、高和像素密度来加�
 
 在 html 标签中引入 manifest 文件，这个属性指向一个 manifest 的文件，这个文件指明了当前页面哪些资源需要进行离线缓存
 
+- 离线浏览 - 用户可在应用离线时使用它们。
+- 速度 - 已缓存资源加载得更快。
+- 减少服务器负载 - 浏览器将只从服务器下载更新过或更改过的资源。
+
 HTML5 的离线存储是基于一个新建的.appcache 文件的，通过这个文件上的解析清单离线存储资源 ，这些资源就会像 cookie 一样被存储了下来。之后当网络在处于离线状态下时，浏览器会通过被离线存储的数据进行页面展示
+
+1、首先在文档的 html 标签中设置 manifest 属性，引用 manifest 文件 。
+
+2、然后配置 manifest 文件，在 manifest 文件中编写离线存储的资源。
+
+3、最后操作 window.applicationCache 进行需求实现。
+
+4、此外，必须要在服务器端正确的配置 MIME-type。
+
+step1：在文档的 html 标签中设置 manifest 属性，引用 manifest 文件 。
 
 ```
 <!DOCTYPE HTML>
 <html manifest="/static/manifest/home.appcache">
 ...
 </html>
+```
+
+step2：配置 manifest 文件，在 manifest 文件中编写离线存储的资源。
+
+```bash
+CACHE MANIFEST  # 写在第一行
+#version 1.0
+CACHE：  # 在此标题下列出的文件将在首次下载后进行缓存
+    img.jpg
+NETWORK: # 在此标题下列出的文件需要与服务器连接，且不会被缓存。
+    *     # 可以使用*，表示除CACHE 外的所有其他资源/文件都需要因特网连接。
+
+FALLBACK: # 在此标题下列出的文件规定当页面无法访问时的替代页面。
+    /demo/ /404.html
+```
+
+step3：操作 window.applicationCache 进行需求实现。
+
+window.applicationCache 对象是对浏览器的应用缓存的编程访问方式。其 status 属性可用于查看缓存的当前状态。
+
+status 属性值：
+
+0（UNCACHED） :无缓存， 即没有与页面相关的应用缓存。
+
+1（IDLE） :闲置，即应用缓存未得到更新。
+
+2 （CHECKING） :检查中，即正在下载描述文件并检查更新。
+
+3 （DOWNLOADING） :下载中，即应用缓存正在下载描述文件中指定的资源。
+
+4 （UPDATEREADY） :更新完成，所有资源都已下载完毕。
+
+5 （IDLE） :废弃，即应用缓存的描述文件已经不存在了，因此页面无法再访问应用缓存。
+
+以下代码使用 status 属性为当前通过网页所加载的文档确定应用程序缓存的状态。
+
+```javascript
+var oAppCache = window.applicationCache;
+var sCacheStatus = "Not supported";
+switch (oAppCache.status) {
+    case 0: // UNCACHED == 0
+       sCacheStatus ='（UNCACHED） : 无缓存， 即没有与页面相关的应用缓存';
+    break;
+    case 1: // IDLE == 1
+        sCacheStatus = '（IDLE） : 闲置，即应用缓存未得到更新';
+    break;
+    case 2: // CHECKING == 2
+        sCacheStatus = '（CHECKING） : 检查中，即正在下载描述文件并检查更新';
+    break;
+    case 3: // DOWNLOADING == 3
+        sCacheStatus ='（DOWNLOADING） : 下载中，即应用缓存正在下载描述文件';
+    break;
+    case 4: // UPDATEREADY == 4
+        sCacheStatus ='（UPDATEREADY） : 更新完成，所有资源都已下载完毕';
+    break;
+    case 5: // OBSOLETE == 5
+        sCacheStatus ='（IDLE） : 废弃，即应用缓存的描述文件已经不存在了，因此页面无法再访问应用缓存');
+    break;
+    default:
+        console.log( 'UKNOWN CACHE STATUS');
+    break;
+};
+```
+
+浏览器会对下载进度、应用缓存更新和错误状态等情况触发相应事件。
+
+step4：在服务器端正确的配置 MIME-type。
+
+若遇到如此报错“Application Cache Error event: Manifest fetch failed (404)”,其原因是 manifest 文件需要正确的配置 MIME-type（描述该消息的媒体类型），即“text/cache-manifest”，必须在服务器端进行配置。不同服务器配置方式不一样，举在 tomcat 服务器配置的例子。
+
+在 tomcat 服务器中的 conf/web.xml 中添加：
+
+```xml
+<mime-mapping>
+    <extension>manifest</extension>
+    <mime-type>text/cache-manifest</mime-type>
+</mime-mapping>
+```
+
+在开发者工具的 Network 面板下，可以看到 img.jpg 的 Size 为(from disk cache)，意味着是从缓存中读取的。
+
+#### 更新缓存
+
+一旦应用被缓存，它就会保持缓存直到发生下列情况：
+
+- 用户清空浏览器缓存。
+- manifest 文件被修改。
+- 由程序来更新应用缓存。
+- 由程序来更新应用缓存:
+
+```javascript
+oAppCache.addEventListener(
+  'updateready',
+  function () {
+    oAppCache.swapCache(); // 更新本地缓存
+    location.reload(); //重新加载页面页面
+  },
+  false,
+);
 ```
 
 ### 6.src 和 href 的区别
