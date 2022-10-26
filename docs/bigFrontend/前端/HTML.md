@@ -279,29 +279,39 @@ name属性
 <meta name="format-detection" content="telephone=no,email=no,adress=no" />
 ```
 
-### 8.空元素
+### 8.空元素 & 可替换元素 & 非替换元素
+
+#### 8.1 空元素
 
 空（void）元素，即没有内容的 HTML 元素。空元素是在开始标签中关闭的，也就是说空元素没有闭合标签的。
 
 ```html
-<area />、
+<area />
 <base />
 <br />
 <col />
-<colgroup>
-  <command>
-    <embed />
-    <hr />
-    <img />
-    <input />
-    <keygen>
-      <link />
-      <meta />
-      <param />
-      <source />
-      <track /></keygen
-  ></command>
-</colgroup>
+<embed />
+<hr />
+<img />
+<input />
+<link />
+<meta />
+<param />
+<source />
+<track />
+```
+
+#### 8.2 可替换元素
+
+替换元素就是浏览器根据元素的标签和属性，来决定元素的具体显示内容。替换元素是其内容不受 CSS 视觉格式化模型控制的元素，(x)html 中的 img , input , textarea , select , object 都是替换元素，这些元素没有实际的内容，即是个空元素。
+
+#### 8.3 非替换元素
+
+(X)HTML 的大多数元素是非替换元素，他们将内容直接告诉浏览器，将其显示出来。如：
+
+```html
+<p>p的内容</p>
+<label>label的内容</label>
 ```
 
 ### 9.web worker
