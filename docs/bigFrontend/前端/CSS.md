@@ -10,6 +10,8 @@ order: 2
 
 组合选择器里面的优先级：选择器的权值加在一起，权值大的优先；权值相同，后面的会覆盖前面的
 
+css 匹配选择器是从右向左进行的 ul.ul-style{color:red;} 先匹配.ul-style 再匹配它前面的 ul 标签，应尽量减少选择器的嵌套。
+
 ## 2.盒模型(标准、怪异)
 
 一个完整的盒模型有四部分组成，分别是内容区域 content，内边距 padding，边框 border，以及外边距 margin；其中 margin 不参与计算盒子的大小；盒模型有两种类型，IE 盒模型和标准盒模型；有时候 IE 盒模型也被成为怪异盒模型；
@@ -31,6 +33,16 @@ css3 规范中要求使用双冒号（::）表示伪元素，以此来区分伪�
 伪类 :hover 和:active 伪类使用单冒号
 
 :nth-child(n) 选择满足是其父元素的第 n 个子元素的元素
+
+### 3.1 nth-child 和 nth-of-type 的区别
+
+:nth-child(n) 选择器匹配属于其父元素的第 n 个子元素，不论元素的类型，n 可以是数字、关键词或公式。
+
+:nth-of-type(n) 选择器匹配属于父元素的特定类型的第 n 个子元素的每个元素，n 可以是数字、关键词或公式。
+
+p:nth-of-type(7) 选择的 p 元素所在的父元素，下的第 7 个 P 元素
+
+p:nth-child(6) 选择的 p 元素所在的父元素，下的第 6 个子元素，且该元素是 P 元素
 
 ## 4.场景问题
 
@@ -77,7 +89,31 @@ css3 规范中要求使用双冒号（::）表示伪元素，以此来区分伪�
 
 **点击穿透现象**
 
-在这 300ms 以内，因为上层元素隐藏或消失了，由于 click 事件的滞后性，同样位置的 DOM 元素触发了 click 事件（如果是 input 则触发了 focus 事件）。在代码中，给我们的感觉就是 target 发生了飘移。
+由于很多时候，我们点击关闭弹窗时，弹窗立马就关闭了，但在移动端还存在一个点击延迟效果，即执行 tap 事件之后 300ms 之后才会触发 click 事件，在这 300ms 以内，因为上层元素隐藏或消失了，于是 click 事件就作用在了弹窗下的元素上，由于 click 事件的滞后性，同样位置的 DOM 元素触发了 click 事件（如果是 input 则触发了 focus 事件）。在代码中，给我们的感觉就是 target 发生了飘移。
+
+点击穿透的原因：
+
+在 pc 端的事件触发顺序：mousedown -> click -> mouseup
+
+在移动端的事件触发顺序：touchstart -> touchmove -> touchend
+
+移动端的事件优先级高，并且会模拟 mouse 事件，所以综合来看，移动端的执行顺序：
+
+touchstart -> touchmove -> touchend -> mousedown -> click -> mouseup
+
+解决方案：
+
+1、使用 fastclick 禁止 300ms 点击延迟。
+
+使用 fastclick 库，其实现思路是，取消 click 事件（参看源码 164-173 行），用 touchend 模拟快速点击行为（参看源码 521-610 行）。
+
+```javascript
+FastClick.attach(document.body);
+```
+
+2、使用 pointer-events 控制是否可点击。
+
+不允许点击，即让点击穿透 ：pointer-events: none; 允许点击，即禁止穿透（默认值）：pointer-events: auto;
 
 ### 4.3 li 与 li 之间有看不见的空白间隔
 
@@ -99,9 +135,56 @@ em 和 rem 相对于 px 更具有灵活性，他们是相对长度单位，意�
 
 em/rem：用于做响应式页面，不过我更倾向于 rem，因为 em 不同元素的参照物不一样（都是该元素父元素），所以在计算的时候不方便，相比之下 rem 就只有一个参照物（html 元素），这样计算起来更清晰。
 
+### 4.5 CSS 画三角形
+
+只设置底部 border 颜色，其他部分使用透明颜色代替。
+
+```css
+.div {
+  width: 0;
+  height: 0;
+  border-top: 40px solid transparent;
+  border-right: 40px solid transparent;
+  border-bottom: 40px solid #ff0000;
+  border-left: 40px solid transparent;
+}
+```
+
+### 4.5 小于 12px,chrome 小于 12px 会显示成 12px ，但在最新的 chrome 已支持小于 12px 的显示。
+
+Chrome 中文版浏览器会默认设定页面的最小字号是 12px，英文版没有限制
+
+原由 Chrome 团队认为汉字小于 12px 就会增加识别难度
+
+常见的解决方案有：
+
+- zoom // 变焦
+- -webkit-transform:scale() //放缩
+- -webkit-text-size-adjust:none //该属性用来设定文字大小是否根据设备(浏览器)来自动调整显示大小
+
+#### Zoom
+
+zoom 的字面意思是“变焦”，可以改变页面上元素的尺寸，属于真实尺寸
+
+其支持的值类型有：
+
+zoom:50%，表示缩小到原来的一半
+
+zoom:0.5，表示缩小到原来的一半
+
+#### #-webkit-transform:scale()
+
+针对 chrome 浏览器,加 webkit 前缀，用 transform:scale()这个属性进行放缩
+
+注意的是，使用 scale 属性只对可以定义宽高的元素生效，所以，下面代码中将 span 元素转为行内块元素
+
 ## 5.CSS3 新特性
 
 CSS3 的新特征有：1、圆角效果；2、图形化边界；3、块阴影与文字阴影；4、使用 RGBA 实现透明效果；5、渐变效果；6、使用“@Font-Face”实现定制字体；7、多背景图；8、文字或图像的变形处理；9、多栏布局；10、媒体查询等。
+
+```
+transition： CSS属性，花费时间，效果曲线(默认ease)，延迟时间(默认0)
+```
 
 ## 6.css 属性
 
@@ -136,7 +219,25 @@ cursor:pointer //小手
 
 ### 6.5 flex
 
-flex:flex-grow flex-shrink flex-basis; flex-grow 属性用于设置或检索弹性盒子的扩展比率。属性值 number 一个数字，规定项目将相对于其他灵活的项目进行扩展的量。默认值是 0。 flex-shrink 属性指定了 flex 元素的收缩规则。flex 元素仅在默认宽度之和大于容器的时候才会发生收缩，其收缩的大小是依据 flex-shrink 的值。 flex-basis 属性用于设置或检索弹性盒伸缩基准值。属性值 number 一个长度单位或者一个百分比，规定灵活项目的初始长度。
+    flex:flex-grow flex-shrink flex-basis;
+
+flex-grow 属性定义项目的放大比例，默认为 0，即如果存在剩余空间，也不放大。规定项目将相对于其他灵活的项目进行扩展的量。默认值是 0。
+
+flex-shrink 属性指定了 flex 元素的收缩规则。flex 元素仅在默认宽度之和大于容器的时候才会发生收缩，其收缩的大小是依据 flex-shrink 的值。
+
+flex-basis 属性定义了在分配多余空间之前，项目占据的主轴空间，默认为 auto。
+
+```css
+.item {
+  flex: 1;
+}
+/* 相当于 */
+.item {
+  flex-basis: 0%;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+```
 
 ## 7.**css 可继承属性与不可继承属性**
 
