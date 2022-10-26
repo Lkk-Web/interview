@@ -272,19 +272,161 @@ html5 提供一个专门用于请求动画的 API，那就是 requestAnimationFr
 - flex 实现
 - grid 网格布局
 
-## 12.替换元素与非替换元素
+## 12.Css 预编语言
 
-### 12.1 替换元素
+- 预处理语言
 
-替换元素就是浏览器根据元素的标签和属性，来决定元素的具体显示内容。替换元素是其内容不受 CSS 视觉格式化模型控制的元素，(x)html 中的 img , input , textarea , select , object 都是替换元素，这些元素没有实际的内容，即是个空元素。
+扩充了 Css 语言，增加了诸如变量、混合（mixin）、函数等功能，让 Css 更易维护、方便
 
-### 12.2 非替换元素
+本质上，预处理是 Css 的超集
 
-(X)HTML 的大多数元素是非替换元素，他们将内容直接告诉浏览器，将其显示出来。如：
+包含一套自定义的语法及一个解析器，根据这些语法定义自己的样式规则，这些规则最终会通过解析器，编译生成对应的 Css 文件
 
-```html
-<p>p的内容</p>
-<label>label的内容</label>
+Css 预编译语言在前端里面有三大优秀的预编处理器，分别是：
+
+    sass less stylus
+
+### 12.1 sass
+
+2007 年诞生，最早也是最成熟的 Css 预处理器，拥有 Ruby 社区的支持和 Compass 这一最强大的 Css 框架，目前受 LESS 影响，已经进化到了全面兼容 Css 的 Scss
+
+文件后缀名为.sass 与 scss，可以严格按照 sass 的缩进方式省去大括号和分号
+
+### 12.2 less
+
+2009 年出现，受 SASS 的影响较大，但又使用 Css 的语法，让大部分开发者和设计师更容易上手，在 Ruby 社区之外支持者远超过 SASS
+
+其缺点是比起 SASS 来，可编程功能不够，不过优点是简单和兼容 Css，反过来也影响了 SASS 演变到了 Scss 的时代
+
+### 12.3 stylus
+
+Stylus 是一个 Css 的预处理框架，2010 年产生，来自 Node.js 社区，主要用来给 Node 项目进行 Css 预处理支持
+
+所以 Stylus 是一种新型语言，可以创建健壮的、动态的、富有表现力的 Css。比较年轻，其本质上做的事情与 SASS/LESS 等类似
+
+#### 区别
+
+虽然各种预处理器功能强大，但使用最多的，还是以下特性：
+
+- 变量（variables）
+- 作用域（scope）
+- 代码混合（ mixins）
+- 嵌套（nested rules）
+- 代码模块化（Modules）
+
+**基本使用:**
+
+```css
+/* less和 scss */
+.box {
+  display: block;
+}
+/* sass */
+.box
+  display: block
+/* stylus */
+.box
+  display: block
+```
+
+**变量:**
+
+减少了原来在 Css 中无法避免的重复「硬编码」
+
+```css
+/* less */
+@red: #c00;
+strong {
+  color: @red;
+}
+/* sass */
+$red: #c00;
+strong {
+  color: $red;
+}
+/* stylus */
+red = #c00
+strong
+  color: red
+```
+
+**作用域:**
+
+Css 预编译器把变量赋予作用域，也就是存在生命周期。就像 js 一样，它会先从局部作用域查找变量，依次向上级作用域查找
+
+sass 中不存在全局变量
+
+less 与 stylus 的作用域跟 javascript 十分的相似，首先会查找局部定义的变量，如果没有找到，会像冒泡一样，一级一级往下查找，直到根为止
+
+**混入:**
+
+混入（mixin）应该说是预处理器最精髓的功能之一了，简单点来说，Mixins 可以将一部分样式抽出，作为单独定义的模块，被很多选择器重复使用，可以在 Mixins 中定义变量或者默认参数
+
+在 less 中，混合的用法是指将定义好的 ClassA 中引入另一个已经定义的 Class，也能使用够传递参数，参数变量为@声明
+
+Sass 声明 mixins 时需要使用@mixinn，后面紧跟 mixin 的名，也可以设置参数，参数名为变量$声明的形式
+
+stylus 中的混合和前两款 Css 预处理器语言的混合略有不同，他可以不使用任何符号，就是直接声明 Mixins 名，然后在定义参数和默认值之间用等号（=）来连接
+
+```css
+/* less */
+.alert {
+  font-weight: 700;
+}
+.highlight(@color: red) {
+  color: @color;
+  font-size: 1.2em;
+}
+.heads-up {
+  .alert;
+  .highlight(red);
+}
+/* sass */
+@mixin large-text {
+  font: {
+    family: Arial;
+    size: 20px;
+    weight: bold;
+  }
+  color: #ff0000;
+}
+.page-title {
+  @include large-text;
+  margin-top: 10px;
+  padding: 4px;
+}
+/* stylus */
+error(borderWidth= 2px) {
+  color: #f00;
+  border: borderWidth solid #f00;
+}
+```
+
+**嵌套:**
+
+三者的嵌套语法都是一致的，甚至连引用父级选择器的标记 & 也相同
+
+区别只是 Sass 和 Stylus 可以用没有大括号的方式书写
+
+```less
+.a {
+  &.b {
+    color: red;
+  }
+}
+```
+
+**代码模块化:**
+
+模块化就是将 Css 代码分成一个个模块
+
+scss、less、stylus 三者的使用方法都如下所示
+
+```css
+@import './common';
+@import './github-markdown';
+@import './mixin';
+@import './variables';
 ```
 
 ## 13.CSS Sprites（精灵图）
