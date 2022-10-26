@@ -237,6 +237,34 @@ git remote rm name  # 删除远程仓库
 git remote rename old_name new_name  #修改仓库名
 ```
 
+- 查看上游分支
+
+可以通过 git status 、 git checkout <分支>、git branch -vv 命令查看
+
+- 设置上游分支
+
+方式一（适用远程分支已存在）：
+
+用参数 -u 或 --set-upstream-to 设置上游
+
+```bash
+git branch --set-upstream-to=origin/<远程分支> <本地分支>
+```
+
+方式二（适用远程分支不存在）：
+
+上传本地分支到远程，同是把上传后的远程分支设置为本地分支的上游分支：
+
+```bash
+git push set-upstream origin HEAD:<远程分支>
+```
+
+- 取消分支上游：
+
+```bash
+git branch --unset-upstream
+```
+
 #### 场景：拉取远程仓库到本地分支
 
 ```bash
@@ -377,14 +405,14 @@ git stash   # 保存当前工作进度，会把暂存区和工作区的改动保
 git stash save  # 与 git stash 用处一致，但即将废除
 git stash list  # 查看每次stash操作的列表
 git stash pop [stashname] # 从栈恢复到工作区,默认栈顶
-git stash apply [stashname] #将 堆栈中的内容应用到当前目录，不同于git stash pop，该命令不会将内容从堆栈中删除
+git stash apply [stashname] #将堆栈中的内容应用到当前目录，不同于git stash pop，该命令不会将内容从堆栈中删除
 # 也就说该命令能够将堆栈的内容多次应用到工作目录中，适应于多个分支的情况
 git stash show [stashname]  #查看堆栈中最新保存的stash和当前目录的差异
 git stash drop [stashname]   # 从堆栈中移除某个指定的stash
 git stash clear # 清除堆栈中的所有内容,不会回到工作区
 ```
 
-#### 场景：发进行到一半,但是代码还不想进行提交 ,然后需要同步去关联远端代码时，可能发生冲突
+#### 场景：开发进行到一半,但是代码还不想进行提交 ,然后需要同步去关联远端代码时，可能发生冲突
 
 这时候就可以依次使用下述的命令：
 
