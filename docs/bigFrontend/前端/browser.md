@@ -117,3 +117,39 @@ javascript 中先分【同步和异步】，然后事件任务分为【宏任务
 核心：**同步-->微任务-->宏任务依次执行-->单个宏任务中的同步、微任务、宏任务-->下一个宏任务..**
 
 ## 4、浏览器缓存
+
+## 5、浏览器兼容
+
+## 5.1 browserslist
+
+在不同前端工具之间共享目标浏览器和 Node.js 版本的配置。在不同前端工具之间共享目标浏览器和 Node.js 版本的配置。 它用于：
+
+- [Autoprefixer](https://github.com/postcss/autoprefixer)
+
+- [Babel](https://github.com/babel/babel/tree/master/packages/babel-preset-env)
+
+- [postcss-preset-env](https://github.com/csstools/postcss-preset-env)
+
+### 5.1.1 编写规则
+
+defaults: Browserslist 的默认浏览器（>0.5%, last 2 versions, FIrefox ESR, not dead）
+
+5%：通过全球使用情况统计信息选择的浏览器版本
+
+dead：24 个月内没有官方支持或更新的浏览器。目前是 IE 10，IE_Mob 11
+
+last 2 versions：每个浏览器的最新 2 个版本
+
+还有一些不太常用的配置可以查看官网
+
+### 5.1.2 使用方法
+
+在 `package.josn` 中添加 browserslist 字段或根目录下添加 `.browserslistrc` 文件
+
+```json
+{
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"]
+  }
+}
+```
