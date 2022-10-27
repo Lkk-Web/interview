@@ -34,7 +34,9 @@ setState 是一个伪异步，或者可以称为 defer，即延迟执行但本�
 
 ### 2.1 类式编写 生命周期
 
-componentDidMount
+- componentDidMount
+
+componentDidMount() 在组件挂载后 (插入 DOM 树后) 立即调用，componentDidMount() 是发送网络请求、启用事件监听方法的好时机，并且可以在 此钩子函数里直接调用 setState()
 
 componentDidUpdate
 
@@ -88,3 +90,5 @@ SPA，即单页面应用。单页应用程序 (SPA) 是加载单个 HTML 页面�
 - hash 通过 window.onhashchange 的方式，来监听 hash 的改变，借此实现无刷新跳转的功能。
 
 回到之前的问题，为什么会自动到根目录去寻找。首先因为没有配置 basePath，导致应用根据根路径来映射。然后是 SPA 应用，每次跳转页面，都会导致加上子路径重新变成根路径（并不是相对路劲），因此需要配置 HashRoute。
+
+## 5、React Hooks
