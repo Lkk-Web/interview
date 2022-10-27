@@ -330,7 +330,19 @@ translate 是 transform 的一个值。改变 transform 或者 opacity 不会触
 
 html5 提供一个专门用于请求动画的 API，那就是 requestAnimationFrame，顾名思义就是**请求动画帧。**
 
-与 setTimeout 相比，requestAnimationFrame 最大的优势是**由系统来决定回调函数的执行时机。**具体一点讲，如果屏幕刷新率是 60Hz,那么回调函数就每 16.7ms 被执行一次，如果刷新率是 75Hz，那么这个时间间隔就变成了 1000/75=13.3ms（CPU 节能），换句话说就是，requestAnimationFrame 的步伐跟着系统的刷新步伐走。**它能保证回调函数在屏幕每一次的刷新间隔中只被执行一次**(函数节流)，这样就不会引起丢帧现象，也不会导致动画出现卡顿的问题。
+`window.requestAnimationFrame()` 告诉浏览器——你希望执行一个动画，该方法需要传入一个回调函数作为参数，并且要求浏览器在下次重绘之前执行回调函数更新动画。。
+
+当你准备更新动画时你应该调用此方法。这将使浏览器在下一次重绘之前调用你传入给该方法的动画函数 (即你的回调函数)。回调函数执行次数通常是每秒 60 次，但在大多数遵循 W3C 建议的浏览器中，回调函数执行次数通常与浏览器屏幕刷新次数相匹配。为了提高性能和电池寿命，因此在大多数浏览器里，当 requestAnimationFrame() 运行在后台标签页或者隐藏的`<iframe>` 里时，requestAnimationFrame() 会被暂停调用以提升性能和电池寿命。
+
+与 setTimeout 相比，requestAnimationFrame 最大的优势是**由系统来决定回调函数的执行时机。**具体一点讲，requestAnimationFrame 的步伐跟着系统的刷新步伐走。**它能保证回调函数在屏幕每一次的刷新间隔中只被执行一次**(函数节流)，这样就不会引起丢帧现象，也不会导致动画出现卡顿的问题。
+
+```javascript
+window.requestAnimationFrame(callback);
+```
+
+### 兼容：优雅降级
+
+由于 requestAnimationFrame 目前还存在兼容性问题，而且不同的浏览器还需要带不同的前缀。因此需要通过优雅降级的方式对 requestAnimationFrame 进行封装，优先使用高级特性，然后再根据不同浏览器的情况进行回退，直止只能使用 setTimeout 的情况。
 
 ## 11.BFC(块格式化上下文)
 
