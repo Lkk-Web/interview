@@ -5,7 +5,7 @@ title: ES5 - ES12
 
 # ECMAScript
 
-## 2、ES6
+## 二、ES6
 
 ### 2.1 箭头函数
 
