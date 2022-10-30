@@ -263,9 +263,31 @@ JSON (JavaScript Object Notation, JS 对象标记) 是一种轻量级的数据�
 
 ### 1.6 arguments
 
-arguments：js 把传入到这个函数的全部参数存储在一个叫做 arguments 的东西里面，最后我们还可以看到 arguments 还有一个叫做 callee 的属性，这个属性是表示的是当前函数的一个引用，简单点说，这个属性里面存储的我们调用的这个函数的代码
+`arguments`：arguments 是一个类似于数组的对象，对应于传递给函数的参数，他有 length 属性，arguments[ i ]来访问对象中的元素，但是它不能用数组的一些方法。例如 push、pop、slice 等。
 
 arguments 本身并不能调用数组方法，它是一个另外一种对象类型，只不过属性从 0 开始排，依次为 0，1，2...最后还有 callee 和 length 属性，我们也把这样的对象称为类数组。因此调用数组方法需要转化成数组
+
+```javascript
+const args = Array.prototype.slice.call(arguments);
+
+const args = [...arguments];
+```
+
+注：对参数使用 slice 会阻止某些 JavaScript 引擎中的优化 (比如 V8 - 更多信息)。如果你关心性能，尝试通过遍历 arguments 对象来构造一个新的数组。另一种方法是使用被忽视的 Array 构造函数作为一个函数：
+
+arguments 还有一个叫做 callee 的属性，这个属性引用函数自身,可以方便使用递归。
+
+#### 1.6.1 作用
+
+JavaScript 里面的一个 arguments 对象。首先，ECMAScript 函数的参数与其他语言的函数参数有一点不同。ECMAScript 函数不介意传进来的参数个数和类型。
+
+在 ECMAScript 中，函数的参数始终是存放在一个数组中，而通过 arguments 对象，就可以访问到这个数组。
+
+- 可以确定调用函数时传递了多少个参数。
+
+在函数代码中，使用特殊对象 arguments 可以访问函数的参数。即，开发者在定义函数时，无需明确的为方法声明参数，也可以在方法体中使用 arguments 来访问参数。
+
+正因为 arguments 表示参数组成的数组，因此，首先可以使用 arguments.length 检测函数的参数个数，其次，可以通过下标（arguments[index]）来访问某个参数。这样，可以用 arguments 对象判断传递给函数的参数个数并获取参数，适用于函数参数无法确定个数的情况下。
 
 ## 2、
 
