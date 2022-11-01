@@ -247,15 +247,197 @@ module.exports = {
 
 注：runtime 并且 dependOn 不应在单个条目上一起使用，否则会配置无效并会引发错误
 
-## 三、Output(输出)
+## 四、Output(输出)
 
-## 四、Loaders(加载器)
+## 五、Loaders(加载器)
 
-## 五、Plugins(插件)
+## 六、Plugins(插件)
 
-## 六、Mode(模式)
+## 七、Mode(模式)
 
-## 七、工程化样例
+## 八、工程化样例
+
+### 8.1 样式隔离
+
+### 8.2 优雅降级
+
+### 8.3 optimization(优化)
+
+#### 8.3.1 optimization.concatenateModules
+
+普通打包只是将一个模块最终放到一个单独的`立即执行函数`中，如果你有很多模块，那么就有很多立即执行函数。concatenateModules 可以要所有的模块都合并到一个函数里面去。
+
+```javascript
+module.exports = {
+  optimization: {
+    usedExports: true,
+    concatenateModules: true,
+    minimize: true,
+  },
+};
+```
+
+#### 8.3.2 optimization.flagIncludedChunks
+
+告知 webpack 确定和标记出作为其他 chunk 子集的那些 chunk，其方式是在已经加载过较大的 chunk 之后，就不再去加载这些 chunk 子集。optimization.flagIncludedChunks 默认会在 `production` 模式 中启用，其他情况禁用
+
+```javascript
+module.exports = {
+  optimization: {
+    flagIncludedChunks: true,
+  },
+};
+```
+
+#### 8.3.3 optimization.mergeDuplicateChunks
+
+告知 webpack `合并含有相同模块`的 chunk。将 optimization.mergeDuplicateChunks 设置为 false 以禁用这项优化。
+
+```javascript
+module.exports = {
+  optimization: {
+    mergeDuplicateChunks: true,
+  },
+};
+```
+
+#### 8.3.4 optimization.removeAvailableModules
+
+如果模块已经包含在所有父级模块中，告知 webpack 从 chunk 中检测出这些模块，或移除这些模块。将 optimization.removeAvailableModules 设置为 true 以启用这项优化。在 `production` 模式 中默认会被开启。
+
+```javascript
+module.exports = {
+  optimization: {
+    removeAvailableModules: true,
+  },
+};
+```
+
+#### 8.3.4 optimization.removeEmptyChunks
+
+如果 chunk 为空，告知 webpack 检测或移除这些 chunk。将 optimization.removeEmptyChunks 设置为 false 以禁用这项优化。
+
+```javascript
+module.exports = {
+  optimization: {
+    removeEmptyChunks: true,
+  },
+};
+```
+
+#### 8.3.4 optimization.splitChunks
+
+默认情况下，它只会影响到按需加载的 chunks，因为修改 initial chunks 会影响到项目的 HTML 文件中的脚本标签。
+
+webpack 将根据以下条件自动拆分 chunks：
+
+- 新的 chunk 可以被共享，或者模块来自于 node_modules 文件夹
+- 新的 chunk 体积大于 20kb（在进行 min+gz 之前的体积）
+- 当按需加载 chunks 时，并行请求的最大数量小于或等于 30
+- 当加载初始化页面时，并发请求的最大数量小于或等于 30
+
+当尝试满足最后两个条件时，最好使用较大的 chunks。
+
+```javascript
+module.exports = {
+  //...
+  optimization: {
+    splitChunks: {
+      chunks: 'async' | 'all', //这表明将选择哪些 chunk 进行优化,设置为 all 可能特别强大，因为这意味着 chunk 可以在异步和非异步 chunk 之间共享。
+      minSize: 20000, // 生成 chunk 的最小体积（以 bytes 为单位）
+      minRemainingSize: 0, //生成 chunk 所需的主 chunk（bundle）的最小体积（以字节为单位）缩减
+      minChunks: 1, //拆分前必须共享模块的最小 chunks 数。
+      maxAsyncRequests: 30, // 按需加载时的最大并行请求数。
+      maxInitialRequests: 30, // 入口点的最大并行请求数
+      enforceSizeThreshold: 50000,
+      automaticNameDelimiter: '~', // 此选项用于指定生成名称的分隔符。
+      cacheGroups: {
+        defaultVendors: {
+          test: /[\\/]node_modules[\\/]/, //控制此缓存组选择的模块,匹配 chunk 名称时，将选择 chunk 中的所有模块
+          priority: -10, //缓存组的优先级,优化将优先考虑具有更高 priority（优先级）的缓存组，默认为负
+          reuseExistingChunk: true, //如果当前 chunk 包含已从主 bundle 中拆分出的模块，则它将被重用，而不是生成新的模块。这可能会影响 chunk 的结果文件名。
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
+        },
+        json: {
+          type: 'json', //允许按模块类型将模块分配给缓存
+        },
+      },
+    },
+  },
+};
+```
+
+##### splitChunks.cacheGroups
+
+缓存组可以继承和/或覆盖来自 splitChunks.\* 的任何选项。但是 test、priority 和 reuseExistingChunk 只能在缓存组级别上进行配置。将它们设置为 false 以禁用任何默认缓存组。
+
+### 编译打包优化方案
+
+umi:在配置项 chainWebpack 上能够获取到整个 webpack 的配置文件
+
+```json
+"analyzeDev": "ANALYZE=1 umi dev", // 开发打包分析
+"analyzeBuild": "ANALYZE=1 umi build", // 生产打包分析
+```
+
+一、编译优化
+
+1. 缓存文件，加速项目重启速度
+2. 分配更多 v8 内存，确保大项目能正常启动
+3. 解决 babel-plugin-react-css-modules 与 cssLoader 在 windows 上协作异常问题
+4. 开启多线程打包
+   - 过滤部分非必要的且耗时的 webpack 插件
+   - 升级代码压缩的插件，并开启缓存
+     - 升级 UglifyJsPlugin 为 ParallelUglifyPlugin
+
+二、文件优化
+
+1. 图片大小优化
+2. 清除无用文件
+   - momentjs 国际化
+   - lodashjs 国际化文件
+   - @antd-design icons/lib
+   - src/helpers/antdIcons.js
+3. 文件压缩 gzip
+
+三、动态加载
+
+1. splitchunksPlugin
+   - dynamic
+2. CommonsChunkPlugin
+
+四、缓存
+
+1. 强缓存协商缓存
+2. cdn 缓存
+
+建议以下插件在 dev 环境下使用：
+
+`BundleAnalyzerPlugin` `HardSourceWebpackPlugin`
+
+建议以下插件在 prod 环境下使用：
+
+`ParallelUglifyPlugin` `IgnorePlugin`
+
+五、部署优化（CICD 编译优化）在许多自动化集成的系统中，项目的构建空间会在每次构建执行完毕后，立即回收清理。在这种情况下，默认的项目构建缓存目录（node_mo dules/.cache）将无法留存，导致即使项目中开启了缓存设置，也无法享受缓存的便利性，反而因为需要写入缓存文件而浪费额外的时间。因此，在集成化的平台中构建部署的项目，如果需要使用缓存，则需要根据对应平台的规范，将缓存设置到公共缓存目录下。
+
+六、webpack 5 中部分默认开启的优化 plugin 只在联调环境中生效。生产环境需要手动配置
+
+参考链接：
+
+[umi 项目性能优化 - 简书](https://www.jianshu.com/p/48e24329e08f)
+
+[umi 工程的打包优化 - 阿里云](https://developer.aliyun.com/article/1050878)
+
+[Ant Design Pro 项目打包优化 - 稀土](https://juejin.cn/post/6990869970385109005#heading-6)
+
+[v5 和 v4 的区别 - 稀土](https://juejin.cn/post/6990869970385109005#heading-6)
+
+[webpack optimization 编译优化 - 官网](https://webpack.docschina.org/configuration/optimization/#optimizationprovidedexports)
 
 ## 鸣谢
 
