@@ -29,78 +29,79 @@ order: 6
 
 - 插件进程 (Plugin Process)：负责控制网页使用到的插件
 
-- GPU 进程 (GPU Process)：负责处理整个应用程序的 GPU 任务
-
 ## 2、事件源
 
-获取事件源：通过[回调](https://so.csdn.net/so/search?q=回调&spm=1001.2101.3001.7020)函数中的 e 参数的 target 属性即可获取事件源（e.target）
+获取事件源：通过回调函数中的 e 参数的 target 属性即可获取事件源（e.target）
 
 ### 2.1 事件模型
 
-1、原始事件模型（DOM0 级）
+1、原始事件模型（`DOM0 级`）
+
+- 特性
+
+  - 绑定速度快
+  - 只支持冒泡，不支持捕获
+  - 同一个类型的事件只能绑定一次
 
 - HTML 代码中直接绑定
 
-```js
-<input type="button" onclick="fun()">
-```
-
-- 通过`JS`代码绑定
-
-```js
-var btn = document.getElementById('.btn');
-btn.onclick = fun;
+```html
+<input type="button" onclick="fun()" />
+<script>
+  var btn = document.getElementById('.btn');
+  btn.onclick = fun;
+</script>
 ```
 
 - 只支持冒泡，不支持捕获
 - 同一个类型的事件只能绑定一次
 
-2、标准事件模型（DOM2 级）
+2、标准事件模型（`DOM2级`）
 
-事件绑定监听函数的方式如下:
+- 特性
+
+  - 可以在一个 DOM 元素上绑定多个事件处理器，各自并不会冲突
+  - 执行时机
+
+    当第三个参数(useCapture)设置为 true 就在捕获过程中执行，反之在冒泡过程中执行处理函数
+
+DOM2 级事件处理程序，其中定义了两个方法：
 
 ```js
-addEventListener(eventType, handler, useCapture);
+addEventListener(eventType, handler, useCapture); //监听
+removeEventListener(eventType, handler, useCapture); //取消监听
+/*
+函数均有3个参数，
+第一个参数是要处理的事件名(不带on前缀的才是事件名)
+第二个参数是作为事件处理程序的函数
+第三个参数是一个boolean值，默认false表示使用冒泡机制，true表示捕获机制。
+*/
 ```
-
-- 事件捕获阶段：事件从`document`一直向下传播到目标元素, 依次检查经过的节点是否绑定了事件监听函数，如果有则执行
-- 事件处理阶段：事件到达目标元素, 触发目标元素的监听函数
-- 事件冒泡阶段：事件从目标元素冒泡到`document`, 依次检查经过的节点是否绑定了事件监听函数，如果有则执行
 
 3、IE 事件模型（基本不用）
 
 事件绑定监听函数的方式如下:
 
-```text
-attachEvent(eventType, handler)
+```js
+attachEvent(eventType, handler);
 ```
 
-- 事件处理阶段：事件到达目标元素, 触发目标元素的监听函数。
+#### 事件流
+
+- 事件捕获阶段：事件从`document`一直向下传播到目标元素, 依次检查经过的节点是否绑定了事件监听函数，如果有则执行
+- 事件处理阶段：事件到达目标元素, 触发目标元素的监听函数
 - 事件冒泡阶段：事件从目标元素冒泡到`document`, 依次检查经过的节点是否绑定了事件监听函数，如果有则执行
 
-**IE 阻止冒泡**
+**阻止事件冒泡**
 
 ```js
-window.event.cancelBubble = true;
+event.stopPropagation(); // 执行捕获阶段，阻止事件冒泡
+event.preventDefault(); // 执行事件冒泡，阻止捕获阶段
+return false; // 同时阻止捕获阶段，同时阻止事件冒泡
+window.event.cancelBubble = true; // （已弃用）执行捕获阶段，阻止事件冒泡
 ```
 
-### 2.2 事件流
-
-#### 事件捕获阶段(capture phase)
-
-#### 处于目标阶段(target phase)
-
-#### 事件冒泡阶段(bubbling phase)
-
-事件冒泡是一种从下往上的传播方式，由最具体的元素（触发节点）然后逐渐向上传播到最不具体的那个节点，也就是`DOM`中最高层的父节点
-
-**阻止事件冒泡**：
-
-①event.preventDefault()方法，这是阻止默认事件的方法，调用此方法是，连接不会被打开，但是会发生冒泡，冒泡会传递到上一层的父元素；`event.stopPropagation()` 阻止冒泡
-
-② 将回调函数中的返回值 设为 false 也可以阻止默认事件。
-
-### 2.3 Event 对象
+### 2.2 Event 对象
 
 event 每个事件函数都有的内置对象，里面储存着事件发生之后的信息
 
@@ -311,7 +312,7 @@ let a = new Promise((resolve, reject) => {
 
 ## 5、浏览器兼容
 
-## 5.1 browserslist
+### 5.1 browserslist
 
 在不同前端工具之间共享目标浏览器和 Node.js 版本的配置。在不同前端工具之间共享目标浏览器和 Node.js 版本的配置。 它用于：
 
@@ -321,7 +322,7 @@ let a = new Promise((resolve, reject) => {
 
 - [postcss-preset-env](https://github.com/csstools/postcss-preset-env)
 
-### 5.1.1 编写规则
+#### 5.1.1 编写规则
 
 defaults: Browserslist 的默认浏览器（>0.5%, last 2 versions, FIrefox ESR, not dead）
 
@@ -333,7 +334,7 @@ last 2 versions：每个浏览器的最新 2 个版本
 
 还有一些不太常用的配置可以查看官网
 
-### 5.1.2 使用方法
+#### 5.1.2 使用方法
 
 在 `package.josn` 中添加 browserslist 字段或根目录下添加 `.browserslistrc` 文件
 
