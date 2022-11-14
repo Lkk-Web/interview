@@ -15,6 +15,8 @@ order: 6
   - JavaScript 引擎线程
   - GUI 渲染引擎线程
 
+  GUI 线程就是渲染页面的，解析 HTML 和 CSS，然后构建成 DOM 树和渲染树。
+
   ```
   A.处理html生成 DOM（Document Object Model）Tree
   B.处理css生成 CSSOM（CSS Object Model）Tree
@@ -27,6 +29,8 @@ order: 6
   - 定时触发器线程
   - 异步 http 请求线程
 
+- GPU 进程 (GPU Process)：负责处理整个应用程序的 GPU 任务
+- 网络进程
 - 插件进程 (Plugin Process)：负责控制网页使用到的插件
 
 ## 2、事件源
@@ -309,6 +313,12 @@ let a = new Promise((resolve, reject) => {
 ```
 
 ## 4、浏览器缓存
+
+### 4.1 service worker
+
+### 4.2 强缓存与协商缓存
+
+### 4.3 CDN 缓存
 
 ## 5、浏览器兼容
 
