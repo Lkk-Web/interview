@@ -316,7 +316,80 @@ let a = new Promise((resolve, reject) => {
 
 ### 4.1 service worker
 
-### 4.2 强缓存与协商缓存
+### 4.2 强缓存与协商缓存（http 缓存）
+
+http 缓存规则由`响应首部字段`进行控制，其中的关键字段有`Expires`，`Cache-Control` ，`Last-Modified` ，`Etag` 四个字段，Expires 和 Cache-Control 用来确定确定缓存的存储时间，Last-Modified 和 Etag 则用来确定缓存是否要被更新。
+
+- expires: `HTTP1.0`中用来控制缓存时间的参数，响应头包含日期/时间，即在此时间之后，响应过期。
+- cache-control: `HTTP1.1`中用来控制缓存时间的参数
+  - public: 表明响应可以被任何对象（包括：发送请求的客户端，代理服务器，等等）缓存
+  - private: 表明响应只能被单个用户缓存，不能作为共享缓存（即代理服务器不能缓存它）。
+  - max-age=`<seconds>`: 设置缓存存储的最大周期，相对于请求的时间缓存 seconds 秒，在此时间内，访问资源直接读取本地缓存，不向服务器发出请求。（与 expires 同时出现时，max-age 优先级更高）
+  - no-store: 不缓存服务器响应的任何内容，每次访问资源都需要服务器完整响应
+  - no-cache: 缓存资源，但立即过期，每次请求都需要跟服务器对比验证资源是否被修改。（等同于 max-age=0）
+- Last-modified: 源头服务器认定的资源做出修改的日期及时间。精确度比 Etag 低。包含有 If-Modified-Since 或 If-Unmodified-Since 首部的条件请求会使用这个字段。
+- Etag: HTTP 响应头是资源的特定版本的标识符。
+
+```js
+//response header
+Access-Control-Allow-Origin: *
+Cache-Control: no-store, no-cache, no-transform, must-revalidate, max-age=0
+Connection: keep-alive
+Content-Type: application/json; charset=UTF-8
+Date: Tue, 15 Nov 2022 14:35:37 GMT
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+Vary: Origin
+```
+
+<image src='https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/11/8/166f2735c584653e~tplv-t2oaga2asx-zoom-in-crop-mark:4536:0:0:0.image' />
+
+重点关注 1: 缓存是否过期
+
+基于该资源上次响应缓存规则同时满足下列条件则视为缓存未过期。需要注意的是，判断缓存是否过期只跟客户端有关系，与服务端无关。1&2&3 同时满足即认为缓存未过期，相反则是已过期
+
+1. cache-control 值为 max-age
+2. max-age > 0
+3. 当前 date < 上次请求时的 date + max-age
+
+重点关注 2: 询问服务器资源是否修改
+
+判断资源是否修改，需要客户端与服务器共同协作，客户端在首次拿到资源缓存后会存储 Etag（若有）和 Last-Modified（若有）,在下次缓存过期时会将 Etag 写在请求头部中的 If-None-Match 中，将 Last-Modified 值写在请求头部中的 If-Modified-Since 中，服务端优先对 Etag 进行对比，然后再对比 Last-Modified，完全通过后即视为缓存没有修改，有一项不通过则认为资源已被修改，缓存失效。
+
+#### 4.2.1 缓存配置
+
+从上述规则和与流程图中我们可以看到，缓存规则的配置其实并不复杂，除开 Etag 和 Last-Modified 用于缓存对比（实际使用中只需要开启该功能即可），我们需要关注的其实只是 cache-control（expires 可转化为 max-age 形式，不再赘述），方案如下：
+
+1. cache-control: no-store：不缓存，每次访问都从服务下载所有资源。
+2. cache-control: no-cache 或 cache-control: max-age=0：`协商缓存`，缓存当前资源，但每次访问都需要跟服务器对比，检查资源是否被修改。
+3. cache-control: max-age=seconds //seconds > 0：`强缓存`，缓存当前资源，在一定时期内，再次请求资源直接读取本地缓存。
+
+> 注：强缓存下资源也并非不可更新，例如 chrome 的 ctrl + f5 等同于直接触发方案 1，f5 或者 webview 的刷新键会直接触发方案 2，但都是基于客户端操作，不建议纳入实际项目考虑。
+
+- 对于 img，css，js，fonts 等非 html 资源，我们可以直接考虑`强缓存`，并且 max-age 配置的时间可以尽可能久，类似于缓存规则案例中，cache-control: max-age=31535000 配置 365 天的缓存，需要注意的是，这样配置并不代表这些资源就一定一年不变，其根本原因在于目前前端构建工具在静态资源中都会加入戳的概念（例如，webpack 中的[hash]，gulp 中的 gulp-rev），**每次修改均会改变文件名或增加 query 参数，本质上改变了请求的地址**，也就不存在缓存更新的问题。
+
+  - HTML：使用协商缓存。
+  - CSS&JS&图片：使用强缓存，文件命名带上 hash 值。
+
+- 对于 html 资源，我们建议根据项目的更新频度来确定采用哪套方案。html 作为前端资源的入口文件，一旦被强缓存，那么相关的 js，css，img 等均无法更新。对于高频维护的业务类项目，建议采用方案 2，或是方案 3 但 max-age 设置一个较小值，例如 3600，一小时过期。对于一些活动项目，上线后不会进行较大改动，建议采用方案 3，不过 max-age 也不要设置过大，否则一旦出现 bug 或是未知问题，用户无法及时更新。
+
+除了以上考虑，有时候其他因素也会影响缓存的配置，例如 QQ 红包除夕活动，高并发大流量很容易给服务器带来极大挑战，这时我们作为前端开发，就可以采用方案 3 来避免用户多次进入带来的流量压力。
+
+#### 补充：后端需要怎么设置
+
+浏览器是根据响应头的相关字段来决定缓存的方案的。所以，后端的关键就在于，根据不同的请求返回对应的缓存字段。 以 nodejs 为例，如果需要浏览器强缓存，我们可以这样设置：
+
+```js
+res.setHeader('Cache-Control', 'public, max-age=xxx');
+```
+
+如果需要协商缓存，则可以这样设置：
+
+```js
+res.setHeader('Cache-Control', 'public, max-age=0');
+res.setHeader('Last-Modified', xxx);
+res.setHeader('ETag', xxx);
+```
 
 ### 4.3 CDN 缓存
 
