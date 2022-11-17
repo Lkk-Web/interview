@@ -507,6 +507,24 @@ Function.prototype.mybind = function (context, ...bindArgs) {
 };
 ```
 
+### 5.2 self 关键字
+
+这个非常简单。我们知道，打开任何一个网页，浏览器会首先创建一个窗口，这个窗口就是一个 window 对象，也是 js 运行所依附的全局环境对象和全局作用域对象。self 指窗口本身，它返回的对象跟 window 对象是一模一样的。也正因为如此，window 对象的常用方法和函数都可以用 self 代替 window。
+
+举个例子，常见的写法如“self.alert('弹窗');”，把它放在`<a>`标记中：`<a href="javascript:self.alert('弹窗');">点击弹窗</a>`，单击“点击弹窗”链接，当前页面弹窗。
+
+```tsx
+import React from 'react';
+import { Modal } from 'interview';
+
+export default () => (
+  <Modal
+    title="self.close"
+    component={<a href="javascript:self.alert('弹窗');">点击弹窗</a>}
+  ></Modal>
+);
+```
+
 ## 6、原型链
 
 ### 6.1 new 操作符
