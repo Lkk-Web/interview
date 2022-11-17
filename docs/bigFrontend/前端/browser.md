@@ -314,9 +314,7 @@ let a = new Promise((resolve, reject) => {
 
 ## 4、浏览器缓存
 
-### 4.1 service worker
-
-### 4.2 强缓存与协商缓存（http 缓存）
+### 4.1 强缓存与协商缓存（http 缓存）
 
 http 缓存规则由`响应首部字段`进行控制，其中的关键字段有`Expires`，`Cache-Control` ，`Last-Modified` ，`Etag` 四个字段，Expires 和 Cache-Control 用来确定确定缓存的存储时间，Last-Modified 和 Etag 则用来确定缓存是否要被更新。
 
@@ -391,9 +389,113 @@ res.setHeader('Last-Modified', xxx);
 res.setHeader('ETag', xxx);
 ```
 
-### 4.3 CDN 缓存
+### 4.2 CDN 缓存
 
 cdn 缓存是一种服务端缓存，CDN 服务商将源站的资源缓存到遍布全国的高性能加速节点上，当用户访问相应的业务资源时，用户会被调度至最接近的节点最近的节点 ip 返回给用户，在 web 性能优化中，它主要起到了，缓解源站压力，优化不同用户的访问速度与体验的作用。
+
+### 4.3 service worker
+
+`Service Worker` 是服务于前端页面的后台线程，基于 Web Worker 实现。有着独立的 js 运行环境，分担、协助前端页面完成前端开发者分配的需要在后台悄悄执行的任务。基于它可以实现拦截和处理网络请求、消息推送、静默更新、事件同步等服务.
+
+#### Service Worker 优势及典型应用场景
+
+- 离线缓存：可以将 H5 应用中不变化的资源或者很少变化的资源长久的存储在用户端，提升加载速度、降低流量消耗、降低服务器压力。如中重度的 H5 游戏、框架数据独立的 web 资讯客户端、web 邮件客户端等
+
+- 消息推送：激活沉睡的用户，推送即时消息、公告通知，激发更新等。如 web 资讯客户端、web 即时通讯工具、h5 游戏等运营产品。
+
+- 事件同步：确保 web 端产生的任务即使在用户关闭了 web 页面也可以顺利完成。如 web 邮件客户端、web 即时通讯工具等。
+- 定时同步：周期性的触发 Service Worker 脚本中的定时同步事件，可借助它提前刷新缓存内容。如 web 资讯客户端。
+
+要使用 Service Worker，首先需要注册一个 sw，通知浏览器为该页面分配一块内存，然后 sw 就会进入安装阶段。
+
+```js
+// register 注册
+// 要使用Service Worker，首先需要注册一个sw，通知浏览器为该页面分配一块内存，然后sw就会进入安装阶段。
+const isLocalHost = window.location.hostname === 'localhost';
+if ('serviceWorker' in navigator && !isLocalHost) {
+  //如果指定的属性在指定的对象或其原型链中，则 in 运算符返回 true。
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-wroker.js') //注册
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
+
+self.addEventListener('install', function (event) {
+  //调试时跳过等待过程
+  self.skipWaiting();
+  // Perform install steps
+  //首先 event.waitUntil 你可以理解为 new Promise，
+  //它接受的实际参数只能是一个 promise，因为,caches 和 cache.addAll 返回的都是 Promise，
+  //这里就是一个串行的异步加载，当所有加载都成功时，那么 SW 就可以下一步。
+  //另外，event.waitUntil 还有另外一个重要好处，它可以用来延长一个事件作用的时间，
+  //这里特别针对于我们 SW 来说，比如我们使用 caches.open 是用来打开指定的缓存，但开启的时候，
+  //并不是一下就能调用成功，也有可能有一定延迟，由于系统会随时睡眠 SW，所以，为了防止执行中断，
+  //就需要使用 event.waitUntil 进行捕获。另外，event.waitUntil 会监听所有的异步 promise
+  //如果其中一个 promise 是 reject 状态，那么该次 event 是失败的。这就导致，我们的 SW 开启失败。
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(function (cache) {
+      console.log('[SW]: Opened cache');
+      return cache.addAll(allAssets);
+    }),
+  );
+});
+
+// activated
+//如果是第一次加载sw，在安装后，会直接进入activated阶段，而如果sw进行更新，情况就会显得复杂一些
+//sw激活阶段,说明上一sw已失效
+self.addEventListener('activate', function (event) {
+  event.waitUntil(
+    // 遍历 caches 里所有缓存的 keys 值
+    caches.keys().then(deleteOldCaches),
+  );
+});
+
+//idle
+//这个空闲状态一般是不可见的，这种一般说明sw的事情都处理完毕了，然后处于闲置状态了。
+//浏览器会周期性的轮询，去释放处于idle的sw占用的资源。
+
+//fetch
+//该阶段是sw最为关键的一个阶段，用于拦截代理所有指定的请求，并进行对应的操作。
+//所有的缓存部分，都是在该阶段，这里举一个简单的例子：
+//监听浏览器的所有fetch请求，对已经缓存的资源使用本地缓存回复
+self.addEventListener('fetch', function (event) {
+  event.respondWith(
+    caches.match(event.request).then(function (response) {
+      //该fetch请求已经缓存
+      if (response) {
+        return response;
+      }
+      return fetch(event.request);
+    }),
+  );
+});
+```
+
+该示例展示了 Service Worker 最基本的离线缓存应用，前端在原来的 web 应用中使用 Service Worker 只需要三大步：
+
+1. 切入到`https`；由于 Service Worker 可以劫持连接，伪造和过滤响应，所以保证其在传输过程中不被篡改非常重要。
+
+2. 在`页面加载`的恰当时机注册 Service Worker；示例中在 index 页面的 body onload 事件中注册了同 path 下的 serviceWorker.js 作为 index 页面的服务线程。
+
+3. 编写 serviceWorker 脚本逻辑；serviceWorker 是事件驱动型服务线程，所以 serviceWorker 脚本逻辑中基本都是以事件监听作为逻辑入口，示例中在 serviceWorker 脚本被安装的 `install` 事件中缓存 index 页面主资源及子资源，在 `fetch` 事件中，拦截前端页面发起的资源请求并到之前缓存的 cache 中匹配。
+
+该示例部署到服务器上之后，用户**第一次打开 index 页面，仍然会从服务器上拉取，之后便去安装 Service Worker**，执行 Service Worker 中的 install 事件，浏览器会再次拉取需要缓存的资源，这一次的缓存是否从网络拉取取决于资源设置的过期时间。当 install 事件中的资源均拉取成功，Service Worker 算是安装成功。如果有一个资源拉取失败，此次 Service Worker 安装失败，若用户下次再打开该页面，浏览器仍然会重复之前的安装流程尝试安装。
+
+如果 index 页面的 Service Worker 安装成功，用户再次打开 index 页面发起的资源请求便会先经过 Service Woker 脚本的 `fetch` 事件，在该事件中前端开发可以通过编写逻辑控制请求从网络拉取还是从 cache 中读取或者自己构造一个 response 丢给前端。
+
+#### 需要注意点
+
+1. Service Worker 线程运行的是 js，有着独立的 js 环境，不能直接操作 DOM 树，但可以通过`postMessage`与其服务的前端页面通信。
+
+2. **Service Worker 服务的不是单个页面，它服务的是当前网络 path 下所有的页面**，只要当前 path 的 Service Worker 被安装，用户访问当前 path 下的任意页面均会启动该 Service Worker。当一段时间没有事件过来，浏览器会自动停止 Service Worker 来节约资源，所以 Service Worker 线程中不能保存需要持久化的信息。
+
+3. Service Worker 安装是在后台悄悄执行，更新也是如此。每次新唤起 Service Worker 线程，它都会去检查 Service Worker 脚本是否有更新，如有一个字节的变化，它都会新起一个 Service Worker 线程类似于安装一样去安装新的 Service Worker 脚本，当旧的 Service Worker 所服务的页面都关闭后，新的 Service Worker 便会生效。
 
 #### 缓存规则
 
