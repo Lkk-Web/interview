@@ -517,7 +517,7 @@ self.addEventListener('fetch', function (event) {
 
 - [Autoprefixer](https://github.com/postcss/autoprefixer)
 
-- [Babel](https://github.com/babel/babel/tree/master/packages/babel-preset-env)
+- [Babel](https://github.com/babel/babel/tree/master/packages/babel-preset-env)，也可以看看站内介绍[Babel](/big-frontend/dev-ops/babel)
 
 - [postcss-preset-env](https://github.com/csstools/postcss-preset-env)
 
@@ -531,7 +531,7 @@ dead：24 个月内没有官方支持或更新的浏览器。目前是 IE 10，I
 
 last 2 versions：每个浏览器的最新 2 个版本
 
-还有一些不太常用的配置可以查看官网
+还有一些不太常用的配置可以查看官网 [browserslist](https://github.com/browserslist/browserslist)
 
 #### 5.1.2 使用方法
 
