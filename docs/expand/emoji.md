@@ -23,6 +23,15 @@ stages:
   - 🦄 quality
 ```
 
+## Emoji in React
+
+```tsx
+import React from 'react';
+import { Modal } from 'interview';
+
+export default () => <Modal title="Emoji" component={<span>{'\uD83D\uDe04'}</span>}></Modal>;
+```
+
 ---
 
 ## Emoji in commits
