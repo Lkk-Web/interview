@@ -509,17 +509,96 @@ self.addEventListener('fetch', function (event) {
 
 3. Service Worker 安装是在后台悄悄执行，更新也是如此。每次新唤起 Service Worker 线程，它都会去检查 Service Worker 脚本是否有更新，如有一个字节的变化，它都会新起一个 Service Worker 线程类似于安装一样去安装新的 Service Worker 脚本，当旧的 Service Worker 所服务的页面都关闭后，新的 Service Worker 便会生效。
 
-#### 缓存规则
+### 4.4 WorkBox
 
-与 http 缓存规则不同的是，这个规则并不是规范性的，而是由 cdn 服务商来制定，我们以腾讯云举例，打开 cdn 加速服务配置，提供给我们的配置项只有文件类型（或文件目录）和刷新时间，意义也很简单，针对不同文件类型，在 cdn 节点上缓存对应的时间。
+由于直接写原生的 sw.js，比较繁琐和复杂，所以一些工具就出现了，而 Workbox 是其中的佼佼者，由 google 团队推出。
 
-<image src='https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/11/8/166f2735f65e8be9~tplv-t2oaga2asx-zoom-in-crop-mark:4536:0:0:0.image'/>
+#### 使用者
 
-#### http 缓存与 cdn 缓存的结合
+有很多团队也是启用该工具来实现 Service Worker 的缓存，比如说：
 
-当我们分别理解了 http 缓存配置和 cdn 缓存配置后，我们还有一件事情，就是理解二者结合时，请求的流向问题.
+- 淘宝首页
 
-当用户访问我们的业务服务器时，首先进行的就是 http 缓存处理，如果 http 缓存通过校验，则直接响应给用户，如果未通过校验，则继续进行 cdn 缓存的处理，cdn 缓存处理完成后返回给客户端，由客户端进行 http 缓存规则存储并响应给用户。
+- 网易新闻 wap 文章页
+
+- 百度的 Lavas
+
+#### 基本配置
+
+首先，需要在项目的 sw.js 文件中，引入 Workbox 的官方 js，这里是网易有道的静态资源：
+
+```ts
+importScripts(
+  'https://edu-cms.nosdn.127.net/topics/js/workbox_9cc4c3d662a4266fe6691d0d5d83f4dc.js',
+);
+```
+
+其中 importScripts 是 webworker 中加载 js 的方式。
+
+Workbox 的缓存分为两种，一种的 `precache`，一种的 `runtimecache`。
+
+##### precache
+
+precache 对应的是在 installing 阶段进行读取缓存的操作。它让开发人员可以确定缓存文件的时间和长度，以及在不进入网络的情况下将其提供给浏览器，这意味着它可以用于创建 Web 离线工作的应用。
+
+工作原理：
+
+首次加载 Web 应用程序时，Workbox 会下载指定的资源，并存储具体内容和相关修订的信息在 indexedDB 中。当资源内容和 sw.js 更新后，Workbox 会去比对资源，然后将新的资源存入 Cache，并修改 [indexedDB](/big-frontend/前端/browser#84-indexdb) 中的版本信息。
+
+```ts
+workbox.precaching.precacheAndRoute(['./main.css']);
+```
+
+`indexedDB` 中会保存其相关信息，这个时候我们把 main.css 的内容改变后，再刷新页面，会发现除非强制刷新，否则 Workbox 还是会读取 Cache 中存在的老的 main.css 内容。即使我们把 main.css 从服务器上删除，也不会对页面造成影响。所以这种方式的缓存都需要配置一个版本号（hash 参数）。在修改 sw.js 时，对应的版本也需要变更。
+
+使用实践：
+
+一般我们的一些不经常变的资源，都会使用 cdn，所以这里自然就需要支持域外资源了，配置方式如下：
+
+```ts
+var fileList = [
+  {
+    url: 'https://edu-cms.nosdn.127.net/topics/js/cms_specialWebCommon_js_f26c710bd7cd055a64b67456192ed32a.js',
+  },
+  {
+    url: 'https://static.ws.126.net/163/frontend/share/css/article.207ac19ad70fd0e54d4a.css',
+  },
+];
+
+// precache 适用于支持跨域的cdn和域内静态资源
+workbox.precaching.suppressWarnings();
+workbox.precaching.precacheAndRoute(fileList, {
+  ignoreUrlParametersMatching: [/./],
+});
+```
+
+这里需要对应的资源配置跨域允许头，否则是不能正常加载的。且文件都要以版本文件名的方式，来确保修改后 Cache 和 indexDB 会得到更新。
+
+因此这种方式适合于上线后就不会经常变动的静态资源。
+
+##### runtimecache
+
+运行时缓存是在 install 之后，activated 和 fetch 阶段做的事情。既然在 fetch 阶段发送，那么 runtimecache 往往应对着各种类型的资源，对于不同类型的资源往往也有不同的缓存策略。
+
+- Stale While Revalidate
+
+这种策略的意思是当请求的路由有对应的 Cache 缓存结果就直接返回
+
+- Network First
+
+这种策略就是当请求路由是被匹配的，就采用`网络优先`的策略，也就是优先尝试拿到网络请求的返回结果，如果拿到网络请求的结果，就将结果返回给客户端并且写入 Cache 缓存。
+
+- Cache First
+
+这个策略的意思就是当匹配到请求之后直接从 Cache 缓存中取得结果,即`缓存优先`，如果 Cache 缓存中没有结果，那就会发起网络请求，拿到网络请求结果并将结果更新至 Cache 缓存，并将结果返回给客户端。
+
+- Network Only
+
+比较直接的策略，直接强制使用正常的网络请求，并将结果返回给客户端，这种策略比较适合对实时性要求非常高的请求。
+
+- Cache Only
+
+这个策略也比较直接，直接使用 Cache 缓存的结果，并将结果返回给客户端，这种策略比较适合一上线就不会变的静态资源请求。
 
 ## 5、浏览器兼容
 
