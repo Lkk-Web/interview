@@ -600,6 +600,44 @@ workbox.precaching.precacheAndRoute(fileList, {
 
 这个策略也比较直接，直接使用 Cache 缓存的结果，并将结果返回给客户端，这种策略比较适合一上线就不会变的静态资源请求。
 
+#### Workbox 工具库原理
+
+简单提几个 Workbox 源码的亮点。
+
+##### 通过 Proxy 按需依赖
+
+熟悉了 Workbox 后会得知，它是有很多个子模块的，各个子模块再通过用到的时候按需 importScript 到线程中。
+
+做到按需依赖的原理就是通过 Proxy 对全局对象 Workbox 进行代理：
+
+```js
+new Proxy(this, {
+  get(t, s) {
+    //如果workbox对象上不存在指定对象，就依赖注入该对象对应的脚本
+    if (t[s]) return t[s];
+    const o = e[s];
+    return o && t.loadModule(`workbox-${o}`), t[s];
+  },
+});
+```
+
+如果找不到对应模块，则通过 importScripts 主动加载：
+
+```js
+/**
+ * 加载前端模块
+ * @param {Strnig} t
+ */
+loadModule(t) {
+  const e = this.o(t);
+  try {
+    importScripts(e), (this.s = !0);
+  } catch (s) {
+    throw (console.error(`Unable to import module '${t}' from '${e}'.`), s);
+  }
+}
+```
+
 ## 5、浏览器兼容
 
 ### 5.1 browserslist
