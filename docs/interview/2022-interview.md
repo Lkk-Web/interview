@@ -9,7 +9,7 @@ toc: menu
 
 1、在一个 div 里实现富文本编辑器，可放入图片（类似于 web 微信聊天框）如果从其他地方复制过来的图片在编辑器中怎么显示 contenteditable
 
-2、移动端中用 email 或 iPhone 会被系统识别为超链接，用 html 标签屏蔽 <mate>
+2、移动端中用 email 或 iPhone 会被系统识别为超链接，用 html 标签屏蔽 (`<mate>`)
 
 3、垂直居中的所有方法（浅提重绘）
 
@@ -269,7 +269,7 @@ React + Hooks + Nodejs 提供数据服务
 
 3、src 和 href 的区别
 
-4、scrpit 的 defer 和 async 的区别，执行顺序
+4、script 的 defer 和 async 的区别，执行顺序
 
 5、display none 和 visible hidden 的区别（浅提重绘）
 
@@ -281,16 +281,17 @@ React + Hooks + Nodejs 提供数据服务
 
 9、老规矩 浅拷贝题、异步输出题
 
-```
-var b = 20 function fn(){
-	var a = 10;
-	function c(){
-		console.log(a + b)
-	}
-	c()
+```js
+var b = 20;
+function fn() {
+  var a = 10;
+  function c() {
+    console.log(a + b);
+  }
+  c();
 }
-b = 200
-fn() //210   答错了，丢人
+b = 200; // 同步执行时，被覆盖成200
+fn(); //210   答错了，丢人
 ```
 
 10、--proto-- 和 prototype 的区别
