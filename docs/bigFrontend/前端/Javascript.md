@@ -22,6 +22,16 @@ JS6 种数据基本类型：Undefined、Null、Boolean、Number、String、Symbo
 
 const 修饰的引用类型可以被修改，因为对象是引用类型的，P 中保存的仅是对象的指针，这就意味着，const 仅保证指针不发生改变，修改对象的属性不会改变对象的指针，所以是被允许的。也就是说 const 定义的引用类型只要指针不发生改变，其他的不论如何改变都是允许的。
 
+- 怎么让 const 修饰的引用类型不可以被修改？
+
+Object.freeze({})
+
+```js
+const obj = Object.freeze({});
+obj.name = 'Jake';
+console.log(obj.name); // undefined
+```
+
 **赋值**
 
 基本类型赋值，系统会为新的变量在栈内存中分配一个新值，这个很好理解。引用类型赋值，系统会为新的变量在栈内存中分配一个值，这个值仅仅是指向同一个对象的引用，和原对象指向的都是堆内存中的同一个对象。
