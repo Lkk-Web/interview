@@ -24,7 +24,7 @@ const 修饰的引用类型可以被修改，因为对象是引用类型的，P 
 
 - 怎么让 const 修饰的引用类型不可以被修改？
 
-Object.freeze({})
+  - Object.freeze({})
 
 ```js
 const obj = Object.freeze({});
