@@ -13,9 +13,12 @@ order: 6
 - 渲染进程 (Renderer Process)：负责一个 Tab 内的显示相关的工作，也称渲染引擎。
 
   - JavaScript 引擎线程
+  - 事件触发线程
+  - 定时触发器线程
+  - 异步 http 请求线程
   - GUI 渲染引擎线程
 
-  GUI 线程就是渲染页面的，解析 HTML 和 CSS，然后构建成 DOM 树和渲染树。
+  GUI 线程就是渲染页面的，解析 HTML 和 CSS，然后构建成 DOM 树和渲染树。渲染过程如下：
 
   ```
   A.处理html生成 DOM（Document Object Model）Tree
@@ -25,9 +28,7 @@ order: 6
   E.遍历Render树的每一个节点绘制到屏幕
   ```
 
-  - 事件触发线程
-  - 定时触发器线程
-  - 异步 http 请求线程
+  [DOM 构建过程](https://xie.infoq.cn/article/9066d97f021319a6bac5f9eb5)： 首先浏览器的 HTML 解析器会先将其解析成字节码，然后通过 DOCTYPE 解析对应的浏览器模式和编码（比如 utf-8），而如何构建其实就是对编码后格式的 DOM 所有节点进行深度遍历，当遍历到当前节点如果有挂在 css 资源，将会去生成 `CSSOM Tree`(此时是异步生成的)，而如果遇到 js(此处是同步，异步可自行推演)则会去立刻下载 js 文件，同时阻塞 dom 的构建，而执行则是在 CSSOM 树生成完后，render 树生成前执行。
 
 - GPU 进程 (GPU Process)：负责处理整个应用程序的 GPU 任务
 - 网络进程
