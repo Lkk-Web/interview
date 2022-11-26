@@ -232,8 +232,7 @@ text-overflow: ellipsis;
 
 ```css
 div {
-  direction: rtl //ltr为从左向右
-;
+  direction: rtl; //ltr为从左向右
 }
 ```
 
