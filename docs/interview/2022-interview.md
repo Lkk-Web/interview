@@ -317,7 +317,7 @@ fn(); //210   答错了，丢人
 
 4、 了解 React18 中的 `Concurrent` 吗
 
-5、code view 的 diff 和 React diff 算法的相同点
+5、code review 的 diff 和 React diff 算法的相同点
 
 6、有哪些优化策略
 
