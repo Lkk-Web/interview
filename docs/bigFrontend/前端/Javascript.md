@@ -8,7 +8,13 @@ order: 3
 
 ### 1.1 数据类型有哪些
 
-JS6 种数据基本类型：Undefined、Null、Boolean、Number、String、Symbol 3 种引用类型:Object、Array、Function
+JS
+
+7 种数据基本类型：`Undefined`、`Null`、`Boolean`、`Number`、`String`、`Symbol`、`BigInt`
+
+3 种引用类型:`Object`、`Array`、`Function`
+
+其他类型：`Set`、`WeakSet`、`Map`、`WeakMap`、`Date`、`RegExp`
 
 为什么基本数据类型存在栈内存，引用数据类型存在堆内存?（变量存在于栈中）
 
@@ -142,6 +148,9 @@ typeof true; // "boolean"
 typeof NaN; // 'number'
 typeof Symbol(); // 'symbol'
 typeof Array; // "function"
+typeof BigInt; // "function"
+typeof BigInt(1); // "BigInt"
+typeof new Set() / Map / Array(); //"object"
 typeof (() => {}); // typeof 箭头函数返回也是 "function"
 //typeof的返回值都是 string类型
 typeof typeof undefined; // "string"
