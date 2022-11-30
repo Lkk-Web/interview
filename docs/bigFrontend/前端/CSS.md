@@ -380,39 +380,58 @@ window.requestAnimationFrame(callback);
 
 由于 requestAnimationFrame 目前还存在兼容性问题，而且不同的浏览器还需要带不同的前缀。因此需要通过优雅降级的方式对 requestAnimationFrame 进行封装，优先使用高级特性，然后再根据不同浏览器的情况进行回退，直止只能使用 setTimeout 的情况。
 
-## 11.BFC(块格式化上下文)
+## 11.BFC，IFC，GFC，FFC
 
-**BFC 是一个独立的布局环境，BFC 内部的元素布局与外部互不影响**
+什么是 FC,Formatting Context，格式化上下文，指页面中一个渲染区域，拥有一套渲染规则，它决定了其子元素如何定位，以及与其他元素的相互关系和作用。
 
-1、设置元素浮动 float
+### 11.1 BFC(块格式化上下文)
 
-2、设置元素绝对定位 position: absolute;
+BFC,该区域拥有一套渲染规则来约束块级盒子的布局，且与区域外部无关。
 
-3、设置元素为 inline-block
+- BFC 的约束规则
 
-4、将元素的 overflow 设置为一个非 visible 的值
+1. 内部的 BOX 会在垂直方向上一个接一个的放置；
+2. 垂直方向上的距离由 margin 决定。（完整的说法是：属于同一个 BFC 的俩个相邻的 BOX 的 margin 会发生重叠，与方向无关。）
+3. 每个元素的左外边距与包含块的左边界相接触（从左到右），即使浮动元素也是如此。（这说明 BFC 中的子元素不会超出它的包含块，而 position 为 absolute 的元素可以超出它的包含块边界）；
+4. BFC 的区域不会与 float 的元素区域重叠；
+5. 计算 BFC 的高度时，浮动子元素也参与计算；
+6. BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面的元素，反之亦然；
+
+- BFC 的应用
+
+1. 防止 margin 发生重叠
+2. 防止发生因浮动导致的高度塌陷
+
+- 怎么生成 BFC
+
+1. float 的值不为 none；
+2. overflow 的值不为 visible；
+3. display 的值为 inline-block table-cell table-caption；
+4. position 的值为 absolute 或 fixed；
+
+`display：table` 也认为可以生成 BFC？其实是在于 Table 会默认生成一个匿名的 table-cell，正是这个匿名的 table-cell 生成了 BFC。
 
 推荐方式：将 overflow 设置为 hidden 是副作用最小的开启 BFC 的方式
 
-### 11.1 解决浮动元素令父元素高度坍塌的问题
+#### 11.1.1 解决浮动元素令父元素高度坍塌的问题
 
 方法：给父元素开启 BFC
 
 原理：计算 BFC 的高度时，浮动子元素也参与计算
 
-### 11.2 非浮动元素被浮动元素覆盖
+#### 11.1.2 非浮动元素被浮动元素覆盖
 
 方法：给非浮动元素开启 BFC
 
 原理：BFC 的区域不会与 float box 重叠
 
-### 11.3 两栏布局
+#### 11.1.3 两栏布局
 
 方法：给固定栏设置固定宽度，给不固定栏开启 BFC。
 
 原理：BFC 的区域不会与 float box 重叠
 
-### 11.4 三栏布局
+#### 11.1.4 三栏布局
 
 实现三栏布局中间自适应的布局方式有：
 
@@ -420,6 +439,40 @@ window.requestAnimationFrame(callback);
 - 两边使用 absolute，中间使用 margin
 - flex 实现
 - grid 网格布局
+
+### 11.2 IFC(行内格式化上下文)
+
+IFC(Inline Formatting Contexts)直译为"行内格式化上下文"，IFC 的 line box（线框）高度由其包含行内元素中最高的实际高度计算而来（不受到竖直方向的 padding/margin 影响)
+
+- IFC 特性与约束规则
+
+1. IFC 中的 line box 一般左右都贴紧整个 IFC，但是会因为 float 元素而扰乱。float 元素会位于 IFC 与与 line box 之间，使得 line box 宽度缩短。
+2. IFC 中时不可能有块级元素的，当插入块级元素时（如 p 中插入 div）会产生两个匿名块与 div 分隔开，即产生两个 IFC，每个 IFC 对外表现为块级元素，与 div 垂直排列。
+
+- IFC 的应用
+
+1. 水平居中：当一个块要在环境中水平居中时，设置其为 inline-block 则会在外层产生 IFC，通过 text-align 则可以使其水平居中。
+2. 垂直居中：创建一个 IFC，用其中一个元素撑开父元素的高度，然后设置其 `vertical-align:middle`，其他行内元素则可以在此父元素下`垂直居中`。
+
+### 11.3 GFC(网格布局格式化上下文)
+
+GFC(GridLayout Formatting Contexts)直译为"网格布局格式化上下文"，当为一个元素设置 display 值为 grid 的时候，此元素将会获得一个独立的渲染区域.
+
+我们可以通过在网格容器（grid container）上定义网格行（grid row）和网格列（grid columns）为每一个网格项目（grid item）定义位置和空间。
+
+GFC 将改变传统的布局模式，他将让布局从一维布局变成了二维布局。简单的说，有了 `GFC` 之后，布局不再局限于单个维度了。这个时候你要实现类似九宫格，拼图之类的布局效果显得格外的容易。
+
+### 11.4 FFC(自适应格式化上下文)
+
+FFC(Flex Formatting Contexts)直译为"自适应格式化上下文"，display 值为`flex`或者`inline-flex`的元素将会生成自适应容器（flex container）。
+
+Flex Box 由伸缩容器和伸缩项目组成。设置为 flex 的容器被渲染为一个`块级元素`，而设置为 inline-flex 的容器则渲染为一个`行内元素`。
+
+伸缩容器中的每一个子元素都是一个伸缩项目。伸缩项目可以是任意数量的。伸缩容器外和伸缩项目内的一切元素都不受影响。简单地说，Flexbox 定义了伸缩容器内伸缩项目该如何布局。
+
+FFC 与 BFC 的区别
+
+`float` 和 `clear` 属性对 Flexbox 中的子元素是没有效果的，也不会使子元素脱离文档流(但是对 Flexbox 是有效果的！)
 
 ## 12.Css 预编语言
 
