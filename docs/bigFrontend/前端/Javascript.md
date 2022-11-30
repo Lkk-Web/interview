@@ -548,20 +548,54 @@ export default () => (
 
 ### 6.1 new 操作符
 
-手撕 new 操作符（new 具体干了什么）
+在 JavaScript 中，new 操作符用于创建一个给定构造函数的实例对象
 
 ```js
-function new(Func,...args){
-	//1.创建一个新对象
-    const obj = {};
-    //2.新对象原型指向构造函数对象
-    obj.prototype = Func.prototype;
-    //3.将构造函数的this指向新对象
-    let result = Func.apply(obj,args)
-    //4.根据返回值判断
-    return result instanceof Object ? result : obj
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
 }
+Person.prototype.sayName = function () {
+  console.log(this.name);
+};
+const person1 = new Person('Tom', 20);
+console.log(person1); // Person {name: "Tom", age: 20}
+t.sayName(); // 'Tom'
 ```
+
+从上面可以看到：
+
+- `new` 通过构造函数 Person 创建出来的实例可以访问到构造函数中的属性
+- `new` 通过构造函数 Person 创建出来的实例可以访问到构造函数`原型链`中的属性（即实例与构造函数通过原型链连接了起来）
+
+new 具体干了什么：
+
+1. 在内存中创建一个新对象。
+2. 这个新对象内部的[[Prototype]]特性被赋值为构造函数的 prototype 属性。
+3. 构造函数内部的 this 被赋值为这个新对象（即 this 指向新对象）。
+4. 执行构造函数内部的代码（给新对象添加属性）。
+5. 如果构造函数返回对象，则返回该对象；否则，返回刚创建的新对象(空对象)。
+
+因此也就解释了 `typeof new xxx()` 始终为 object, `xxx instance Object`也始终为 true。
+
+```js
+function Person() {
+  this.age = 18;
+}
+Person.prototype;
+/**
+{
+    constructor: ƒ Foo()
+    __proto__: Object
+}
+**/
+```
+
+普通函数创建时，引擎会按照特定的规则为这个函数创建一个 prototype 属性（指向原型对象）。默认情况下，所有原型对象自动获得一个名为 `constructor` 的属性，指回与之关联的构造函数。
+
+创建箭头函数时，引擎不会为其创建 `prototype` 属性，箭头函数没有 constructor 供 new 调用，因此使用 new 调用[箭头函数](/big-frontend/前端/ecmascprit#21-箭头函数)会报错！
+
+[手撕 new 操作符](/interview/frontend-shred-code#23-手撕-new-操作符)
 
 ## 7、闭包
 
