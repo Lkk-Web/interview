@@ -137,14 +137,14 @@ console.log(oldobj.pet.pet_age); //3
 
 ### 1.2 判断数据类型
 
-typeof 判断：
+typeof 一般只能返回如下几个结果：`number`,`boolean`,`string`,`function`,`object`,`undefined`,`Symbol`,`BigInt`；
+
+JavaScript 中的值是由一个表示类型的标签和实际数据值表示的。 对象的类型标签是 0。 由于 null 代表的是`空指针`（大多数平台下值为 0x00），因此， typeof null 也因此返回 "object" 。
 
 ```javascript
+typeof [1, 2]; // "object"
 typeof undefined; // "undefined"
 typeof null; // "object"
-//JavaScript 中的值是由一个表示类型的标签和实际数据值表示的。 对象的类型标签是 0。 由于 null 代表的是空指针（大多数平台下值为 0x00），因此，null 的类型标签是 0， typeof null 也因此返回 "object" 。
-typeof [1, 2]; // "object"
-typeof true; // "boolean"
 typeof NaN; // 'number'
 typeof Symbol(); // 'symbol'
 typeof Array; // "function"
