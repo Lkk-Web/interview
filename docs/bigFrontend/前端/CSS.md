@@ -177,7 +177,7 @@ em/rem：用于做响应式页面，不过我更倾向于 rem，因为 em 不同
 }
 ```
 
-### 4.5 小于 12px,chrome 小于 12px 会显示成 12px ，但在最新的 chrome 已支持小于 12px 的显示。
+### 4.6 小于 12px,chrome 小于 12px 会显示成 12px ，但在最新的 chrome 已支持小于 12px 的显示。
 
 Chrome 中文版浏览器会默认设定页面的最小字号是 12px，英文版没有限制
 
@@ -199,11 +199,21 @@ zoom:50%，表示缩小到原来的一半
 
 zoom:0.5，表示缩小到原来的一半
 
-#### #-webkit-transform:scale()
+#### -webkit-transform:scale()
 
 针对 chrome 浏览器,加 webkit 前缀，用 transform:scale()这个属性进行放缩
 
 注意的是，使用 scale 属性只对可以定义宽高的元素生效，所以，下面代码中将 span 元素转为行内块元素
+
+### 4.7 如何让网站 1s 至灰
+
+有些节日，如清明节等灰色节日，我们常常需要将整个网站至灰处理，极其简单的操作就是，如下代码
+
+```css
+html {
+  filter: grayscale(1);
+}
+```
 
 ## 5.CSS3 新特性
 
