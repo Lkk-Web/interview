@@ -7,17 +7,27 @@ order: 1
 
 # Node.js
 
-## 1、简介
+官方文档：[Node](https://nodejs.org/en/docs/)
 
-Node 是什么？
+## 1、简介
 
 消息队列？
 
 GraphQL
 
+esql
+
 RPC
 
+高并发
+
+redis
+
 cnpm 、 npm 、pnpm 的区别
+
+## 1、基本概念
+
+### Node 是什么？
 
 ## 1、CommonJS 规范
 
