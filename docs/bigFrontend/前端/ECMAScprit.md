@@ -15,7 +15,7 @@ ES6 的第一个版本，是在 1015 年 6 月发布，正式名称就是《ECMA
 
 # ES6
 
-## 1、Promise
+## 一、Promise
 
 `Promise`，是异步编程的一种解决方案，比传统的解决方案（回调函数）更加合理和更加强大,支持**链式调用，解决回调地狱**。
 
@@ -125,11 +125,11 @@ p.then(() => {
 ]
 ```
 
-## 2、Generator
+## 二、Generator
 
 ### 2.1 async 函数
 
-## 3、 Number API
+## 三、Number API
 
 ### 3.1 Number.isNaN()
 
@@ -158,7 +158,7 @@ function withinErrorMargin(left, right) {
 withinErrorMargin(0.1 + 0.1, 0.3); // true
 ```
 
-## 4、 Object API
+## 四、Object API
 
 ### 4.1 Object.prototype.is()
 
@@ -186,7 +186,7 @@ data.hasOwnProperty('thumbUp');
 
 另外，`Object.keys() `的返回并不总能保持先来后到的顺序。从解决业务需要的角度，我们可以通过维护一个单独的 tag 数组来回避这个问题。
 
-## 5、 Array API
+## 五、Array API
 
 ### 5.1 Array.prototype.some()
 
@@ -237,34 +237,34 @@ const someNumbers = { '0': 10, '1': 15, length: 1 };
 Array.from(someNumbers, (value) => value * 1); // => [10, 30]
 ```
 
-## 6、String API
+## 六、String API
 
-## 7、箭头函数
+## 七、箭头函数
 
 1. 箭头函数的 this 永远指向其上下文的 this ，任何方法都改变不了其指向，如 call() , bind() , apply()，它只会从自己的作用域链的上一层继承 this，指向 construct。 而普通函数的 this 指向调用它的那个对象
 2. 优美，当函数体只有一条语句，可简写
 3. **箭头函数没有原型 prototype**
 
-## 8、Set 和 Map 数据结构
+## 八、Set 和 Map 数据结构
 
-## 9、Proxy
+## 九、Proxy
 
-## 10、Reflect
+## 十、Reflect
 
-## 11、Iterator 和 for...of 循环
+## 十一、Iterator 和 for...of 循环
 
-## 12、Class
+## 十二、Class
 
 ### 12.1 Class 的基本语法
 
 ### 12.2 Class 的继承
 
-## 13、Module
+## 十三、Module
 
 ### 13.1 Module 的语法
 
 ### 13.2 Module 的加载实现
 
-## 14、Symbol
+## 十四、Symbol
 
-## 15、ArrayBuffer
+## 十五、ArrayBuffer
