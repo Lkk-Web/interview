@@ -73,14 +73,14 @@ p:nth-child(6) 选择的 p 元素所在的父元素，下的第 6 个子元素�
 
 ## 4.场景问题
 
-### 4.1 1px 问题
+### 4.1 1px 问题，为什么 border 不能小于 1px
 
 - 物理像素： 移动设备出厂时，不同设备自带的不同像素，也称硬件像素；
 - 逻辑像素： 即 css 中记录的像素。
 
-在开发中，为什么移动端 CSS 里面写了 1px，实际上看起来比 1px 粗；了解设备物理像素和逻辑像素的同学应该很容易理解，其实这两个 px 的含义其实是不一样的，UI 设计师要求的 1px 是指设备的物理像素 1px，而 CSS 里记录的像素是逻辑像素，它们之间存在一个比例关系，通常可以用 javascript 中的 `window.devicePixelRatio` 来获取，也可以用媒体查询的 `-webkit-min-device-pixel-ratio` 来获取。当然，比例多少与设备相关。
+在开发中，为什么移动端 CSS 里面写了 1px 或小于 1px，实际上看起来比 1px 粗；了解设备物理像素和逻辑像素的同学应该很容易理解，其实这两个 px 的含义其实是不一样的，UI 设计师要求的 1px 是指设备的物理像素 1px，而 CSS 里记录的像素是逻辑像素，它们之间存在一个比例关系，通常可以用 javascript 中的 `window.devicePixelRatio` 来获取，也可以用媒体查询的 `-webkit-min-device-pixel-ratio` 来获取。当然，比例多少与设备相关。
 
-在手机上 border 无法达到我们想要的效果。这是因为 `devicePixelRatio` 特性导致，iPhone 的 `devicePixelRatio==2`，而 `border-width: 1px;` 描述的是设备独立像素，所以，border 被放大到物理像素 2px 显示，在 iPhone 上就显得较粗。
+在手机上 border 无法达到我们想要的效果。这是因为 `devicePixelRatio`DRP 设备像素比 特性导致，iPhone 的 `devicePixelRatio==2`，而 `border-width: 1px;` 描述的是设备独立像素，所以，border 被放大到物理像素 2px 显示，在 iPhone 上就显得较粗。
 
 解决：媒体查询 + transfrom 方案
 
