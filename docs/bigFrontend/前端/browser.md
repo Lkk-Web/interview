@@ -707,6 +707,55 @@ last 2 versions：每个浏览器的最新 2 个版本
 
 ### 6.2 postMessage
 
+`postMessage()`方法允许来自不同源的脚本采用异步方式进行有限的通信，可以实现跨文本档、多窗口、跨域消息传递。
+
+postMessage 的优点
+
+1. 两个跨域页面的消息传递
+2. 多窗口之间的消息传递
+3. 嵌套 iframe 的数据传递
+
+`postMessage(data,origin)`方法接受两个参数
+
+- data:要传递的数据，html5 规范中提到该参数可以是 JavaScript 的任意基本类型或可复制的对象，然而并不是所有浏览器都做到了这点儿，部分浏览器只能处理字符串参数，所以需要使用`JSON.stringify()`方法对对象参数序列化.
+- origin：字符串参数，指明目标窗口的源，`协议+主机+端口号[+URL]`，URL 会被忽略，所以可以不写，这个参数是为了安全考虑，postMessage()方法只会将 message 传递给指定窗口，当然如果愿意也可以建参数设置为"\*"，这样可以传递给任意窗口，如果要指定和当前窗口`同源的话设置为"/"`。
+
+A 页面: http://a.com
+
+```js
+const data = document.getElementById('name').value;
+window.frames[0].postMessage(data, 'http://b.com');
+```
+
+B 页面监听 message:[http://b.com]
+
+```ts
+window.addEventListener(
+  'message',
+  function (event) {
+    // 当我们是父子窗口进行消息传递时，可以使用此判断，只接受父窗口传递来的消息,
+    if (event.source !== window.parent) return;
+    // 或直接判断源
+    if (event.origin !== 'http://example.org:8080') return;
+    var data = event.data;
+    console.info('message from parent:', data);
+  },
+  false,
+);
+```
+
+通过这样的一个传递和接受的过程可以实现一个完整的消息传递。不管 A,B 是否跨域，是否存在嵌套关系，都可以使用 `postMessage` 的方式实现消息传递。
+
+而对于对于`cookie`和`token`等鉴权等问题也可以通过`postMessage`的方式传递
+
+- 安全问题如果您不希望从其他网站接收 message，请不要为 message 事件添加任何事件侦听器。 这是一个完全万无一失的方式来避免安全问题。
+
+如果您确实希望从其他网站接收 message，请始终使用 `origin` 和 `source` 属性验证发件人的身份。任何窗口都可以向任何其他窗口发送消息，并且您不能保证未知发件人不会发送恶意消息。但是，验证身份后，您仍然应该始终验证接收到的消息的语法。否则，您信任只发送受信任邮件的网站中的安全漏洞可能会在您的网站中打开跨网站脚本漏洞。
+
+当您使用 postMessage 将数据发送到其他窗口时，**始终指定精确的目标 origin，而不是 \*。** 恶意网站可以在您不知情的情况下更改窗口的位置，因此它可以拦截使用 postMessage 发送的数据。
+
+无法检查 origin 和 source 属性会导致[跨站点脚本攻击](/big-frontend/运维/frontend-secure#一-跨站点脚本攻击xss)。
+
 ### 6.3 浏览器强制刷新是怎么实现的
 
 网站的缓存设置一般是这样的：入口设置 `no-cache` 其他资源设置 `max-age`，这样入口文件会缓存但是每次都协商，保证能及时更新，而其他资源不发请求，减轻服务端压力。
