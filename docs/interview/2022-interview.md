@@ -337,3 +337,64 @@ fn(); //210   答错了，丢人
 经验较丰富，沟通很舒服，但 coding 基础也要注意
 
 3、办公地点是否可选
+
+## 字节 搜索方向
+
+### 一面（12.1）1 个半小时
+
+1、自我介绍
+
+2、Webpack 怎么调优
+
+3、webpack `Loader` 和 `plugin` 的区别
+
+4、Babel 是怎么编译的
+
+5、Babel 的 html 和 css 是怎么处理的
+
+6、权限路由怎么做的
+
+7、cookie 和 token
+
+8、在 https 下 cookie 怎么设置为不可更改
+
+9、hashRoute 和 historyRoute 依赖的 api 是什么
+
+10、history.push 为什么能渲染
+
+11、https 的过程
+
+12、简单说下微前端
+
+13、如何确认一个 html 被加载完毕
+
+14、九宫格怎么实现，多种方案
+
+15、简单说下 React18
+
+16、React 18 中什么 Api 可以决定渲染时机
+
+17、React 18 的 流式 SSR 是什么原理
+
+18、如何实现懒加载（嘴撕）
+
+19、Taro 是怎么编译的
+
+20、node 中的 Event Loop
+
+21、怎么学习前端，方向，途径
+
+22、做题
+
+1. [最接近的三数之和](https://leetcode.cn/problems/3sum-closest/description/)
+
+反问：
+
+1、业务线
+
+2、有用 node 的业务吗
+
+3、建议
+
+1. 某些方面基础还是不够
+2. 工程化方案要整理和务实一下
