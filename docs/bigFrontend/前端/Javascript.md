@@ -22,7 +22,7 @@ UTF-8 编码：
 
 ### 1.1 数据类型有哪些
 
-JS
+JS 拥有以下数据类型：
 
 7 种数据基本类型：`Undefined`、`Null`、`Boolean`、`Number`、`String`、`Symbol`、`BigInt`
 
@@ -85,49 +85,11 @@ console.log(newobj);
 //newobj与oldobj相同
 ```
 
+可实现的方法有：`Array.from()`
+
 #### 1.1.2 深拷贝
 
-深拷贝是指**源对象与拷贝对象互相独立**，其中任何一个对象的改动都不会对另外一个对象造成影响。
-
-```js
-let oldobj = {
-  name: 'Yang',
-  age: 18,
-  pet: {
-    pet_name: 'Bai',
-    pet_age: 3,
-  },
-};
-
-//构建深拷贝函数
-const deepCopy = (target, map = new Map()) => {
-  let reg = /^(Function|RegExp|Data|Map|Set)$/;
-  if (reg.test(target.constructor.name)) {
-    return new target.constructor(target);
-  }
-  let newObj = target instanceof Array ? [] : {};
-  if (target instanceof Object) {
-    if (map.get(target)) {
-      return map.get(target);
-    } else {
-      map.set(target, newObj);
-    }
-    for (let item in target) {
-      newObj[item] = deepCopy(target[item], map);
-    }
-  }
-  return newObj;
-};
-
-let newobj = myDeepCopy({}, oldobj);
-console.log(newobj);
-//age: 18	name: "Yang" pet: {pet_name: 'Bai', pet_age: 5} [[Prototype]]: Object
-
-newobj.pet.pet_age = 5;
-console.log(newobj.pet.pet_age); //5
-console.log(oldobj.pet.pet_age); //3
-//完成深拷贝
-```
+深拷贝是指**源对象与拷贝对象互相独立**，其中任何一个对象的改动都不会对另外一个对象造成影响。([手撕深拷贝](/interview/frontend-shred-code#31-手撕深拷贝))
 
 #### 1.1.3 **Object 和 Map 的区别**
 
@@ -161,9 +123,8 @@ typeof undefined; // "undefined"
 typeof null; // "object"
 typeof NaN; // 'number'
 typeof Symbol(); // 'symbol'
-typeof Array; // "function"
-typeof BigInt; // "function"
-typeof BigInt(1); // "BigInt"
+typeof Array / BigInt / Object; // "function" 相当于构造函数
+typeof BigInt(1) / Object() / Array(); // "BigInt"/object/object  相当于new了有一个实例对象
 typeof new Set() / Map / Array(); //"object"
 typeof (() => {}); // typeof 箭头函数返回也是 "function"
 //typeof的返回值都是 string类型
@@ -173,26 +134,7 @@ typeof console.log; // 'function'
 typeof arguments; // 'object'
 ```
 
-instanceof 判断:（true or false）
-
-#### 手撕 instanceof
-
-```js
-function instanceof(L: Object, R: any){
-  let protoChain = Object.getPrototypeOf(L);
-  const Lprototype = R.prototype;
-  // 最坏情况递归查到Object.prototype === null
-  while(protoChain) {
-      // 两个对象指向同一个内存地址，则为同一个对象
-      if(protoChain === Lprototype) {
-        return true;
-      }
-      protoChain = Object.getPrototypeOf(protoChain);
-  }
-  // 找到终点还没找到，那就没有了呗
-  return false;
-}
-```
+[instanceof](/interview/frontend-shred-code#21-手撕-instanceof) 判断:（true or false）
 
 `instanceof` 运算符用于检测构造函数的 `prototype` 属性是否出现在某个实例对象的原型链上
 
@@ -201,6 +143,9 @@ let car = new String('xxx');
 car instanceof String; // true
 let str = 'xxx';
 str instanceof String; // false
+let reg = new RegExp();
+reg instanceof RegExp; // true
+reg instanceof Object; // true new 操作符的过程
 ```
 
 通用`Object.prototype.toString`判断：
@@ -221,19 +166,7 @@ Object.prototype.toString.call(document); //"[object HTMLDocument]"
 Object.prototype.toString.call(window); //"[object Window]"
 ```
 
-面试手撕：
-
-```js
-function getType(obj) {
-  let type = typeof obj;
-  if (type !== 'object') {
-    // 先进行typeof判断，如果是基础数据类型，直接返回
-    return type;
-  }
-  // 对于typeof返回结果是object的，再进行如下的判断，正则返回结果
-  return Object.prototype.toString.call(obj).replace(/^\[object (\S+)\]$/, '$1');
-}
-```
+- 获得数据类型函数手撕：[数据类型手撕](/interview/frontend-shred-code#22-数据类型手撕)
 
 ### 1.3 数据类型转换机制
 
@@ -287,6 +220,8 @@ Number(Symbol())     //Uncaught TypeError: Cannot convert a Symbol value to a nu
 {}=={}      //false   因为比较的是地址
 {} + [] === 0               // true
 [] + {} === 0               // false，'[object Object]'
+0 == null           //false
+undefined == null      //true
 ```
 
 ### 1.4 包装类型
@@ -345,7 +280,7 @@ js 使用之后的区别：
 
 声明一个函数，并马上调用这个匿名函数就叫做立即执行函数；也可以说立即执行函数是一种语法，让你的函数在定义以后立即执行。
 
-### 2.1 用法
+### 3.1 用法
 
 ```javascript
 (function () {})(); //前面的括号包含着一个匿名函数，后面的括号调用此函数
@@ -355,28 +290,47 @@ js 使用之后的区别：
 
 立即执行函数，还有一些其他的写法（加一些小东西，不让解析成语句就可以）,比如下边：
 
-```
-(function () {alert("我是匿名函数")}())   //用括号把整个表达式包起来
-(function () {alert("我是匿名函数")})()  //用括号把函数包起来
-!function () {alert("我是匿名函数")}()  //求反，我们不在意值是多少，只想通过语法检查
-+function () {alert("我是匿名函数")}()
--function () {alert("我是匿名函数")}()
-~function () {alert("我是匿名函数")}()
-void function () {alert("我是匿名函数")}()
-new function () {alert("我是匿名函数")}()
+```js
+(function () {
+  alert('我是匿名函数');
+})()(
+  //用括号把整个表达式包起来
+  function () {
+    alert('我是匿名函数');
+  },
+)(); //用括号把函数包起来
+!(function () {
+  alert('我是匿名函数');
+})() + //求反，我们不在意值是多少，只想通过语法检查
+  (function () {
+    alert('我是匿名函数');
+  })() -
+  (function () {
+    alert('我是匿名函数');
+  })();
+~(function () {
+  alert('我是匿名函数');
+})();
+void (function () {
+  alert('我是匿名函数');
+})();
+new (function () {
+  alert('我是匿名函数');
+})();
 ```
 
-### 2.2 作用
+### 3.2 作用
 
 1. 不必为函数命名，避免了污染全局变量
-2. 立即执行函数内部形成了一个单独的作用域，可以封装一些外部无法读取的私有变量
+2. **立即执行函数内部形成了一个单独的作用域，可以封装一些外部无法读取的私有变量**
 3. 封装变量,可以返回一个在全局中需要的变量（用 return）。
 
-### 2.3 场景
+### 3.3 场景
 
 - 你的代码在页面加载完成之后，不得不执行一些设置工作，比如时间处理器，创建对象等等。
 - 所有的这些工作只需要执行一次，比如只需要显示一个时间。
 - 但是这些代码也需要一些临时的变量，但是初始化过程结束之后，就再也不会被用到，如果将这些变量作为全局变量，不是一个好的注意，我们可以用立即执行函数——去将我们所有的代码包裹在它的局部作用域中，不会让任何变量泄露成全局变量，
+- 在模块化之前采用此方式避免污染变量
 
 ---
 
@@ -409,66 +363,19 @@ console.log('1111', obj.get('a'));
 
 判断一个元素是否在可视区域，可用`offsetTop`和`scrollTop`
 
-```js
-//判断是否在可视区
-function isInViewPort(element) {
-  const viewWidth = window.innerWidth || document.documentElement.clientWidth;
-  const viewHeight = window.innerHeight || document.documentElement.clientHeight;
-  const { top, right, bottom, left } = element.getBoundingClientRect();
-
-  return top >= 0 && left >= 0 && right <= viewWidth && bottom <= viewHeight;
-}
-```
+[手撕懒加载](/interview/frontend-shred-code#32-懒加载)
 
 ### 4.2 防抖
 
-n 秒后在执行该事件，若在 n 秒内被重复触发，则重新计时
+n 秒后在执行该事件，若在 n 秒内被重复触发，则重新计时.
 
-```js
-function debounce(fn: any, delay: number) {
-  // 初次触发定时器为null，后面产生一份定时器并记下定时器id
-  let timer: any = null;
-  // 闭包使定时器id逃逸
-  return function () {
-    let args = arguments;
-    // 如果已有定时器id，则需要清除，重新开始延迟执行
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-
-    timer = setTimeout(() => {
-      fn.apply(this, args);
-      // 销毁定时器id，以便下次节流函数触发
-      timer = null;
-    }, delay);
-  };
-}
-```
+[手撕防抖](interview/frontend-shred-code#33-手撕防抖)
 
 ### 4.3 节流
 
 n 秒内只运行一次，若在 n 秒内重复触发，只有一次生效
 
-```js
-function throttle(fn: any, wait: number) {
-  let last: any;
-  return function () {
-    let now: any = Date.now();
-    // 初次执行
-    if (!last) {
-      fn.apply(this, arguments);
-      last = now;
-      return;
-    }
-    // 以后触发，需要判断是否到延迟
-    if (now - last >= wait) {
-      fn.apply(this, arguments);
-      last = now;
-    }
-  };
-}
-```
+[手撕节流](/interview/frontend-shred-code#34-手撕节流)
 
 ## 5、this 关键字
 
