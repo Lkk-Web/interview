@@ -117,6 +117,22 @@ Object.keys(require.cache).forEach(function (key) {
 
 注意，缓存是根据绝对路径识别模块的，如果同样的模块名，但是保存在不同的路径，require 命令还是会重新加载该模块。
 
+### 1.5 CMD 规范
+
+CMD（Common Module Definition）是国内大牛玉伯在开发 SeaJS 的时候提出来的，`属于 CommonJS 的一种规范`，根据浏览器的异步环境做了自己的实现。它和 AMD 很相似，尽量保持简单，并与 CommonJS 和 Node.js 的 Modules 规范保持了很大的兼容性。
+
+### 1.5.1 define 方法：定义模块
+
+在 CMD 中，一个模块就是一个文件，格式为：define( factory )；define 是一个全局函数，用来定义模块。
+
+defin.cmd 属性是一个空对象，可用来判定当前页面是否有 CMD 模块加载器，其用法跟 AMD 的 denfine.amd 相似，写法如下：
+
+```js
+if (typeof define === 'function' && define.cmd) {
+  // 有 Sea.js 等 CMD 模块加载器存在
+}
+```
+
 ## 2、洋葱圈模型
 
 在 `koa` 中，中间件被 `next()` 方法分成了两部分。`next()` 方法上面部分会先执行，下面部门会在后续中间件执行全部结束之后再执行。
