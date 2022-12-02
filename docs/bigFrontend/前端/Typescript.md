@@ -183,3 +183,145 @@ const someVar = Foo; //error:'someVar' is assigned a value but never used.
 > 我们并不能把一些如 interface 定义的内容当作变量使用。
 
 与此相似，一些用 var、let 声明的变量，也只能在变量`声明空间`使用，不能用作类型注解。
+
+## 三、模块
+
+选择上有 commonjs, amd, es modules, others，你可以根据不同的 module 选项来把 TypeScript 编译成不同的 JavaScript 模块类型,怎么书写 TypeScript 模块呢？
+
+1. AMD：不要使用它，它仅能在浏览器工作；
+2. SystemJS：这是一个好的实验，已经被 ES 模块替代；
+
+使用 `module: commonjs` 选项以及使用 `ES 模块语法导入、导出、编写模块`。
+
+一般使用：
+
+```ts
+// foo.ts
+type someType = {
+  foo: string;
+};
+
+export { someType }; //部分导出
+export * from './foo'; //整体导出
+
+// bar.ts
+import { someType } from './foo';
+let data: someType;
+```
+
+### 3.1 ESModule
+
+ES Module 是 ES6 之后官方推出的模块化规范，使得 js 可以原生支持模块化，目前大多在服务端 node.js 中使用 CommonJS 方案，在浏览器中使用 ES Module 方。在 ES Moudle 之前，浏览器中通常使用 AMD 或 CMD。本文简要介绍 ES Module 的语法规范
+
+1. 自动采用严格模式
+2. 每个 ESM 模块都是单独的私有作用域
+3. ESM 的 script 标签会延迟执行脚本，默认加上了 defer 属性
+4. ESM 是通过 CORS 这种跨域请求的方式 去请求外部 JS 模块的
+
+#### 3.1.1 import 规范
+
+- 使用 import 关键字导入一个变量或者是一个类型：
+
+```ts
+// bar.ts
+import { someVar, someType } from './foo';
+```
+
+- 通过重命名的方式导入变量或者类型：
+
+```ts
+// bar.ts
+import { someVar as aDifferentName } from './foo';
+```
+
+- 除了指定加载某个输出值，还可以使用整体加载，即用星号（\*）指定一个对象，所有输出值都加载在这个对象上面：
+
+```ts
+// bar.ts
+import * as foo from './foo';
+// 你可以使用 `foo.someVar` 和 `foo.someType` 以及其他任何从 `foo` 导出的变量或者类型
+```
+
+#### 3.1.2 export 规范
+
+- 使用 `export` 关键字导出一个变量或类型
+
+```ts
+// foo.ts
+export const someVar = 123;
+export type someType = {
+  foo: string;
+};
+// or
+
+type someType = {
+  type: string;
+};
+
+export { someType };
+```
+
+- 你也可以用重命名变量的方式导出：
+
+```ts
+// foo.ts
+const someVar = 123;
+export { someVar as aDifferentName };
+```
+
+- 从其他模块导入后整体导出：
+
+```ts
+export * from './foo';
+```
+
+#### 3.1.3 node 中使用
+
+在 Node 中使用 ESM 有两种方式：
+
+1. 在 package.json 中，增加 "type": "module" 配置；
+2. 在 .mjs 文件可以直接使用 import 和 export；
+
+- ES Module 中可以导入 CommonJS 模块导出的成员
+
+在 ES6 模块里可以很方便地使用 import 来引用一个 CommonJS 模块，因为在 ES6 模块里异步加载并非是必须的：
+
+```ts
+import { default as cjs } from 'cjs';
+
+// The following import statement is "syntax sugar" (equivalent but sweeter)
+// for `{ default as cjsSugar }` in the above import statement:
+import cjsSugar from 'cjs';
+
+console.log(cjs);
+console.log(cjs === cjsSugar);
+```
+
+- CommonJS 中不能导入 ES Modules 所定义的导出成员 这里发生了语法错误异常的问题
+
+由于 ES Modules 的加载、解析和执行都是异步的，而 `require()` 的过程是同步的、所以不能通过 `require()` 来引用一个 ES6 模块。
+
+ES6 提议的 import() 函数将会返回一个 Promise，它在 ES Modules 加载后标记完成。借助于此，我们可以在 CommonJS 中使用异步的方式导入 ES Modules：
+
+```ts
+// 使用 then() 来进行模块导入后的操作
+import(“es6-modules.mjs”).then((module)=>{/*…*/}).catch((err)=>{/**…*/})
+// 或者使用 async 函数
+(async () => {
+  await import('./es6-modules.mjs');
+})();
+```
+
+#### 3.1.4 与 Commonjs 规范的区别
+
+`Commonjs`简言之，每个模块都有自己的函数包装器， Node 通过此种方式确保模块内的代码对它是私有的。
+
+在包装器执行之前，模块内的导出内容是不确定的。除此之外，第一次加载的模块会被缓存到 Module.\_cache 中。
+
+在 ESM 中，import 语句用于在解析代码时导入模块依赖的静态链接。文件的依赖关系在`编译阶段`就确定了。对于 ESM，模块的加载大致分为三步：
+
+```java
+Construction (解析) -> Instantiation (实例化、建立链接) -> Evaluation (执行)
+```
+
+这些步骤是异步执行的，每一步都可以看作是相互独立的。这一点跟 CommonJS 有很大不同，对于 CommonJS 来说，每一步都是同步进行的。
