@@ -693,3 +693,51 @@ require(['math'], function (math) {
 math.add()与 math 模块加载不是同步的，浏览器不会发生假死。所以很显然，AMD 比较适合浏览器环境。
 
 目前，主要有两个 Javascript 库实现了 AMD 规范：`require.js`和 `curl.js`。
+
+## 11、UMD 规范
+
+所谓 UMD (Universal Module Definition)，就是一种 javascript 通用模块定义规范，让你的模块能在 javascript` 所有运行环境中发挥作用`。
+
+实现一个 UMD 模块，就要考虑现有的主流 javascript 模块规范了，如 CommonJS, AMD, CMD 等。那么如何才能同时满足这几种规范呢？
+
+首先要想到，模块最终是要导出一个对象，函数，或者变量。而不同的模块规范，关于模块导出这部分的定义是完全不一样的。因此，我们需要一种过渡机制。
+
+### 11.1 实现 UMD
+
+首先，我们需要一个 factory，也就是工厂函数，它只负责返回你需要导出的内容（对象，函数，变量等）。
+
+我们把 factory 写成一个匿名函数，利用 IIFE（立即执行函数）去执行工厂函数，返回的对象赋值给 root.umdModule，这里的 root 就是指向全局对象 this，其值可能是 window 或者 global，视运行环境而定。
+
+```js
+(function (root, factory) {
+  console.log('没有模块环境，直接挂载在全局对象上');
+  root.umdModule = factory();
+})(this, function () {
+  return {
+    name: '我是一个umd模块',
+  };
+});
+```
+
+再进一步，兼容 AMD 规范
+
+要兼容 AMD 也简单，判断一下环境，是否满足 AMD 规范。如果满足，则使用 require.js 提供的 define 函数定义模块。
+
+```js
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // 如果环境中有define函数，并且define函数具备amd属性，则可以判断当前环境满足AMD规范
+    console.log('是AMD模块规范，如require.js');
+    define(factory);
+  } else {
+    console.log('没有模块环境，直接挂载在全局对象上');
+    root.umdModule = factory();
+  }
+})(this, function () {
+  return {
+    name: '我是一个umd模块',
+  };
+});
+```
+
+可以看到，原则是调用者先加载，所依赖的模块后加载。
