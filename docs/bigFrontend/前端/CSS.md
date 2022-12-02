@@ -215,6 +215,18 @@ html {
 }
 ```
 
+### 4.8 如何让图标随着鼠标移动
+
+```js
+var pic = document.querySelector('img');
+document.addEventListener('mousemove',function(e){
+// 核心原理  每次鼠标移动的最新坐标赋值给图片的top 和left 来移动图片
+var x = e.pageX;
+var y = e.pageY;
+pic.style.top = y + 'px';  // 图片的位置一定要用数字+px来表示
+pic.style.left = x + 'px';
+```
+
 ## 5.CSS3 新特性
 
 CSS3 的新特征有：1、圆角效果；2、图形化边界；3、块阴影与文字阴影；4、使用 RGBA 实现透明效果；5、渐变效果；6、使用“@Font-Face”实现定制字体；7、多背景图；8、文字或图像的变形处理；9、多栏布局；10、媒体查询等。
