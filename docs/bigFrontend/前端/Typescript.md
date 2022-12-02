@@ -85,3 +85,101 @@ declare module 'foo' {
 global.d.ts 是一种扩充 lib.d.ts 很好的方式，如果你需要的话。
 
 当你从 JS 迁移到 TS 时，定义 declare module "some-library-you-dont-care-to-get-defs-for" 能让你快速开始。
+
+## 二、声明空间
+
+在 TypeScript 里存在两种声明空间：`类型声明空间`与`变量声明空间`。
+
+### 2.1 类型声明空间
+
+类型声明空间包含用来当做类型注解的内容，例如下面的类型声明：
+
+```ts
+//作为类型注解使用
+class Foo {}
+interface Bar {}
+type Bas = {};
+enum Car = {}
+
+let foo: Foo;
+let bar: Bar;
+let bas: Bas;
+let car: Car;
+```
+
+注意，尽管你定义了 interface Bar，却并不能够把它作为一个变量来使用，因为它没有定义在变量声明空间中。
+
+#### 2.1.1 Required, Partial, Readonly, Pick
+
+- Required
+
+将类型属性都变成必填。
+
+```ts
+type Coord = Required<{ x: number; y?: number }>;
+
+// 等同于
+type Coord = {
+  x: number;
+  y: number;
+};
+```
+
+- Partial
+
+将类型定义的所有属性都修改为可选。
+
+```ts
+type Coord = Partial<Record<'x' | 'y', number>>;
+
+// 等同于
+type Coord = {
+  x?: number;
+  y?: number;
+};
+```
+
+- Readonly
+
+不管是从字面意思，还是定义上都很好理解：将所有属性定义为只读
+
+```ts
+type Coord = Readonly<Record<'x' | 'y', number>>;
+
+// 等同于
+type Coord = {
+  readonly x: number;
+  readonly y: number;
+};
+
+// 如果进行了修改，则会报错：
+const c: Coord = { x: 1, y: 1 };
+c.x = 2; // Error: Cannot assign to 'x' because it is a read-only property.
+```
+
+- Pick
+
+从类型定义的属性中，选取指定一组属性，返回一个新的类型定义。
+
+```ts
+type Coord = Record<'x' | 'y', number>;
+type CoordX = Pick<Coord, 'x'>;
+
+// 等用于
+type CoordX = {
+  x: number;
+};
+```
+
+### 2.2 变量声明空间
+
+变量声明空间包含可用作变量的内容，在上文中 Class Foo 提供了一个类型 Foo 到类型声明空间，此外它同样提供了一个变量 Foo 到变量声明空间，如下所示：
+
+```ts
+class Foo {}
+const someVar = Foo; //error:'someVar' is assigned a value but never used.
+```
+
+> 我们并不能把一些如 interface 定义的内容当作变量使用。
+
+与此相似，一些用 var、let 声明的变量，也只能在变量`声明空间`使用，不能用作类型注解。
