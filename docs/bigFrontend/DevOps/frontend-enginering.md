@@ -44,7 +44,7 @@ order: 1
 所以，模块化已经是 JavaScript 一个非常迫切的需求：
 
 - 但是 JavaScript 本身，直到 ES6（2015）才推出了自己的模块化方案；
-- 在此之前，为了让 JavaScript 支持模块化，涌现出了很多不同的模块化规范：AMD、CMD、[CommonJS](/big-frontend/后端/node)、ESModule 等；
+- 在此之前，为了让 JavaScript 支持模块化，涌现出了很多不同的模块化规范：[AMD](/big-frontend/前端/javascript#10amd-规范)、[CMD](/big-frontend/后端/node#15-cmd-规范)、[CommonJS](/big-frontend/后端/node)、[ESModule](/big-frontend/前端/typescript#31-esmodule)、[UMD](/big-frontend/前端/javascript#11umd-规范) 等；
 
 没有模块化带来的问题：
 
