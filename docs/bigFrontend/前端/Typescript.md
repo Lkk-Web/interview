@@ -458,3 +458,23 @@ declare let process: Process;
 ```ts
 process.exit();
 ```
+
+### 5.2 interface
+
+类可以实现接口,如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用 `implements` 关键字来确保其兼容性：
+
+基本上，在 implements（实现） 存在的情况下，该外部 Point 接口的任何更改都将导致代码库中的编译错误，因此可以轻松地使其保持同步：
+
+```ts
+interface Point {
+  x: number;
+  y: number;
+  z: number; // New member
+}
+
+class MyPoint implements Point {
+  x = 1;
+  y = 2;
+  // ERROR : missing member `z`
+}
+```
