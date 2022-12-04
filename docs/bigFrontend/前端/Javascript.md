@@ -365,6 +365,22 @@ console.log('1111', obj.get('a'));
 
 [手撕懒加载](/interview/frontend-shred-code#32-懒加载)
 
+webpack 实现：
+
+```ts
+import(/* webpackChunkName: "momentjs" */ 'moment')
+  .then((moment) => {
+    // 懒加载的模块拥有所有的类型，并且能够按期工作
+    // 类型检查会工作，代码引用也会工作  :100:
+    const time = moment().format();
+    console.log('TypeScript >= 2.4.0 Dynamic Import Expression:');
+    console.log(time);
+  })
+  .catch((err) => {
+    console.log('Failed to load moment', err);
+  });
+```
+
 ### 4.2 防抖
 
 n 秒后在执行该事件，若在 n 秒内被重复触发，则重新计时.
