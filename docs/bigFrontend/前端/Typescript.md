@@ -434,3 +434,27 @@ type CoordX = {
   x: number;
 };
 ```
+
+## 五、环境声明
+
+### 5.1 declare
+
+你可以通过 declare 关键字来告诉 TypeScript，你正在试图表述一个其他地方已经存在的代码，如：写在 JavaScript、CoffeeScript 或者是像浏览器和 Node.js 运行环境里的代码：
+
+当你想告诉 TypeScript 编辑器关于 process 变量时，你可以这么做：
+
+```ts
+interface Process {
+  exit(code?: number): void;
+}
+
+declare let process: Process;
+```
+
+你并不需要为 process 做这些，因为这已经存在于社区维护的 node.d.ts
+
+这允许你使用 process，并能成功通过 TypeScript 的编译：
+
+```ts
+process.exit();
+```
