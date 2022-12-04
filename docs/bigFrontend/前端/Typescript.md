@@ -109,68 +109,6 @@ let car: Car;
 
 注意，尽管你定义了 interface Bar，却并不能够把它作为一个变量来使用，因为它没有定义在变量声明空间中。
 
-#### 2.1.1 Required, Partial, Readonly, Pick
-
-- Required
-
-将类型属性都变成必填。
-
-```ts
-type Coord = Required<{ x: number; y?: number }>;
-
-// 等同于
-type Coord = {
-  x: number;
-  y: number;
-};
-```
-
-- Partial
-
-将类型定义的所有属性都修改为可选。
-
-```ts
-type Coord = Partial<Record<'x' | 'y', number>>;
-
-// 等同于
-type Coord = {
-  x?: number;
-  y?: number;
-};
-```
-
-- Readonly
-
-不管是从字面意思，还是定义上都很好理解：将所有属性定义为只读
-
-```ts
-type Coord = Readonly<Record<'x' | 'y', number>>;
-
-// 等同于
-type Coord = {
-  readonly x: number;
-  readonly y: number;
-};
-
-// 如果进行了修改，则会报错：
-const c: Coord = { x: 1, y: 1 };
-c.x = 2; // Error: Cannot assign to 'x' because it is a read-only property.
-```
-
-- Pick
-
-从类型定义的属性中，选取指定一组属性，返回一个新的类型定义。
-
-```ts
-type Coord = Record<'x' | 'y', number>;
-type CoordX = Pick<Coord, 'x'>;
-
-// 等用于
-type CoordX = {
-  x: number;
-};
-```
-
 ### 2.2 变量声明空间
 
 变量声明空间包含可用作变量的内容，在上文中 Class Foo 提供了一个类型 Foo 到类型声明空间，此外它同样提供了一个变量 Foo 到变量声明空间，如下所示：
@@ -325,3 +263,174 @@ Construction (解析) -> Instantiation (实例化、建立链接) -> Evaluation 
 ```
 
 这些步骤是异步执行的，每一步都可以看作是相互独立的。这一点跟 CommonJS 有很大不同，对于 CommonJS 来说，每一步都是同步进行的。
+
+## 四、注解
+
+- TypeScript 的类型系统被设计为可选的，因此，你的 JavaScript 就是 TypeScript;
+- TypeScript 不会阻止 JavaScript 的运行，即使存在类型错误也不例外，这能让你的 JavaScript 逐步迁移至 TypeScript。
+- 如果你需要使用类型注解的层次结构，请使用接口。它能使用 implements 和 extends
+
+### 4.1 基本注解
+
+如前文所提及，类型注解使用 `:TypeAnnotation` 语法。在类型声明空间中可用的任何内容都可以用作类型注解。
+
+- null 和 undefined
+
+在类型系统中，JavaScript 中的 `null` 和 `undefined` 字面量和标注了 any 类型的变量一样，都能被赋值给`任意类型`的变量
+
+```ts
+let power: any;
+let num: number;
+let str: string;
+let bool: boolean;
+let boolArray: boolean[];
+function identity(num: number): number {
+  return num;
+}
+const identify: number | void = (num: number | null | undefined) => num;
+```
+
+### 4.2 泛型
+
+许多算法和数据结构并不会依赖于对象的实际类型。但是，你仍然会想在每个变量里强制提供约束。例如：在一个函数中，它接受一个列表，并且返回这个列表的反向排序，这里的约束是指传入至函数的参数与函数的返回值
+
+```ts
+function reverse<T>(items: T[]): T[] {
+  const toreturn = [];
+  for (let i = items.length - 1; i >= 0; i--) {
+    toreturn.push(items[i]);
+  }
+  return toreturn;
+}
+
+const sample = [1, 2, 3];
+let reversed = reverse(sample); //reversed 获得类型安全
+
+console.log(reversed); // 3, 2, 1
+
+// Safety
+reversed[0] = '1'; // Error
+reversed = ['1', '2']; // Error
+
+reversed[0] = 1; // ok
+reversed = [1, 2]; // ok
+```
+
+事实上，JavaScript 数组已经拥有了 reverse 的方法，TypeScript 也确实使用了泛型来定义其结构：
+
+```ts
+interface Array<T> {
+  reverse(): T[];
+}
+```
+
+如上述例子，调用 reverse 方法后，reversed 数组将会获得 `number[]`的类型，因此再次赋值`string[]`会 Type Error。
+
+这意味着，当你在数组上调用 reverse 方法时，将会获得类型安全。
+
+#### 4.2.1 联合类型
+
+在 JavaScript 中，你可能希望属性为多种类型之一，如字符串或者数组。这正是 TypeScript 中联合类型能派上用场的地方（它使用 | 作为标记，如 string | number）。
+
+#### 4.2.2 交叉类型
+
+在 JavaScript 中， extend 是一种非常常见的模式，在这种模式中，**你可以从两个对象中创建一个新对象，新对象拥有着两个对象所有的功能**。交叉类型可以让你安全的使用此种模式：
+
+```ts
+function extend<T extends object, U extends object>(first: T, second: U): T & U {
+  const result = <T & U>{};
+  for (let id in first) {
+    (<T>result)[id] = first[id];
+  }
+  for (let id in second) {
+    if (!result.hasOwnProperty(id)) {
+      (<U>result)[id] = second[id];
+    }
+  }
+
+  return result;
+}
+
+const x = extend({ a: 'hello' }, { b: 42 });
+
+// 现在 x 拥有了 a 属性与 b 属性
+const a = x.a;
+const b = x.b;
+```
+
+#### 4.2.3 元组类型
+
+JavaScript 并不支持元组，开发者们通常只能使用数组来表示元组。而 TypeScript 支持它，开发者可以使用 :[typeofmember1, typeofmember2] 的形式，为元组添加类型注解，元组可以包含任意数量的成员，示例：
+
+```ts
+let nameNumber: [string, number];
+nameNumber = ['Jenny', 221345]; // Ok
+nameNumber = ['Jenny', '221345']; // Error
+
+// 将其与 TypeScript 中的解构一起使用：
+let nameNumber: [string, number];
+nameNumber = ['Jenny', 322134];
+const [name, num] = nameNumber;
+```
+
+### 4.3 Required, Partial, Readonly, Pick
+
+- Required
+
+将类型属性都变成必填。
+
+```ts
+type Coord = Required<{ x: number; y?: number }>;
+
+// 等同于
+type Coord = {
+  x: number;
+  y: number;
+};
+```
+
+- Partial
+
+将类型定义的所有属性都修改为可选。
+
+```ts
+type Coord = Partial<Record<'x' | 'y', number>>;
+
+// 等同于
+type Coord = {
+  x?: number;
+  y?: number;
+};
+```
+
+- Readonly
+
+不管是从字面意思，还是定义上都很好理解：将所有属性定义为只读
+
+```ts
+type Coord = Readonly<Record<'x' | 'y', number>>;
+
+// 等同于
+type Coord = {
+  readonly x: number;
+  readonly y: number;
+};
+
+// 如果进行了修改，则会报错：
+const c: Coord = { x: 1, y: 1 };
+c.x = 2; // Error: Cannot assign to 'x' because it is a read-only property.
+```
+
+- Pick
+
+从类型定义的属性中，选取指定一组属性，返回一个新的类型定义。
+
+```ts
+type Coord = Record<'x' | 'y', number>;
+type CoordX = Pick<Coord, 'x'>;
+
+// 等用于
+type CoordX = {
+  x: number;
+};
+```
