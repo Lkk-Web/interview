@@ -478,3 +478,39 @@ class MyPoint implements Point {
   // ERROR : missing member `z`
 }
 ```
+
+### 5.3 enum
+
+枚举是组织收集有关联变量的一种方式。
+
+#### 5.3.1 数字类型枚举与数字类型
+
+默认不赋值的情况下，数字类型枚举，允许我们将数字类型或者其他任何与数字类型兼容的类型赋值给枚举类型的实例。
+
+```ts
+enum Color {
+  Red,
+  Green,
+  Blue,
+}
+
+let col = Color.Red; // 将会被编译成 col = 0
+col = 0; // 有效的，这也是 Color.Red
+```
+
+#### 5.3.2 字符串枚举
+
+在上文中，我们只看到了数字类型的枚举，实际上，枚举类型的值，同时也可以是字符串类型。
+
+```ts
+export enum EvidenceTypeEnum {
+  UNKNOWN = '',
+  PASSPORT_VISA,
+  PASSPORT = 'passport',
+  SIGHTED_STUDENT_CARD = 'sighted_tertiary_edu_id',
+  SIGHTED_KEYPASS_CARD = 'sighted_keypass_card',
+  SIGHTED_PROOF_OF_AGE_CARD = 'sighted_proof_of_age_card',
+}
+```
+
+这些可以更容易被处理和调试，因为它们提供有意义/可调试的字符串。
