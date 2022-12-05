@@ -575,3 +575,122 @@ export enum EvidenceTypeEnum {
 ```
 
 这些可以更容易被处理和调试，因为它们提供有意义/可调试的字符串。
+
+### 5.4 type
+
+type 可以声明基本类型别名，联合类型，元组等类型
+
+```ts
+// 基本类型别名
+type Name = string;
+let name: Name = 'Lucy';
+```
+
+#### 函数重载
+
+TypeScript 允许你声明函数重载。这对于文档 + 类型安全来说很实用。
+
+```ts
+// 联合类型
+interface Dog {
+  wong();
+}
+interface Cat {
+  miao();
+}
+
+type Pet = Dog | Cat;
+
+// 具体定义数组每个位置的类型
+type PetList = [Dog, Pet];
+```
+
+## 六、异常处理
+
+JavaScript 有一个 Error 类，用于处理异常。你可以通过 throw 关键字来抛出一个错误。然后通过 try/catch 块来捕获此错误：
+
+```ts
+try {
+  throw new Error('Something bad happened');
+} catch (e) {
+  console.log(e);
+}
+```
+
+JavaScript 初学者可能有时候仅仅是抛出一个原始字符串：
+
+`不要这么做`，使用 Error 对象的基本好处是，它能自动跟踪堆栈的属性构建以及生成位置。
+
+原始字符串会导致极差的调试体验，并且在分析日志时，将会变得错综复杂。
+
+### 6.1 Never
+
+never 类型是 TypeScript 中的底层类型。它自然被分配的一些例子：
+
+- 一个从来不会有返回值的函数（如：如果函数内含有 while(true) {}）；
+- 一个总是会抛出错误的函数（如：function foo() { throw new Error('Not Implemented') }，foo 的返回类型是 never）；
+
+```ts
+let foo: never = 123; // Error: number 类型不能赋值给 never 类型
+
+// ok, 作为函数返回类型的 never
+let bar: never = (() => {
+  throw new Error('Throw my hands in the air like I just dont care');
+})();
+```
+
+> 与 void 的差异
+
+void 表示没有任何类型，never 表示永远不存在的值的类型。
+
+当一个函数返回空值时，它的返回值为 `void 类型`，但是，当一个函数永不返回时（或者总是抛出错误），它的返回值为 `never 类型`。void 类型可以被赋值（在 strictNullChecking 为 false 时），但是除了 never 本身以外，其他任何类型不能赋值给 never。
+
+### 6.2 错误子类型
+
+除内置的 Error 类外，还有一些额外的内置错误，它们继承自 Error 类：
+
+#### RangeError
+
+当数字类型变量或者参数超出其有效范围时，出现 RangeError 的错误提示：
+
+```ts
+// 使用过多参数调用 console
+console.log.apply(console, new Array(1000000000)); // RangeError: 数组长度无效
+```
+
+#### ReferenceError
+
+当引用无效时，会出现 ReferenceError 的错误提示：
+
+```ts
+'use strict';
+console.log(notValidVar); // ReferenceError: notValidVar 未定义
+```
+
+#### SyntaxError
+
+当解析无效 JavaScript 代码时，会出现 SyntaxError 的错误提示：
+
+```ts
+1 *** 3   // SyntaxError: 无效的标记 *
+```
+
+#### TypeError
+
+变量或者参数不是有效类型时，会出现 TypeError 的错误提示：
+
+```ts
+'1.2'.toPrecision(1); // TypeError: '1.2'.toPrecision 不是函数。
+```
+
+#### URIError
+
+当传入无效参数至 `encodeURI()` 和 `decodeURI()` 时，会出现 URIError 的错误提示：
+
+```ts
+decodeURI('%'); // URIError: URL 异常
+```
+
+## 七、 React tsx
+
+## 八、 源码分析
