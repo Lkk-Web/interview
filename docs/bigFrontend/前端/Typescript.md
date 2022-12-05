@@ -66,6 +66,36 @@ order: 4
 }
 ```
 
+`lib` 分类如下：
+
+- JavaScript 功能
+  - es5
+  - es6
+  - es2015
+  - es7
+  - es2016
+  - es2017
+  - esnext
+- 运行环境
+  - dom
+  - dom.iterable
+  - webworker
+  - scripthost
+- ESNext 功能选项
+  - es2015.core
+  - es2015.collection
+  - es2015.generator
+  - es2015.iterable
+  - es2015.promise
+  - es2015.proxy
+  - es2015.reflect
+  - es2015.symbol
+  - es2015.symbol.wellknown
+  - es2016.array.include
+  - es2017.object
+  - es2017.sharedmemory
+  - esnext.asynciterable
+
 ### 1.1 global.d.ts
 
 在上文中，当我们讨论文件模块时，比较了全局变量与文件模块，并且我们推荐使用基于文件的模块，而不是选择污染全局命名空间。
