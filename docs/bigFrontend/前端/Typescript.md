@@ -116,6 +116,37 @@ global.d.ts 是一种扩充 lib.d.ts 很好的方式，如果你需要的话。
 
 当你从 JS 迁移到 TS 时，定义 declare module "some-library-you-dont-care-to-get-defs-for" 能让你快速开始。
 
+### 1.2 lib.d.ts
+
+当你安装 TypeScript 时，会顺带安装一个 lib.d.ts 声明文件。这个文件包含 JavaScript 运行时以及 DOM 中存在各种常见的环境声明。
+
+- 它自动包含在 TypeScript 项目的编译上下文中；
+- 它能让你快速开始书写经过类型检查的 JavaScript 代码。
+
+你可以通过指定 --noLib 的编译器命令行标志（或者在 tsconfig.json 中指定选项 noLib: true）从上下文中排除此文件。
+
+> 看如下例子：
+
+```ts
+const foo = 123;
+const bar = foo.toString();
+```
+
+这段代码的类型检查正常，因为 lib.d.ts 为所有 `JavaScript 对象`定义了 toString 方法。
+
+如果你在 noLib 选项下，使用相同的代码，这将会出现类型检查错误：
+
+```ts
+const foo = 123;
+const bar = foo.toString(); // Error: 属性 toString 不存在类型 number 上
+```
+
+> 使用你自己定义的 lib.d.ts
+
+正如上文所说，使用 --noLib 编译选项会导致 TypeScript 排除自动包含的 lib.d.ts 文件。为什么这个功能是有效的，我例举了一些常见原因：
+
+运行的 JavaScript 环境与基于标准浏览器运行时环境有很大不同；你希望在代码里严格的控制全局变量，例如：lib.d.ts 将 item 定义为全局变量，你不希望它泄漏到你的代码里。一旦你排除了默认的 lib.d.ts 文件，你就可以在编译上下文中包含一个命名相似的文件，TypeScript 将提取该文件进行类型检查。
+
 ## 二、声明空间
 
 在 TypeScript 里存在两种声明空间：`类型声明空间`与`变量声明空间`。
