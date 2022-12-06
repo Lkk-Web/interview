@@ -1,6 +1,5 @@
 ---
 order: 2
-toc: menu
 ---
 
 # 搜索

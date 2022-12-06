@@ -1,6 +1,5 @@
 ---
 order: 5
-# toc: menu
 ---
 
 # 数论

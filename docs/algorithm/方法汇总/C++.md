@@ -1,6 +1,5 @@
 ---
 order: 8
-toc: menu
 ---
 
 # C++ 常用语法
@@ -36,7 +35,7 @@ str.atoi("123".c_str())     //c_str()把C++字符串转换为C字符串，然后
 
 - c_str() 放回字符数组的头指针
 
-### queue,
+### queue
 
 - push(),队尾插入
 

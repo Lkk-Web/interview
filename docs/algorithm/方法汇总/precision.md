@@ -1,6 +1,5 @@
 ---
 order: 3
-toc: menu
 ---
 
 # 高精度
