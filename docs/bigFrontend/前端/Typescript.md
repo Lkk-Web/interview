@@ -349,6 +349,8 @@ function identity(num: number): number {
   return num;
 }
 const identify: number | void = (num: number | null | undefined) => num;
+// 函数可选参数
+const foo: number = (num: number, type?: string) => num;
 ```
 
 ### 4.2 泛型
@@ -388,6 +390,17 @@ interface Array<T> {
 如上述例子，调用 reverse 方法后，reversed 数组将会获得 `number[]`的类型，因此再次赋值`string[]`会 Type Error。
 
 这意味着，当你在数组上调用 reverse 方法时，将会获得类型安全。
+
+> 误用泛型：
+
+我见过开发者使用泛型仅仅是为了它的 hack。当你使用它时，你应该问问自己：**你想用它来提供什么样的约束。如果你不能很好的回答它，你可能会误用泛型**，如：
+
+```ts
+declare function foo<T>(arg: T): void;
+//在这里，泛型完全没有必要使用，因为它仅用于单个参数的位置，使用如下方式可能更好：
+
+declare function foo(arg: any): void;
+```
 
 #### 4.2.1 联合类型
 
@@ -436,7 +449,7 @@ const [name, num] = nameNumber;
 
 ### 4.3 Required, Partial, Readonly, Pick
 
-- Required
+#### Required
 
 将类型属性都变成必填。
 
@@ -450,7 +463,7 @@ type Coord = {
 };
 ```
 
-- Partial
+#### Partial
 
 将类型定义的所有属性都修改为可选。
 
@@ -464,7 +477,7 @@ type Coord = {
 };
 ```
 
-- Readonly
+#### Readonly
 
 不管是从字面意思，还是定义上都很好理解：将所有属性定义为只读
 
@@ -482,7 +495,19 @@ const c: Coord = { x: 1, y: 1 };
 c.x = 2; // Error: Cannot assign to 'x' because it is a read-only property.
 ```
 
-- Pick
+与 const 的不同：
+
+`const`
+
+- 用于变量；
+- 变量不能重新赋值给其他任何事物。
+
+`readonly`
+
+- 用于属性；
+- 用于别名，可以修改属性；
+
+#### Pick
 
 从类型定义的属性中，选取指定一组属性，返回一个新的类型定义。
 
@@ -496,7 +521,52 @@ type CoordX = {
 };
 ```
 
+### 4.4 类型断言
+
+TypeScript 允许你覆盖它的推断，并且能以你任何你想要的方式分析它，这种机制被称为「类型断言」。
+
+类型断言用来告诉编译器你比它更了解这个类型，并且它不应该再发出错误。
+
+foo 的类型推断为 {}，即没有属性的对象。因此，你不能在它的属性上添加 bar 或 bas，你可以通过类型断言来避免此问题：
+
+```ts
+interface Foo {
+  bar: number;
+  bas: string;
+}
+
+const foo = {} as Foo; // 为了防止Error: 'bar' 属性不存在于 ‘{}’
+foo.bar = 123;
+foo.bas = 'hello';
+```
+
+- 双重断言
+
+下例子中的代码将会报错，尽管使用者已经使用了类型断言：
+
+```ts
+function handler(event: Event) {
+  const element = event as HTMLElement; // Error: 'Event' 和 'HTMLElement' 中的任何一个都不能赋值给另外一个
+}
+```
+
+如果你仍然想使用那个类型，你可以使用双重断言。首先断言成兼容所有类型的 any，编译器将不会报错：
+
+```ts
+function handler(event: Event) {
+  const element = event as any as HTMLElement; // ok
+}
+```
+
 ## 五、环境声明
+
+> interface，enum，type 的区别
+
+Interface: 使用`Interface`来定义对象的类型.在面向对象语言中，接口（Interfaces）是一个很重要的概念，它是对行为的抽象，而具体如何行动需要由类（classes）去实现（implement）。
+
+Type:类型别名用来给一个类型起个新名字。或者字符串字面量类型用来约束取值只能是某几个字符串中的一个。所以`type`常用于`联合类型`。
+
+Enum:枚举（Enum）类型用于取值被限定在一定范围内的场景。枚举成员会被赋值为从 0 开始递增的数字，同时也会对枚举值到枚举名进行反向映射。
 
 ### 5.1 declare
 
@@ -538,6 +608,18 @@ class MyPoint implements Point {
   y = 2;
   // ERROR : missing member `z`
 }
+```
+
+- 可实例化可实例化仅仅是可调用的一种特殊情况，它使用 `new` 作为前缀。它意味着你需要使用 new 关键字去调用它：
+
+```ts
+interface CallMeWithNewToGetString {
+  new (): string;
+}
+
+// 使用
+declare const Foo: CallMeWithNewToGetString;
+const bar = new Foo(); // bar 被推断为 string 类型
 ```
 
 ### 5.3 enum
