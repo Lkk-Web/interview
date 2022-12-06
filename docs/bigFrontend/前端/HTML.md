@@ -51,7 +51,7 @@ svg：可伸缩矢量图形
 
 `defer`要等到整个页面在内存中正常渲染结束（DOM 结构完全生成，以及其他脚本执行完成），才会`执行`；
 
-HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一个延迟脚本会先于第二个延迟脚本执行，而这两个脚本会先于`DOMContentLoaded`事件执行。**在现实当中**，延迟脚本并不一定会按照顺序执行，也不一定会在`DOMContentLoad`时间触发前执行，因此最好只包含一个延迟脚本。
+HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一个延迟脚本会先于第二个延迟脚本执行，而这两个脚本会先于[DOMContentLoaded](/big-frontend/前端/html#111-domcontentloaded)事件执行。**在现实当中**，延迟脚本并不一定会按照顺序执行，也不一定会在`DOMContentLoad`时间触发前执行，因此最好只包含一个延迟脚本。
 
 #### 4.2.2 async
 
@@ -497,3 +497,207 @@ HTML 4.01 中的 doctype 需要对 DTD 进行引用，因为 HTML 4.01 基于 SG
 - 标准模式下，overflow 取值默认值为 visible；
 
 - 在怪异模式下，这个溢出会被当做扩展 box 对待，就是元素的大小由内容决定，溢出不会裁剪，元素框自动调整，包含溢出内容；
+
+## 11.页面生命周期
+
+HTML 页面的生命周期包含三个重要事件：
+
+1. DOMContentLoaded —— 浏览器已完全加载 HTML，并构建了 DOM 树，但像 `<img>` 和样式表之类的外部资源可能尚未加载完成。
+2. load —— 浏览器不仅加载完成了 HTML，还加载完成了所有外部资源：图片，样式等。
+3. beforeunload/unload —— 当用户正在离开页面时。
+
+### 11.1 DOMContentLoaded
+
+DOMContentLoaded 事件发生在 `document` 对象上。
+
+我们必须使用 `addEventListener` 来捕获它：
+
+在示例中，DOMContentLoaded 处理程序在文档加载完成后触发，所以它可以查看所有元素，包括它下面的 `<img>`元素。
+
+但是，它不会等待图片加载。因此，alert 显示其大小为零。
+
+```html
+<script>
+  function ready() {
+    alert('DOM is ready');
+    // 图片目前尚未加载完成（除非已经被缓存），所以图片的大小为 0x0
+    alert(`Image size: ${img.offsetWidth}x${img.offsetHeight}`);
+  }
+  document.addEventListener('DOMContentLoaded', ready);
+</script>
+
+<img id="img" src="https://domload" />
+```
+
+#### 11.1.1 DOMContentLoaded 和脚本
+
+当浏览器处理一个 HTML 文档，并在文档中遇到 `<script>`标签时，就会在继续构建 DOM 之前运行它。这是一种防范措施，因为脚本可能想要修改 DOM，甚至对其执行 `document.write` 操作，所以 DOMContentLoaded 必须等待脚本执行结束。
+
+- 不会阻塞 DOMContentLoaded 的脚本此规则：
+
+  1. 具有 async 特性（attribute）的脚本不会阻塞 DOMContentLoaded。
+  2. 使用 document.createElement('script') 动态生成并添加到网页的脚本也不会阻塞 DOMContentLoaded。
+
+#### 11.1.2 DOMContentLoaded 和样式
+
+外部样式表不会影响 DOM，因此 DOMContentLoaded 不会等待它们。
+
+但这里有一个陷阱。如果在样式后面有一个脚本，那么**该脚本必须等待样式表加载完成**：
+
+```html
+<link type="text/css" rel="stylesheet" href="style.css" />
+<script>
+  // 在样式表加载完成之前，脚本都不会执行
+  alert(getComputedStyle(document.body).marginTop);
+</script>
+```
+
+原因是，脚本可能想要获取元素的坐标和其他与样式相关的属性，如上例所示。因此，它必须等待样式加载完成。
+
+当 DOMContentLoaded 等待脚本时，它现在也在等待脚本前面的样式。
+
+#### 11.1.3 浏览器内建的自动填充
+
+Firefox，Chrome 和 Opera 都会在 DOMContentLoaded 中自动填充表单。
+
+例如，如果页面有一个带有登录名和密码的表单，并且浏览器记住了这些值，那么在 DOMContentLoaded 上，浏览器会尝试自动填充它们（如果得到了用户允许）。
+
+因此，如果 DOMContentLoaded 被需要加载很长时间的脚本延迟触发，那么自动填充也会等待。你可能在某些网站上看到过（如果你使用浏览器自动填充）—— 登录名/密码字段不会立即自动填充，而是在页面被`完全加载前`会延迟填充。这实际上是 DOMContentLoaded 事件之前的延迟。
+
+### 11.2 window.onload
+
+当整个页面，包括样式、图片和其他资源被加载完成时，会触发 window 对象上的 load 事件。可以通过 onload 属性获取此事件。
+
+下面的这个示例正确显示了图片大小，因为 `window.onload` 会等待所有图片加载完毕：
+
+```html
+<script>
+  window.onload = function () {
+    // 也可以用 window.addEventListener('load', (event) => {
+    alert('Page loaded');
+    // 此时图片已经加载完成
+    alert(`Image size: ${img.offsetWidth}x${img.offsetHeight}`);
+  };
+</script>
+
+<img id="img" src="https://pageload" />
+```
+
+### 11.3 window.onunload
+
+当访问者离开页面时，window 对象上的 `unload` 事件就会被触发。我们可以在那里做一些不涉及延迟的操作，例如关闭相关的弹出窗口。
+
+有一个值得注意的特殊情况是发送分析数据。
+
+假设我们收集有关页面使用情况的数据：鼠标点击，滚动，被查看的页面区域等。
+
+由于是 `xhr` 请求是异步发送，很可能在它即将发送的时候，页面已经卸载了。自然地，当用户要离开的时候，我们希望通过 `unload` 事件将数据保存到我们的服务器上。
+
+有一个特殊的 `navigator.sendBeacon(url, data)` 方法可以满足这种需求，详见规范 https://w3c.github.io/beacon/。
+
+它在后台发送数据，转换到另外一个页面不会有延迟：浏览器离开页面，但仍然在执行 sendBeacon。
+
+使用方式如下：
+
+```ts
+let analyticsData = {
+  /* 带有收集的数据的对象 */
+};
+
+window.addEventListener('unload', function () {
+  navigator.sendBeacon('/analytics', JSON.stringify(analyticsData));
+});
+```
+
+- 请求以 `POST` 方式发送。
+- 我们不仅能发送字符串，还能发送表单以及其他格式的数据，在 Fetch 一章有详细讲解，但通常它是一个字符串化的对象。一般会用到 `DOMString` , `Blob` 和 `Formdata` 这三种对象作为数据发送到后端
+- 数据大小限制在 64kb。
+
+当 sendBeacon 请求完成时，浏览器可能已经离开了文档，所以就无法获取服务器响应（对于分析数据来说通常为空）。
+
+还有一个 keep-alive 标志，该标志用于在 fetch 方法中为通用的网络请求执行此类“离开页面后”的请求。你可以在 Fetch API 一章中找到更多相关信息。
+
+如果我们要取消跳转到另一页面的操作，在这里做不到。但是我们可以使用另一个事件 —— onbeforeunload。
+
+### 11.4 window.onbeforeunload
+
+如果访问者触发了离开页面的导航（navigation）或试图关闭窗口，beforeunload 处理程序将要求进行更多确认。
+
+如果我们要取消事件，浏览器会询问用户是否确定。
+
+你可以通过运行下面这段代码，然后重新加载页面来进行尝试：
+
+```ts
+window.onbeforeunload = function () {
+  return '有未保存的值。确认要离开吗？';
+};
+```
+
+### 11.5 readyState
+
+如果我们在文档加载完成之后设置 `DOMContentLoaded` 事件处理程序，会发生什么？
+
+很自然地，它永远不会运行。
+
+在某些情况下，我们不确定文档是否已经准备就绪。我们希望我们的函数在 DOM 加载完成时执行。
+
+document.readyState 属性可以为我们提供当前加载状态的信息。
+
+它有 3 个可能值：
+
+- loading —— 文档正在被加载。
+- interactive —— 文档被全部读取。
+- complete —— 文档被全部读取，并且所有资源（例如图片等）都已加载完成。
+
+所以，我们可以检查 document.readyState 并设置一个处理程序，或在代码准备就绪时立即执行它。
+
+```ts
+function work() {
+  /*...*/
+}
+
+if (document.readyState == 'loading') {
+  // 仍在加载，处理事件
+  document.addEventListener('DOMContentLoaded', work);
+} else {
+  // DOM 已就绪！
+  work();
+}
+```
+
+还有一个 `readystatechange` 事件，会在状态发生改变时触发,它是跟踪文档加载状态的另一种机制，它很早就存在了。现在则很少被使用。
+
+但是为了完整起见，让我们看看完整的事件流。
+
+```html
+<script>
+  console.log('initial readyState:', document.readyState);
+  document.addEventListener('readystatechange', () =>
+    console.log('readyState:', document.readyState),
+  );
+  document.addEventListener('DOMContentLoaded', () => console.log('DOMContentLoaded'));
+  window.onload = () => console.log('window onload');
+</script>
+
+<iframe src="" onload="console.log('iframe onload')"></iframe>
+
+<img src="http://en.js.cx/clipart/train.gif" id="img" />
+<script>
+  img.onload = () => console.log('img onload');
+</script>
+<!-- 
+[1]initial readyState: loading
+[2]iframe onload
+[2]img onload
+[3]readyState: interactive
+[4]DOMContentLoaded
+[4]readyState: complete
+[4]window onload
+-->
+```
+
+方括号中的数字表示发生这种情况的大致时间。标有相同数字的事件几乎是同时发生的（± 几毫秒）。
+
+- 在 `DOMContentLoaded` 之前，document.readyState 会立即变成 `interactive`。它们俩的意义实际上是相同的。
+- 当所有资源（iframe 和 img）都加载完成后，document.readyState 变成 complete。这里我们可以发现，它与 img.onload（img 是最后一个资源）和 window.onload 几乎同时发生。
+- 转换到 complete 状态的意义与 window.onload 相同。区别在于 window.onload 始终在所有其他 load 处理程序之后运行。
