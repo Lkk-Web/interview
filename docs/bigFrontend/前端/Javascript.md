@@ -393,6 +393,43 @@ n 秒内只运行一次，若在 n 秒内重复触发，只有一次生效
 
 [手撕节流](/interview/frontend-shred-code#34-手撕节流)
 
+### 4.4 预加载
+
+前端预加载，即提前加载后续需要的内容 (`preload and prefetch`)、提前解析域名（`DNS Pretech & Preconnect`）、预先渲染要加载的页面(`prerender`)，这样在后续实际需要加载对应的内容时，有更快的加载速度。举个例子，在抖音 Web 端、阿里云控制台页面等，都能看到很多 rel 属性为 dns-prefetch 的 link 标签。
+
+#### 4.4.1 图片预加载
+
+通常，图片在被创建时才会被加载。所以，当我们向页面中添加 `<img>` 时，用户不会立即看到图片。浏览器首先需要加载它。
+
+浏览器开始加载图片，并将其保存到缓存中。以后，当相同图片出现在文档中时（无论怎样），它都会立即显示。
+
+创建一个函数 preloadImages(sources, callback)，来加载来自数组 source 的所有图片，并在准备就绪时运行 callback。
+
+```ts
+function preloadImages(sources, callback) {
+  /* your code */
+  alert('resource loaded done');
+}
+
+let sources = [
+  'https://en.js.cx/images-load/1.jpg',
+  'https://en.js.cx/images-load/2.jpg',
+  'https://en.js.cx/images-load/3.jpg',
+];
+for (let i = 0; i < sources.length; i++) {
+  sources[i] += '?' + Math.random(); // add random characters to prevent browser caching
+}
+function testLoaded() {
+  let widthSum = 0;
+  for (let i = 0; i < sources.length; i++) {
+    let img = document.createElement('img');
+    img.src = sources[i];
+    widthSum += img.width;
+  }
+}
+preloadImages(sources, testLoaded);
+```
+
 ## 5、this 关键字
 
 1. 在方法中，this 表示该方法所属的对象。
