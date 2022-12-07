@@ -713,3 +713,66 @@ if (document.readyState == 'loading') {
 - 在 `DOMContentLoaded` 之前，document.readyState 会立即变成 `interactive`。它们俩的意义实际上是相同的。
 - 当所有资源（iframe 和 img）都加载完成后，document.readyState 变成 complete。这里我们可以发现，它与 img.onload（img 是最后一个资源）和 window.onload 几乎同时发生。
 - 转换到 complete 状态的意义与 window.onload 相同。区别在于 window.onload 始终在所有其他 load 处理程序之后运行。
+
+## 12.资源加载
+
+浏览器允许我们跟踪外部资源的加载 —— 脚本，iframe，图片等。
+
+[readystatechange](/big-frontend/前端/html#115-readystate) 事件也适用于资源，但很少被使用，因为 `load/error` 事件更简单
+
+这里有两个事件：
+
+- `onload` —— 成功加载，
+- `onerror` —— 出现 error。
+
+### 12.1 onload
+
+假设我们需要加载第三方脚本，并调用其中的函数。
+
+我们可以像这样动态加载它：
+
+```ts
+let script = document.createElement('script');
+script.src = 'my.js';
+document.head.append(script);
+```
+
+但如何运行该脚本中声明的函数？我们需要等到该脚本加载完成，之后才能调用它。
+
+```ts
+let script = document.createElement('script');
+
+// 可以从任意域（domain），加载任意脚本
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js';
+document.head.append(script);
+
+script.onload = function () {
+  // 该脚本创建了一个变量 "_"
+  alert(_.VERSION); // 显示库的版本
+};
+```
+
+如果加载失败怎么办？例如，这里没有这样的脚本（error 404）或者服务器宕机（不可用）。
+
+### 12.2 script.onerror
+
+发生在脚本加载期间的 error 会被 error 事件跟踪到。
+
+例如，我们请求一个不存在的脚本：
+
+```ts
+let script = document.createElement('script');
+script.src = 'https://example.com/404.js'; // 没有这个脚本
+document.head.append(script);
+
+script.onerror = function () {
+  alert('Error loading ' + this.src); // Error loading https://example.com/404.js
+};
+```
+
+请注意，在这里我们无法获取更多 HTTP error 的详细信息。我们不知道 error 是 404 还是 500 或者其他情况。只知道是加载失败了。
+
+onload/onerror 事件仅跟踪加载本身。在脚本处理和执行期间可能发生的 error 超出了这些事件跟踪的范围。也就是说：如果脚本成功加载，则即使脚本中有编程 error，也会触发 `onload` 事件。如果要跟踪脚本 error，可以使用 `window.onerror` 全局处理程序。
+
+- 大多数资源在被添加到文档中后，便开始加载。但是 `<img>` 是个例外。它要等到获得 src (\*) 后才开始加载。
+- 对于 `<iframe>` 来说，iframe 加载完成时会触发 iframe.onload 事件，无论是成功加载还是出现 error。
