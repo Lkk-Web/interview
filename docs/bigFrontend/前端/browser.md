@@ -805,6 +805,216 @@ sessionStorage.getItem('name');
 
 ### 7.2 cookie
 
-### 7.3 sessionStorage；
+Cookie 是直接存储在浏览器中的一小串数据。它们是 HTTP 协议的一部分，由 RFC 6265 规范定义。
 
-### 7.4 IndexDB
+Cookie 通常是由 Web 服务器使用响应 `Set-Cookie HTTP-header` 设置的。然后浏览器使用 Cookie HTTP-header 将它们自动添加到（几乎）每个对`相同域`的请求中。
+
+最常见的用处之一就是身份验证：
+
+登录后，服务器在响应中使用 Set-Cookie HTTP-header 来设置具有唯一“会话标识符（session identifier）”的 cookie。
+
+下次当请求被发送到同一个域时，浏览器会使用 Cookie HTTP-header 通过网络发送 cookie。所以服务器知道是谁发起了请求。
+
+#### 7.2.1 document.cookie
+
+我们还可以使用 `document.cookie` 属性从浏览器访问 cookie。
+
+我们可以通过 `document.cookie`来进行读写操作。但这不是一个数据属性，它是一个 访问器（getter/setter）。对其的赋值操作会被特殊处理。
+
+从技术上讲，cookie 的名称和值可以是任何字符。为了保持有效的格式，它们应该使用内建的 `encodeURIComponent` 函数对其进行转义
+
+```ts
+document.cookie = 'age=19;';
+// 特殊字符（空格），需要编码
+let name = 'user';
+let value = 'lkk 😊';
+// 只会更新名称为 user 的 cookie
+document.cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
+console.log(document.cookie);
+// age=19; user=lkk%20%F0%9F%98%8A
+```
+
+存在一些限制：
+
+- `encodeURIComponent` 编码后的 name=value 对，大小不能超过 4KB。因此，我们不能在一个 cookie 中保存大的东西。
+- 每个域的 cookie 总数不得超过 20+ 左右，具体限制取决于浏览器。
+
+Cookie 有几个选项，其中很多都很重要，应该设置它:
+
+```ts
+document.cookie = 'user=John; path=/; expires=Tue, 19 Jan 2038 03:14:07 GMT';
+```
+
+#### 7.2.2 path
+
+url 路径前缀**必须是绝对路径**。它使得**该路径下的页面可以访问该 cookie**。默认为当前路径。
+
+如果一个 cookie 带有 path=/admin 设置，那么该 cookie 在 /admin 和 /admin/something 下都是可见的，但是在 /home 或 /adminpage 下不可见。
+
+通常，我们应该将 path 设置为根目录：`path=/`，以使 cookie 对此网站的所有页面可见
+
+#### 7.2.3 domain
+
+domain 控制了可访问 cookie 的域。但是在实际中，有一些限制。我们无法设置任何域。
+
+无法从另一个域访问 cookie，因此 other.com 永远不会收到在 site.com 设置的 cookie。
+
+默认情况下，cookie 只有在设置的域下才能被访问到。
+
+```ts
+// 在 site.com
+// 使 cookie 可以被在任何子域 *.site.com 访问：
+document.cookie = 'user=John; domain=site.com';
+
+// 在 forum.site.com
+alert(document.cookie); // 有 cookie user=John
+```
+
+#### 7.2.4 expires，max-age
+
+默认情况下，如果一个 cookie 没有设置这两个参数（expires，max-age）中的任何一个，那么在关闭浏览器之后，它就会消失。此类 cookie 被称为 "session cookie”。
+
+cookie 的过期时间定义了浏览器会自动清除该 cookie 的时间。
+
+日期必须完全采用 GMT 时区的这种格式。我们可以使用 `date.toUTCString` 来获取它。例如，我们可以将 cookie 设置为 1 天后过期。
+
+```ts
+// 当前时间 +1 天
+let date = new Date(Date.now() + 86400e3);
+date = date.toUTCString();
+document.cookie = 'user=John; expires=' + date;
+```
+
+> 注：如果我们将 expires 设置为过去的时间，则 cookie 会被删除。
+
+#### 7.2.5 secure
+
+Cookie 应只能被通过 HTTPS 传输。
+
+默认情况下，如果我们在 `http://site.com` 上设置了 cookie，那么该 cookie 也会出现在 `https://site.com` 上，反之亦然。
+
+也就是说，`cookie 是基于域的，它们不区分协议`。
+
+使用此选项，如果一个 cookie 是通过 https://site.com 设置的，那么它不会在相同域的 HTTP 环境下出现。所以，如果一个 cookie 包含绝不应该通过未加密的 HTTP 协议发送的敏感内容，那么就应该设置 secure 标识。
+
+- samesite 这是另外一个关于安全的特性。它旨在防止 XSRF（跨网站请求伪造）攻击。
+- [XSRF 攻击](/big-frontend/运维/frontend-secure#二csrf跨站请求伪造)
+
+##### cookie samesite
+
+Cookie 的 `samesite` 选项提供了另一种防止此类攻击的方式，（理论上）不需要要求 “XSRF 保护 token”
+
+- `samesite = strict`（和没有值的 samesite 一样)
+
+如果用户来自同一网站之外，那么设置了 samesite=strict 的 cookie 永远不会被发送。
+
+如果身份验证 cookie 具有 samesite 选项，那么 XSRF 攻击是没有机会成功的，因为来自 evil.com 的提交没有 cookie。因此，bank.com 将无法识别用户，也就不会继续进行付款。
+
+虽然，这样有一些不方便。
+
+当用户通过合法的链接访问 bank.com 时，bank.com 无法识别他们的身份。实际上，在这种情况下不会发送 `samesite=strict` cookie。
+
+我们可以通过使用两个 cookie 来解决这个问题：一个 cookie 用于“一般识别”，仅用于说 “Hello, John”，另一个带有 samesite=strict 的 cookie 用于`进行数据更改`的操作。这样，从网站外部来的用户会看到欢迎信息，但是支付操作必须是从银行网站启动的，这样第二个 cookie 才能被发送。
+
+- samesite=lax（宽松模式）
+
+宽松（lax）模式，和 strict 模式类似，当从外部来到网站，则禁止浏览器发送 cookie，但是增加了一个例外。
+
+如果以下两个条件均成立，则会发送含 `samesite=lax` 的 cookie：
+
+1. HTTP 方法是“安全的”（例如 GET 方法，而不是 POST）。
+
+所有安全的 HTTP 方法详见 RFC7231 规范。基本上，这些都是用于读取而不是写入数据的方法。它们不得执行任何更改数据的操作。跟随链接始终是 GET，是安全的方法。
+
+2. 该操作执行顶级导航（更改浏览器地址栏中的 URL）。
+
+这通常是成立的，但是如果导航是在一个 `<iframe>` 中执行的，那么它就不是顶级的。此外，用于网络请求的 JavaScript 方法不会执行任何导航，因此它们不适合。
+
+samesite 会被到 2017 年左右的旧版本浏览器忽略（不兼容）。因此，如果我们仅依靠 `samesite` 提供保护，那么在旧版本的浏览器上将很容易受到攻击。
+
+但是，我们肯定可以将 samesite 与其他保护措施一起使用，例如 `XSRF token`，这样可以多增加一层保护，将来，当旧版本的浏览器淘汰时，我们可能就可以删除 xsrf token 这种方式了
+
+#### 7.2.6 httpOnly
+
+这个选项和 JavaScript 没有关系，但是我们必须为了完整性也提一下它。
+
+Web 服务器使用 `Set-Cookie header` 来设置 cookie。并且，它可以设置 `httpOnly` 选项。
+
+这个选项禁止任何 JavaScript 访问 cookie。我们使用 document.cookie 看不到此类 cookie，也无法对此类 cookie 进行操作。
+
+这是一种预防措施，当黑客将自己的 JavaScript 代码注入网页，并等待用户访问该页面时发起攻击，而这个选项可以防止此时的这种攻击。这应该是不可能发生的，黑客应该无法将他们的代码注入我们的网站，但是网站有可能存在 bug，使得黑客能够实现这样的操作。
+
+通常来说，如果发生了这种情况，并且用户访问了带有黑客 JavaScript 代码的页面，黑客代码将执行并通过 document.cookie 获取到包含用户身份验证信息的 cookie。这就很糟糕了。
+
+但是，如果 cookie 设置了 httpOnly，那么 **document.cookie 则看不到 cookie**，所以它受到了保护。
+
+#### 7.2.6 Cookie 函数、第三方 cookie
+
+这里有一组有关 cookie 操作的函数，比手动修改 document.cookie 方便得多。
+
+有很多这种 cookie 库，所以这些函数只用于演示。虽然它们都能正常使用。
+
+- getCookie
+
+```ts
+// 返回具有给定 name 的 cookie，
+// 如果没找到，则返回 undefined
+function getCookie(name: string) {
+  let matches = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'),
+  );
+  return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+```
+
+- setCookie(name, value, options)
+
+将 cookie 的 name 设置为具有默认值 path=/（可以修改以添加其他默认值）和给定值 value：
+
+```ts
+function setCookie(name, value, options = {}) {
+  options = {
+    path: '/',
+    // 如果需要，可以在这里添加其他默认值
+    ...options,
+  };
+
+  if (options.expires instanceof Date) {
+    options.expires = options.expires.toUTCString();
+  }
+
+  let updatedCookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
+
+  for (let optionKey in options) {
+    updatedCookie += '; ' + optionKey;
+    let optionValue = options[optionKey];
+    if (optionValue !== true) {
+      updatedCookie += '=' + optionValue;
+    }
+  }
+
+  document.cookie = updatedCookie;
+}
+
+// 使用范例：
+setCookie('user', 'John', { secure: true, 'max-age': 3600 });
+```
+
+- deleteCookie
+
+```ts
+function deleteCookie(name) {
+  setCookie(name, '', {
+    'max-age': -1,
+  });
+}
+```
+
+请注意 cookie 的值是经过编码的，所以 getCookie 使用了内建方法 `decodeURIComponent` 函数对其进行`解码`。
+
+另外：
+
+- 浏览器可能会禁用第三方 cookie，例如 Safari 浏览器默认禁止所有第三方 cookie。
+- 在为欧盟公民设置跟踪 cookie 时，GDPR 要求必须得到用户明确许可。
+
+### 7.3 IndexDB
