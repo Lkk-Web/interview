@@ -214,7 +214,7 @@ export const easeout = (dom, destination, rate, callback) => {
 
 - `cancelAnimationFrame()`方法通过调用取消先前安排的动画帧请求
 
-### 3.2.1 微任务
+### 3.2.2 微任务
 
 |                                  | 浏览器 | Node |
 | :------------------------------: | :----: | :--: |
