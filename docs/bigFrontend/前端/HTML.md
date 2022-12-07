@@ -59,6 +59,18 @@ HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一�
 
 与`defer`不同的是，标记为`async`的脚本并不保证按照它们的先后顺序执行。第二个脚本文件可能会在第一个脚本文件之前执行。因此确保两者之间互不依赖非常重要。指定`async`属性的目的是不让页面等待两个脚本下载和执行，从而异步加载页面其他内容。
 
+#### 4.2.3 跨源策略
+
+要允许跨源访问，`<script>`标签需要具有 crossorigin 特性（attribute），并且远程服务器必须提供特殊的 header。
+
+这里有三个级别的跨源访问：
+
+需要服务器发送回带有我们的源的 `header Access-Control-Allow-Origin` 和 `Access-Control-Allow-Credentials: true`
+
+- 无 crossorigin 特性 —— 禁止访问。
+- crossorigin="anonymous" —— 浏览器不会将授权信息和 cookie 发送到远程服务器。
+- crossorigin="use-credentials" —— 浏览器会将授权信息和 cookie 发送到远程服务器。
+
 ### 4.3\<iframe>
 
 iframe 元素会创建包含另外一个文档的内联框架（即行内框架）。这是官方文档的原话，有点难以理解，实际上就是在你的页面上外链一个页面出来，以窗口的形式呈现在你的页面中。
