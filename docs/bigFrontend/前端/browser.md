@@ -142,7 +142,14 @@ javascript 中先分【同步和异步】，然后事件任务分为【宏任务
 
 微任务和宏任务在宏观上看是属于异步，也就是说，先执行同步任务，到异步任务节点时加入任务队列（宏任务，微任务），继续执行同步任务
 
-### 3.2.1 宏任务
+#### 宏任务和微任务的区别？
+
+1. 宏任务队列可以有多个，微任务队列只有一个
+2. 宏任务有 script（全局任务）, setTimeout, setInterval, setImmediate, I/O, UI rendering。微任务有 process.nextTick, Promise, Object.observer, MutationObserver。
+3. 宏任务队列有优先级之分。每次 js 引擎从宏任务队列中取宏任务时，会按照优先级选择宏任务队列，若高优先级的宏任务队列中没有任务时，才会到低级的宏任务队列中去取任务。
+4. 为什么会有宏任务和微任务之分呢？个人理解，宏任务才是真正意义上的任务，而微任务相当于宏任务的附属的一系列操作和相应。所以，js 引擎每次取出一个宏任务执行，并且执行相关的微任务，这样保证一个完整的任务被执行完。这也是微任务队列只有一个的原因，微任务队列就是用来辅助宏任务队列的任务的完整执行的。而宏任务队列才是真正意义的任务，任务有优先级之分就很好理解了，因此才有多个宏任务队列，就是为了区分优先级。
+
+#### 3.2.1 宏任务
 
 |                       | 浏览器 | Node |
 | :-------------------: | :----: | :--: |
@@ -152,7 +159,7 @@ javascript 中先分【同步和异步】，然后事件任务分为【宏任务
 |     setImmediate      |   ❌   |  ✅  |
 | requestAnimationFrame |   ✅   |  ❌  |
 
-#### setImmediate
+##### setImmediate
 
 该方法用于分解长时间运行的操作，并在浏览器完成事件和显示更新等其他操作后立即运行回调函数.即在当前"任务队列"的尾部添加事件，也就是说，它指定的任务总是在下一次 Event Loop 时执行，与 setTimeout(fn, 0)很像。
 
@@ -172,7 +179,7 @@ setTimeout(() => {
 
 上面代码中，setImmediate 与 setTimeout(fn,0)各自添加了一个回调函数，都是在下一次 Event Loop 触发。那么，哪个回调函数先执行呢？答案是`不确定`。运行结果可能是 3 4 1 2 也有可能是 3 1 4 2.(但大多数情况下`setTimeout(fn,0)`比`setImmediate`先执行)
 
-#### requestAnimationFrame
+##### requestAnimationFrame
 
 requestAnimationFrame 姑且算是宏任务，requestAnimationFrame 在 MDN 的定义为，下次页面重绘前所执行的操作，而重绘也是作为宏任务的一个步骤来存在的，且该步骤晚于微任务的执行
 
@@ -214,7 +221,7 @@ export const easeout = (dom, destination, rate, callback) => {
 
 - `cancelAnimationFrame()`方法通过调用取消先前安排的动画帧请求
 
-### 3.2.2 微任务
+#### 3.2.2 微任务
 
 |                                  | 浏览器 | Node |
 | :------------------------------: | :----: | :--: |
@@ -222,7 +229,7 @@ export const easeout = (dom, destination, rate, callback) => {
 | Promise.then catch finally await |   ✅   |  ❌  |
 |         MutationObserver         |   ✅   |  ✅  |
 
-#### process.nextTick
+##### process.nextTick
 
 process.nextTick 方法可以在`当前执行栈`的尾部----下一次 Event Loop（主线程读取"任务队列"）之前----触发回调函数。也就是说，它指定的任务总是发生在所有异步任务之前
 
@@ -246,7 +253,7 @@ console.log('4');
 
 process.nextTick 和 setImmediate 的一个重要`区别`：多个 process.nextTick 语句总是在当前"执行栈"一次执行完，多个 setImmediate 可能则需要多次 loop 才能执行完。
 
-#### MutationObserver
+##### MutationObserver
 
 `MutationObserver` 是用于代替 `Mutation events` 作为观察 DOM 树结构发生变化时，做出相应处理的 API；
 
@@ -288,7 +295,7 @@ document.getElementById('list').addEventListener(
 
   - Mutation Events 本身是事件，所以捕获是采用的是事件冒泡的形式；如果冒泡捕获期间又触发了其他的 Mutation Events 的话，很有可能就会导致阻塞 Javascript 线程，甚至导致浏览器崩溃；
 
-#### 混合使用
+##### 混合使用
 
 ```js
 console.log(1);
