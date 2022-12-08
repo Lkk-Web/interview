@@ -571,6 +571,34 @@ Person.prototype;
 
 [手撕 new 操作符](/interview/frontend-shred-code#23-手撕-new-操作符)
 
+### 6.2 prototype 与 \_\_proto\_\_
+
+\_\_proto\_\_指向创建这个对象的函数(constructor)的 prototype
+
+每一个函数在创建之后都会拥有一个名为 prototype 的属性，这个属性指向函数的原型对象。
+
+> warning：通过 Function.prototype.bind 方法构造出来的函数是个例外，它没有 prototype 属性。（感谢
+
+#### 6.2.1 prototype（显式原型）
+
+函数对象的 prototype 属性是外部共享的，而\_\_proto\_\_是隐式的
+
+只有函数对象才有 prototype 属性
+
+protoype 对象默认有两个属性：constructor 和 proto
+
+#### 6.2.2 \_\_proto\_\_（隐式原型）
+
+JavaScript 中任意对象都有一个内置属性[prototype]，在 ES5 之前没有标准的方法访问这个内置属性，但是大多数浏览器都支持通过\_\_proto\_\_来访问。ES5 中有了对于这个内置属性标准的 Get 方法 `Object.getPrototypeOf()`.
+
+\_\_proto\_\_是 es6 加入的内部属性，不是正式对外的 api
+
+实例对象的\_\_proto\_\_指向的是函数的 protoype
+
+`隐式原型的作用`：构成原型链，同样用于实现基于原型的继承。举个例子，当我们访问 obj 这个对象中的 x 属性时，如果在 obj 中找不到，那么就会沿着\_\_proto\_\_依次查找。
+
+> warning: Object.prototype 这个对象是个例外，它的\_\_proto\_\_值为 null.即 Object.prototype 的\_\_proto\_\_属性指向 null。
+
 ## 7、闭包
 
 - 内层函数中访问到其外层函数的作用域
