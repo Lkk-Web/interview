@@ -1,7 +1,7 @@
 ---
 group:
   order: 4
-order: 2
+order: 3
 ---
 
 # Webpack
