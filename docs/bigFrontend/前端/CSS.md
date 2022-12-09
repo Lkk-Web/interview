@@ -61,6 +61,14 @@ css3 规范中要求使用双冒号（::）表示伪元素，以此来区分伪�
 
 :nth-child(n) 选择满足是其父元素的第 n 个子元素的元素
 
+```ts
+element:after  { style properties }  /* CSS2 语法 */
+
+element::after { style properties }  /* CSS3 语法 */
+```
+
+::符号在 `CSS 3` 中引入的,是用来区分和伪元素的。支持 CSS3 的浏览器同时也都支持 CSS2 中引入的表示法:after`
+
 ### 3.1 nth-child 和 nth-of-type 的区别
 
 :nth-child(n) 选择器匹配属于其父元素的第 n 个子元素，不论元素的类型，n 可以是数字、关键词或公式。
