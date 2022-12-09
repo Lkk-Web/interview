@@ -160,13 +160,13 @@ withinErrorMargin(0.1 + 0.1, 0.3); // true
 
 ## 四、Object API
 
-### 4.1 Object.prototype.is()
+### 4.1 is()
 
-Object.is()类似于===，不做隐式的类型转换，但在三等号判断的基础上特别处理了 NaN、-0 和+0，保证-0 和+0 不再相同，但 Object.is(NaN,NaN)会返回 true。
+`Object.is()`类似于===，不做隐式的类型转换，但在三等号判断的基础上特别处理了 NaN、-0 和+0，保证-0 和+0 不再相同，但 Object.is(NaN,NaN)会返回 true。
 
 而且，严格相等运算符===不能区分两个不同的数字+0 和-0，还会把两个 NaN 看成不相等的。
 
-### 4.2 Object.prototype.hasOwnProperty()
+### 4.2 hasOwnProperty()
 
 hasOwnProperty 方法用于检测参数是否在当前 object 中
 
@@ -176,19 +176,23 @@ data.hasOwnProperty('thumbUp');
 // true or false
 ```
 
-### 4.3 Object.prototype.keys()
+### 4.3 keys()
 
 ```ts
-!!('thumbUp' in data);
-data.hasOwnProperty('thumbUp');
-// true or false
+const object1 = {
+  a: 'somestring',
+  b: 42,
+  c: false,
+};
+console.log(Object.keys(object1));
+// expected output: Array ["a", "b", "c"]
 ```
 
-另外，`Object.keys() `的返回并不总能保持先来后到的顺序。从解决业务需要的角度，我们可以通过维护一个单独的 tag 数组来回避这个问题。
+`Object.keys()`返回一个表示给定对象的所有可枚举属性的字符串数组,但并不总能保持先来后到的顺序。从解决业务需要的角度，我们可以通过维护一个单独的 tag 数组来回避这个问题。
 
 ## 五、Array API
 
-### 5.1 Array.prototype.some()
+### 5.1 some()
 
 some() 方法用于检测数组中的元素是否满足指定条件（函数提供）。some() 方法会依次执行数组的每个元素：`如果有一个元素满足条件，则表达式返回 true` , 剩余的元素不会再执行检测。 如果没有满足条件的元素，则返回 `false`。
 
@@ -197,7 +201,7 @@ some() 方法用于检测数组中的元素是否满足指定条件（函数提�
 const res = data.some((e) => e.user.id === currentUser.id);
 ```
 
-### 5.2 foreach、map、filter、find()
+### 5.2 foreach()、map()、filter()、find()
 
 - forEach(): 针对每一个元素执行提供的函数。除了抛出异常以外，没有办法中止或跳出 forEach() 循环。如果你需要中止或跳出循环，forEach() 方法不是应当使用的工具。
 - map(): 创建一个新的数组，其中每一个元素由调用数组中的每一个元素执行提供的函数得来。
@@ -225,6 +229,8 @@ console.log(array); // [ 11, 14, 17, 13, 16 ] 原数组不变
 
 ### 5.3 Array.prototype.from()
 
+### 5.3 from()
+
 `Array.from()`:允许在 JavaScript 集合(如: 数组、类数组对象、或者是字符串、map 、set 等可迭代对象) 上进行有用的转换。
 
 ```ts
@@ -239,11 +245,22 @@ Array.from(someNumbers, (value) => value * 1); // => [10, 30]
 
 ## 六、String API
 
-## 七、箭头函数
+## 七、基础夯实
 
-1. 箭头函数的 this 永远指向其上下文的 this ，任何方法都改变不了其指向，如 call() , bind() , apply()，它只会从自己的作用域链的上一层继承 this，指向 construct。 而普通函数的 this 指向调用它的那个对象
+### 7.1 暂时性死区
+
+在代码块内，使用 let 命令声明变量之前，该变量都是不可用的。这在语法上，称为“暂时性死区”（temporal dead zone，简称 TDZ）。
+
+### 7.2 箭头函数
+
+1. 箭头函数没有自己的 this，箭头函数内的 this 变量指向外层非箭头函数的函数的 this ，任何方法都改变不了其指向，如 call() , bind() , apply()，它只会从自己的作用域链的上一层继承 this。 而普通函数的 this 指向调用它的那个对象
 2. 优美，当函数体只有一条语句，可简写
-3. **箭头函数没有原型 prototype**
+3. 箭头函数没有原型 prototype，内部也不可以使用 `arguments` 对象
+4. 箭头函数不可以当做构造函数
+
+为什么不能用作构造函数：
+
+构造函数是通过 new 关键字来生成对象实例，生成对象实例的过程也是通过构造函数给实例绑定 this 的过程，而箭头函数没有自己的 this。创建对象过程，new 首先会创建一个空对象，并将这个空对象的\_\_prot\_\_指向构造函数的 prototype，从而继承原型上的方法，但是箭头函数没有 prototype。因此不能使用箭头作为构造函数，也就不能通过 new 操作符来调用箭头函数。
 
 ## 八、Set 和 Map 数据结构
 
