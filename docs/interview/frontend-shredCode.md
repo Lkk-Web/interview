@@ -384,13 +384,273 @@ eventEmitter.emit('article', 'Javascript 发布-订阅模式');
 
 ### 5.1 手撕 promise
 
+```js
+/**
+ * 创建三变量记录表示状态
+ * 用that保存this，避免后期闭包导致this的指向不对
+ * value 变量用于保存 resolve 或者 reject 中传入的值
+ * resolvedCallbacks 和 rejectedCallbacks 用于保存 then 中的回调，
+ * 因为当执行完 Promise 时状态可能还是等待中，这时候应该把 then 中的回调保存起来用于状态改变时使用
+ */
+
+const PENDING = 'pending';
+const FULFILLED = 'fulfilled';
+const REJECTED = 'rejected';
+
+function myPromise(fn) {
+  const that = this;
+  that.value = null;
+  that.status = PENDING; //默认状态
+  that.fulfilledCallbacks = [];
+  that.rejectedCallbacks = [];
+  function resolve(value) {
+    if (that.status === PENDING) {
+      that.status = FULFILLED;
+      that.value = value;
+      //执行回调方法
+      that.fulfilledCallbacks.forEach((myFn) => myFn(that.value));
+    }
+  }
+  function reject(value) {
+    if (that.status === PENDING) {
+      that.status = REJECTED;
+      that.value = value;
+      //执行回调方法
+      that.rejectedCallbacks.forEach((myFn) => myFn(that.value));
+    }
+  }
+
+  // 执行回调函数
+  try {
+    fn(resolve, reject);
+  } catch (e) {
+    reject(e);
+  }
+}
+myPromise.prototype.then = function (onFulfilled, onRejected) {
+  let self = this;
+  //等待状态，则添加回调函数到栈中
+  if (self.status === PENDING) {
+    self.fulfilledCallbacks.push(() => {
+      onFulfilled(self.value);
+    });
+    self.rejectedCallbacks.push(() => {
+      onRejected(self.value);
+    });
+  }
+  if (self.status === FULFILLED) {
+    onFulfilled(self.value);
+  }
+
+  if (self.status === REJECTED) {
+    onRejected(self.value);
+  }
+};
+
+let p = new myPromise((resolve, reject) => {
+  console.log('hello');
+  resolve(5);
+});
+p.then((res) => {
+  console.log(res);
+});
+p.then(() => {
+  console.log('jj');
+});
+```
+
 ### 5.2 手撕 promise.all
+
+```ts
+let p1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(88);
+  }, 1000);
+});
+let p2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(99);
+  }, 3000);
+});
+
+let arr = [p1, p2, 3, 4];
+
+function myPromiseALL(array) {
+  //返回的是一个Promise，直接用async包裹
+  let result = [];
+  let flag = 0;
+  return new Promise((resolve, reject) => {
+    for (let index in array) {
+      if (array[index] instanceof Promise) {
+        array[index].then(
+          (res) => {
+            result[index] = res;
+            flag++;
+            if (flag == array.length) {
+              resolve(result);
+            }
+          },
+          (err) => {
+            reject(err);
+          },
+        );
+      } else {
+        result[index] = array[index];
+        flag++;
+        if (flag == array.length) {
+          resolve(result);
+        }
+      }
+    }
+  });
+}
+
+Promise.myPromiseAll = myPromiseALL;
+myPromiseALL(arr).then(
+  (res) => {
+    console.log(res, 'res');
+  },
+  (err) => {
+    console.log(err, 'err');
+  },
+);
+//[88,99,3,4] 'res'
+
+//将p2改为reject
+let p2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject(99);
+  }, 3000);
+});
+//99 'err'
+```
 
 ### 5.3 手撕 promise.race
 
+```ts
+let p1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject(88);
+  }, 1000);
+});
+let p2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(99);
+  }, 2000);
+});
+
+let arr = [111, p1, p2];
+function myPromiseRace(array) {
+  return new Promise((resolve, reject) => {
+    for (let item of array) {
+      if (item instanceof Promise) {
+        item.then(
+          (res) => {
+            resolve(res);
+          },
+          (err) => {
+            reject(err);
+          },
+        );
+      }
+    }
+  });
+}
+Promise.myPromiseRace = myPromiseRace;
+myPromiseRace(arr).then(
+  (res) => {
+    console.log(res, 'res');
+  },
+  (err) => {
+    console.log(err, 'err');
+  },
+);
+```
+
 ### 5.4 手撕 promise.any
 
+```ts
+let p1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject(99);
+  }, 1000);
+});
+let p2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject(88);
+  }, 2000);
+});
+
+let arr = [111, p1, p2];
+function myPromiseAny(array) {
+  return new Promise((resolve, reject) => {
+    for (let item of array) {
+      if (item instanceof Promise) {
+        item.then(
+          (res) => {
+            resolve(res);
+          },
+          (err) => {
+            if (item == array[arr.length - 1]) reject('all promise were rejected');
+          },
+        );
+      }
+    }
+  });
+}
+Promise.myPromiseRace = myPromiseAny;
+myPromiseAny(arr).then(
+  (res) => {
+    console.log(res);
+  },
+  (err) => {
+    console.log(err);
+  },
+);
+```
+
 ### 5.5 手撕 promise.allSettle
+
+```ts
+const p1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('123');
+  }, 500);
+});
+const p2 = new Promise((resolve, reject) => {
+  reject('456');
+});
+const p3 = new Promise((resolve, reject) => {
+  resolve('789');
+});
+
+let arr = [Promise.resolve('resolve'), p1, 'abc', p2, p3, Promise.reject('error')];
+Promise.allSettled = function (arr) {
+  return new Promise((resolve) => {
+    let count = 0; // 确保每个函数(宏任务)都要执行到
+    const length = arr.length;
+    const result = [];
+    arr.forEach((promise, index) => {
+      Promise.resolve(promise).then(
+        (value) => {
+          count++;
+          result[index] = { status: 'fulfilled', value };
+          if (count === length) resolve(result);
+        },
+        (reason) => {
+          count++;
+          result[index] = { status: 'rejected', reason };
+          if (count === length) resolve(result);
+        },
+      );
+    });
+  });
+};
+
+Promise.allSettled(arr).then((res) => {
+  console.log(res);
+});
+```
 
 ### 5.6 实现控制并发
 
