@@ -138,6 +138,19 @@ function new(Func,...args){
 
 ### 2.4 手撕 apply
 
+```js
+Funciton.prototype.myApply = function (thisArg, args) {
+  let fnName = symbol();
+  if (!thisarg) {
+    thisArg = typeof window === 'undefined' ? globle : windown;
+  }
+  thisArg[fnName] = this;
+  const result = thisArg[fnName](...args);
+  delete thisArg[fnName];
+  return result;
+};
+```
+
 ### 2.5 手撕 call
 
 ### 2.6 手撕 bind
