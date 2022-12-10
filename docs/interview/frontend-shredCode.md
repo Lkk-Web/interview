@@ -49,6 +49,43 @@ console.log(unique(arr));
 //[0,'true', true, undefined, null, NaN,{a: { a: true } },[{ a: true }]]   //所有的都去重了
 ```
 
+### 1.2 数组扁平化
+
+方法一：toString + split(只能实现纯基本数据类型)
+
+```js
+function flatten(arr) {
+  return arr
+    .toString()
+    .split(',')
+    .map((v) => +v);
+}
+```
+
+方法二：some + concat(任何类型)
+
+```js
+function flatten(arr) {
+  while (arr.some((item) => Array.isArray(item))) {
+    arr = [].concat(...arr);
+  }
+  return arr;
+}
+```
+
+优化：控制扁平层级
+
+```ts
+function flattenStage(arr: any[], stag: number) {
+  let index = 0;
+  while (arr.some((item) => Array.isArray(item)) && stag !== index) {
+    arr = [].concat(...arr);
+    index++;
+  }
+  return arr;
+}
+```
+
 ## 二、原型链
 
 ### 2.1 手撕 instanceof
