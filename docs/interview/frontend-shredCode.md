@@ -153,7 +153,40 @@ Funciton.prototype.myApply = function (thisArg, args) {
 
 ### 2.5 手撕 call
 
+```js
+Function.prototype.myCall = function (thisarg, ...args) {
+  let fnName = Symbol();
+  if (!thisArg) {
+    //context 为 null 或者是 undefined,typeof windown -> object
+    thisArg = typeof window === 'undefined' ? global : window;
+  }
+  thisarg[fnName] = this; //this指向被调用的函数fn
+  const result = thisarg[fnName](...args);
+  delete thisarg[fnName];
+  return result;
+};
+
+function fn() {
+  //此时this指向了thisarg
+}
+
+let result = fn.myCall(thisarg, '1', '2'); //第一个参数用this代替，其余参数作为验证可以传参
+
+console.log(result);
+//我是返回值
+```
+
 ### 2.6 手撕 bind
+
+```js
+Function.prototype.mybind = function (context, ...bindArgs) {
+  const self = this;
+  return function (...Args) {
+    const finalArgs = bindArgs.concat(Args);
+    return self.apply(context, finalArgs);
+  };
+};
+```
 
 ## 三、工具类函数
 
