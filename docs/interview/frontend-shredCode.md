@@ -292,6 +292,33 @@ function throttle(fn: any, wait: number) {
 }
 ```
 
+### 3.5 lodash 的\_get 方法
+
+```ts
+// input
+const obj = { 选择器: { to: { toutiao: 'FE Coder' } }, target: [1, 2, { name: 'byted' }] };
+get(obj, '选择器.to.toutiao', 'target[0]', 'target[2].name');
+
+// output
+['FE coder', 1, 'byted'];
+```
+
+实现：
+
+```ts
+function get(object, ...path) {
+  return path.map((item) => {
+    let res = object;
+    item
+      .replace(/\[/g, '.')
+      .replace(/\]/g, '')
+      .split('.')
+      .map((path) => (res = res && res[path]));
+    return res;
+  });
+}
+```
+
 ## 四、设计模式
 
 ### 4.1 发布订阅模式
