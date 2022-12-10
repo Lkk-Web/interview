@@ -339,6 +339,65 @@ function get(object, ...path) {
 
 ### 5.6 实现控制并发
 
+```ts
+/**
+ * @param {number} limit 并发限制数
+ * @param {(() => Promise<any>)[]} requestArr 包含所有请求的数组
+ * @returns {Promise<any[]>} 结果数组
+ */
+async function concurrentControl(limit, requestArr) {
+  const res = []; // 存储所有的异步任务
+  const executing = []; // 存储正在执行的异步任务
+
+  for (const request of requestArr) {
+    res.push(request); // 保存新的异步任务
+    if (limit < requestArr.length) {
+      // then为异步(此时e为完成的任务request)，当任务完后，从 executing 中移除当前任务
+      const e = request.then(
+        () => executing.splice(executing.indexOf(e), 1),
+        () => {
+          executing.splice(executing.indexOf(e), 1);
+        },
+      );
+      executing.push(e); // 增加当前异步任务 此时 e == request.then(fn)
+      if (executing.length >= limit) {
+        await Promise.race(executing); // 等待最快的任务执行完成
+      }
+    }
+  }
+  console.log('res: ', res);
+  return res;
+}
+
+const p1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(1);
+  }, [1000]);
+});
+
+const p2 = new Promise((resolve) => {
+  setTimeout(() => {
+    resolve(2);
+  }, [2000]);
+});
+
+const p3 = new Promise((resolve) => {
+  setTimeout(() => {
+    resolve(3);
+  }, [3000]);
+});
+
+concurrentControl(2, [p1, p2, p3, p1, p2, p3]);
+```
+
+```ts
+p.then(() => executing.splice(executing.indexOf(e), 1));
+// 这段代码其实等同于下面这样
+const e = p.then(fn);
+executing.push(e); // p resolve 后执行 fn
+() => executing.splice(executing.indexOf(e), 1);
+```
+
 ### 5.7 实现失败重试
 
 ```ts
