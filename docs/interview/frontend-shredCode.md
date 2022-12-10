@@ -341,6 +341,21 @@ function get(object, ...path) {
 
 ### 5.7 实现失败重试
 
+```ts
+async function retry(request, limit, times = 1) {
+  try {
+    const value = await request();
+    console.log('获取成功');
+    return value;
+  } catch (error) {
+    // 当超过最大重试次数时，就返回错误
+    if (times > limit) error;
+    console.log(`请求失败，第 ${times} 次重试...`);
+    return retry(request, limit, ++times);
+  }
+}
+```
+
 ## 六、React
 
 ### 6.1 手撕 setState
