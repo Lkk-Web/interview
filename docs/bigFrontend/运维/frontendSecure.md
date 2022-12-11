@@ -170,6 +170,42 @@ csrf 攻击需要程序来执行，并不能做到完全自动，所以如果增
 
 ## 三、clickjacking(点击劫持)
 
+点击劫持是一种`视觉欺骗`的攻击手段。攻击者将需要攻击的网站通过 iframe 嵌套的方式嵌入自己的网页中，并将 iframe 设置为`透明`，在页面中透出一个按钮诱导用户点击。
+
+如图，将需要攻击的网站通过 iframe 嵌套到自己充满诱惑性的网页中，将 iframe 设为透明且 z-index 的层级设为最高，并很心机的将「诱导按钮」与要攻击的网站的「点赞」按钮相重合，这时用户因为喜欢小姐姐，点击诱导按钮，但实际点击的是点赞按钮，这样就在要攻击的网站中完成了点赞操作。
+
+<img src="https://johninch.github.io/Roundtable/assets/img/clickjacking.2fc5c345.png" />
+
+### 3.1 点击劫持防御
+
+本质上，防御点击劫持，就是不让我们自己的网站被别人用 iframe 嵌套引用。
+
+1. `X-FRAME-OPTIONS`，是一个 HTTP 响应头，在现代浏览器有一个很好的支持。这个 HTTP 响应头就是为了防御用 iframe 嵌套的点击劫持攻击。 该响应头有三个值可选，分别是：
+
+- DENY：表示页面不允许通过 iframe 的方式展示
+- SAMEORIGIN：表示页面可以在相同域名下通过 iframe 的方式展示
+- ALLOW-FROM：表示页面可以在指定来源的 iframe 中展示
+
+```ts
+ctx.set('X-FRAME-OPTIONS', 'DENY');
+```
+
+2. 对于一些低级别浏览器，还可以使用 js 来实现：
+
+```js
+// self是对当前窗口自身的引用，window属性是等价的
+// top返回顶层窗口，即浏览器窗口
+if (self == top) {
+  // 二者相同，说明不是一个被iframe展示的页面，就去掉默认设置的”不显示样式“
+  var style = document.getElementById('click-jack');
+  document.body.removeChild(style);
+} else {
+  // 二者不同，则将恶意网站的访问地址top.location，和iframe的访问地址（也就是我们自己的网站地址）拉到一起
+  // 这时，恶意网站就会直接跳转到我们的网站，从而避免了被点击劫持攻击
+  top.location = self.location;
+}
+```
+
 ## 四、SQL 注入
 
 ## 五、OS 命令注入
