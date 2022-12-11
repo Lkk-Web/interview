@@ -227,6 +227,29 @@ if (self == top) {
 
 ## 五、OS 命令注入
 
+OS 命令注入和 SQL 注入差不多，只不过 SQL 注入是针对数据库的，而 OS 命令注入是针对操作系统的。
+
+OS 命令注入攻击指通过 Web 应用，执行非法的操作系统命令达到攻击的目的。只要在`能调用 Shell 函数的地方`就有存在被攻击的风险。倘若调用 Shell 时存在疏漏，就可以执行插入的非法命令。
+
+```ts
+// 以 Node.js 为例，假如在接口中需要从 github 下载用户指定的 repo
+const exec = require('mz/child_process').exec;
+
+let params = {
+  /* 用户输入的参数 */
+};
+
+exec(`git clone ${params.repo} /some/path`);
+```
+
+如果用户输入的参数是：
+
+```sh
+https://github.com/xx/xx.git && rm -rf /* &&
+```
+
+clone repo 后，会直接 `rm -rf /*`，删除全盘。。。。
+
 ## 六、请求劫持（运营商劫持）
 
 ## 七、DDOS（分布式停止服务攻击）
