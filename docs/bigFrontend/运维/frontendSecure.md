@@ -144,6 +144,30 @@ CSRF(Cross Site Request Forgery)，即跨站请求伪造，是一种常见的 We
 - a.com 以受害者的名义执行了 act=xx。
 - 攻击完成，攻击者在受害者不知情的情况下，冒充受害者，让 a.com 执行了自己定义的操作。
 
+### 2.1 CSRF 防御
+
+CSRF 其实防范起来并不容易，没有一种绝对的防范机制。
+
+1. `Referer Check`（理论上是可以防御的，但实际上并不那么有效）
+
+理论上服务端可以从请求头中拿到 `referer` 字段，如果判断不同源则直接拒绝掉
+
+```ts
+app.use(async (ctx, next) => {
+  await next();
+  const referer = ctx.request.header.referer;
+  console.log('Referer:', referer);
+});
+```
+
+但实际上，这并不是很有效的防御手段，因为 referer 也是可以伪造的。另外，从 https 的页面请求到 http 的页面，referer 头会被丢弃。
+
+2. `人机识别（使用验证码）`
+
+csrf 攻击需要程序来执行，并不能做到完全自动，所以如果增加验证码或者其他人机识别验证的步骤，就能有效屏蔽不过也不是绝对的，比如抢火车票，通过图像识别也是可以破解的
+
+3. 使用 `token 验证`来替代 `cookie` 鉴权，这是目前相对来说，公认最合适的方案。
+
 ## 三、clickjacking(点击劫持)
 
 ## 四、SQL 注入
