@@ -30,6 +30,8 @@ JS 拥有以下数据类型：
 
 其他类型：`Set`、`WeakSet`、`Map`、`WeakMap`、`Date`、`RegExp`
 
+[Set、Map](/big-frontend/前端/ecmascprit#八set-和-map-数据结构)
+
 为什么基本数据类型存在栈内存，引用数据类型存在堆内存?（变量存在于栈中）
 
 - 基本数据类型比较稳当，相对来说占用的内存较小
@@ -91,25 +93,15 @@ console.log(newobj);
 
 深拷贝是指**源对象与拷贝对象互相独立**，其中任何一个对象的改动都不会对另外一个对象造成影响。([手撕深拷贝](/interview/frontend-shred-code#31-手撕深拷贝))
 
-#### 1.1.3 **Object 和 Map 的区别**
+#### 1.1.3 Object 和 Map 的区别
 
 - 用法的区别：在某些情况下的用法会截然不同
 - 句法的区别：创建以及增删查改的句法区别
-- 性能的区别：速度和内存占用情况
-- **Map 中的元素会 保持其插入时的顺序 ；而 Object 则不会完全保持插入时的顺序，而是根据如下规则进行排序:**
+- 性能的区别：速度和内存占用情况(Object 性能方面会更为高效)
+- Map 中的元素会 保持其插入时的顺序 ；而 Object 则不会完全保持插入时的顺序，而是根据如下规则进行排序:
   - 非负整数 会最先被列出，排序是从小到大的数字顺序
   - 然后所有字符串，负整数，浮点数会被列出，顺序是根据插入的顺序
   - 最后才会列出 Symbol ， Symbol 也是根据插入的顺序
-
-#### 1.1.4 **Map 和 WeapMap 的区别**
-
-`WeakMap` 。它对于值的引用都是不计入垃圾回收机制的，所以名字里面才会有一个"Weak"，表示这是弱引用（对对象的弱引用是指当该对象应该被 GC 回收时不会阻止 GC 的回收行为）。
-
-`Map` 相对于 `WeakMap` ：
-
-- `Map` 的键可以是任意类型，`WeakMap` 只接受对象作为键（null 除外），不接受其他类型的值作为键
-- `Map` 的键实际上是跟内存地址绑定的，只要内存地址不一样，就视为两个键； `WeakMap` 的键是弱引用，键所指向的对象可以被垃圾回收，此时键是无效的
-- `Map` 可以被遍历， `WeakMap` 不能被遍历
 
 ### 1.2 判断数据类型
 
@@ -357,9 +349,51 @@ console.log(obj.get().set('a', 4));
 console.log('1111', obj.get('a'));
 ```
 
-## 4、性能优化函数
+### 2.3 this 关键字
 
-### 4.1 懒加载
+1. 在方法中，this 表示该方法所属的对象。
+2. 如果单独使用，this 表示全局对象。
+3. 在函数中，this 表示全局对象。
+4. 在函数中，在严格模式下，this 是未定义的(undefined)。
+5. 在事件中，this 表示接收事件的元素。
+6. 类似 call() 和 apply() 方法可以将 this 引用到任何对象。
+
+### 2.4 self 关键字
+
+这个非常简单。我们知道，打开任何一个网页，浏览器会首先创建一个窗口，这个窗口就是一个 window 对象，也是 js 运行所依附的全局环境对象和全局作用域对象。self 指窗口本身，它返回的对象跟 window 对象是一模一样的。也正因为如此，window 对象的常用方法和函数都可以用 self 代替 window。
+
+举个例子，常见的写法如“self.alert('弹窗');”，把它放在`<a>`标记中：`<a href="javascript:self.alert('弹窗');">点击弹窗</a>`，单击“点击弹窗”链接，当前页面弹窗。
+
+```tsx
+import React from 'react';
+import { Modal } from 'interview';
+
+export default () => (
+  <Modal
+    title="self.close"
+    component={<a href="javascript:self.alert('弹窗');">点击弹窗</a>}
+  ></Modal>
+);
+```
+
+### 2.5 apply call bind
+
+`apply`、`call`、`bind`三者的区别在于：
+
+- 三者都可以改变函数的`this`对象指向
+- 三者第一个参数都是`this`要指向的对象，如果如果没有这个参数或参数为`undefined`或`null`，则默认指向全局`window`
+- 三者都可以传参，但是`apply`是数组，而`call`和`bind`是参数列表，且`apply`和`call`是一次性传入参数，而`bind`可以分为多次传入
+- `bind`是返回绑定 this 之后的函数，`apply`、`call` 则是立即执行
+
+手撕:
+
+- [手撕 apply](/interview/frontend-shred-code#24-手撕-apply)
+- [手撕 call](/interview/frontend-shred-code#25-手撕-call)
+- [手撕 bind](/interview/frontend-shred-code#26-手撕-bind)
+
+## 三、性能优化函数
+
+### 3.1 懒加载
 
 ① 首先判断该结点是否在可视区 ② 利用 scroll 函数进行在可视区的滚动加载
 
@@ -432,97 +466,18 @@ function testLoaded() {
 preloadImages(sources, testLoaded);
 ```
 
-## 5、this 关键字
+## 四、原型链
 
-1. 在方法中，this 表示该方法所属的对象。
-2. 如果单独使用，this 表示全局对象。
-3. 在函数中，this 表示全局对象。
-4. 在函数中，在严格模式下，this 是未定义的(undefined)。
-5. 在事件中，this 表示接收事件的元素。
-6. 类似 call() 和 apply() 方法可以将 this 引用到任何对象。
+搞懂原型对象和原型链其实就是搞懂 `prototype`、`__proto__` 和 `constructor` 之间的相互关系
 
-### 5.1 apply call bind
+<img src="https://tsejx.github.io/javascript-guidebook/static/prototype-chain.bbfd7b97.jpg" />
 
-`apply`、`call`、`bind`三者的区别在于：
+- 对象：`__proto__` 和 `constructor` 是对象独有的。
+- 函数：`prototype` 是函数独有的。但是函数也是对象，所以函数也有` __proto__` 和 `constructor`。
 
-- 三者都可以改变函数的`this`对象指向
-- 三者第一个参数都是`this`要指向的对象，如果如果没有这个参数或参数为`undefined`或`null`，则默认指向全局`window`
-- 三者都可以传参，但是`apply`是数组，而`call`和`bind`是参数列表，且`apply`和`call`是一次性传入参数，而`bind`可以分为多次传入
-- `bind`是返回绑定 this 之后的函数，`apply`、`call` 则是立即执行
+> 所有函数和对象最终都是由 Function 构造函数得来，所以 constructor 属性的终点就是 Function 这个函数。
 
-#### 手撕 apply
-
-```js
-Funciton.prototype.myApply = function (thisArg, args) {
-  let fnName = symbol();
-  if (!thisarg) {
-    thisArg = typeof window === 'undefined' ? globle : windown;
-  }
-  thisArg[fnName] = this;
-  const result = thisArg[fnName](...args);
-  delete thisArg[fnName];
-  return result;
-};
-```
-
-#### 手撕 call
-
-```js
-Function.prototype.myCall = function (thisarg, ...args) {
-  let fnName = Symbol();
-  if (!thisArg) {
-    //context 为 null 或者是 undefined,typeof windown -> object
-    thisArg = typeof window === 'undefined' ? global : window;
-  }
-  thisarg[fnName] = this; //this指向被调用的函数fn
-  const result = thisarg[fnName](...args);
-  delete thisarg[fnName];
-  return result;
-};
-
-function fn() {
-  //此时this指向了thisarg
-}
-
-let result = fn.myCall(thisarg, '1', '2'); //第一个参数用this代替，其余参数作为验证可以传参
-
-console.log(result);
-//我是返回值
-```
-
-#### 手撕自定义 bind
-
-```js
-Function.prototype.mybind = function (context, ...bindArgs) {
-  const self = this;
-  return function (...Args) {
-    const finalArgs = bindArgs.concat(Args);
-    return self.apply(context, finalArgs);
-  };
-};
-```
-
-### 5.2 self 关键字
-
-这个非常简单。我们知道，打开任何一个网页，浏览器会首先创建一个窗口，这个窗口就是一个 window 对象，也是 js 运行所依附的全局环境对象和全局作用域对象。self 指窗口本身，它返回的对象跟 window 对象是一模一样的。也正因为如此，window 对象的常用方法和函数都可以用 self 代替 window。
-
-举个例子，常见的写法如“self.alert('弹窗');”，把它放在`<a>`标记中：`<a href="javascript:self.alert('弹窗');">点击弹窗</a>`，单击“点击弹窗”链接，当前页面弹窗。
-
-```tsx
-import React from 'react';
-import { Modal } from 'interview';
-
-export default () => (
-  <Modal
-    title="self.close"
-    component={<a href="javascript:self.alert('弹窗');">点击弹窗</a>}
-  ></Modal>
-);
-```
-
-## 6、原型链
-
-### 6.1 new 操作符
+### 4.1 new 操作符
 
 在 JavaScript 中，new 操作符用于创建一个给定构造函数的实例对象
 
@@ -601,138 +556,260 @@ JavaScript 中任意对象都有一个内置属性[prototype]，在 ES5 之前�
 
 > warning: Object.prototype 这个对象是个例外，它的\_\_proto\_\_值为 null.即 Object.prototype 的\_\_proto\_\_属性指向 null。
 
-## 7、闭包
+### 4.3 原型链继承
+
+- `借用构造函数`（Constructor Stealing），即在子类型构造函数的内部调用父类构造函数以实现对父类构造函数属性的继承。
+  - 缺陷:
+    1. 只能继承父类实例对象的属性和方法，不能继承原型对象的属性和方法无法实现复用
+    2. 每个子类都有父类实例函数的副本，影响性能
+
+```ts
+function Parent() {
+  this.attr = {
+    eye: 'blue',
+    hair: 'black',
+    skin: 'white',
+  };
+  this.sayName = function () {
+    console.log('Name');
+  };
+}
+
+function Child() {
+  Parent.call(this);
+
+  this.sayHi = function () {
+    console.log('Hello world!');
+  };
+}
+```
+
+- `原型式继承`是借助原型基于已有的对象创建新对象，同时还不必因此创建自定义类型。
+
+```ts
+function Person(friendship) {
+  function Creator() {}
+  Creator.prototype = friendship;
+  return new Creator();
+}
+```
+
+- `组合继承`（Combination Inheritance）（也叫伪经典继承），指的是将原型链和借用构造函数的技术组合到一块，从而发挥二者之长的一种继承模式。
+
+```ts
+function Parent(name) {
+  this.name = name;
+  this.attr = {
+    eye: 'blue',
+    hair: 'black',
+    skin: 'white',
+  };
+}
+
+function Child(name, age) {
+  Parent.call(this, name);
+  this.age = age; // 传参数可更新Child的属性
+}
+
+Child.prototype = new Parent();
+Child.prototype.constructor = Child;
+Child.prototype.sayAge = function () {
+  console.log(this.age);
+};
+```
+
+- `寄生式继承`（Parasitic Inheritance）：创建一个仅用于封装继承过程的函数，在函数内部以某种方式增强对象
+
+```ts
+function creator(origin) {
+  // 以 origin 为原型对象创建一个新对象
+  let clone = Object.create(origin);
+
+  clone.sayHi = function () {
+    console.log('Hello world!');
+  };
+  return clone;
+}
+
+let friendship = {
+  name: 'Uzi',
+  friends: ['Amy', 'Ben', 'Tom'],
+};
+
+// 具有实例的原型person的所有属性和方法，也有自己的方法
+let uzi = creator(friendship);
+```
+
+- `寄生组合式继承`，即通过借用构造函数来继承属性，通过原型链的混成形式来继承方法。
+
+```ts
+function Parent() {
+  this.name = 'Parent';
+  this.num = [0, 1, 2];
+}
+
+function Child() {
+  Parent.call(this);
+  thi.type = 'Child';
+}
+
+Child.prototype = Object.create(Parent.prototype);
+Child.prototype.constructor = Child;
+```
+
+### 4.4 Object.create()
+
+通过 `Object.create()` 方式创建的对象会以传入的对象参数为对象的原型。
+
+```ts
+const foo = {};
+const bar = Object.create(foo);
+console.log(bar.__proto__ === foo); //true
+```
+
+## 五、闭包
 
 - 内层函数中访问到其外层函数的作用域
 
-### 7.1 柯里化（curry）
+### 5.1 柯里化（curry）
 
 当传入的参数数不足所需要的参数数时，返回一个可以传入剩余参数的高阶函数
 
-```js
-let add = function (a, b, c) {
-  return a + b + c;
-};
+[手撕柯里化](/interview/frontend-shred-code#36-柯里化curry)
 
-function curry(fn, ...items) {
-  if (fn.length == items.length) {
-    let res = fn(...items);
-    return res;
-  }
-  return (...rests) => {
-    return curry(fn, ...items, ...rests); //递归添加参数
-  };
-}
-
-let addCurry = curry(add);
-console.log(
-  addCurry(1)(2, 4), //7
-  addCurry(9)(10)(10), //29
-);
-```
-
-### 7.2 函数组合（compose）
+### 5.2 函数组合（compose）
 
 组合函数，目的是将多个函数组合成一个函数
 
-```js
-function compose(...args: any[]) {
-  return (subArgs: any) => {
-    return args.reverse().reduce((acc, func, index) => {
-      return func(acc);
-    }, subArgs);
-  };
-}
-```
+[手撕函数组合](/interview/frontend-shred-code#52-函数组合compose)
 
-### 7.3 函数管道（pipe）
+### 5.3 函数管道（pipe）
 
 `compose`执行是从右到左的。而管道函数，执行顺序是从左到右执行的
 
+[手撕函数管道](/interview/frontend-shred-code#53-函数管道pipe)
+
+## 六、编码、解码 URI
+
+统一资源标识符，或叫做 URI，是用来标识互联网上的资源（例如，网页或文件）和怎样访问这些资源的传输协议（例如，HTTP 或 FTP）的字符串。除了`encodeURI`、`encodeURIComponent`、`decodeURI`、`decodeURIComponent`四个用来编码和解码 URI 的函数之外 ECMAScript 语言自身不提供任何使用 URL 的支持。
+
+### 6.1 encodeURI 和 encodeURIComponent
+
+它们都是编码 URL，唯一区别就是编码的字符范围
+
+其中 encodeURI 方法不会对下列字符编码 ,`ASCII 字母 数字 ~!@#$&\_()=:/,;?+'`
+
+encodeURIComponent 方法不会对下列字符编码 `ASCII 字母 数字 ~!\_()'`
+
+所以 encodeURIComponent 比 encodeURI 编码的范围更大。
+
+### 6.2 decodeURI 和 decodeURIComponent
+
+decodeURI() 函数可对 encodeURI() 函数编码过的 URI 进行解码。
+
+decodeURIComponent() 函数可对 encodeURIComponent() 函数编码的 URI 进行解码。
+
+```ts
+encodeURIComponent('#');
+// "%23"
+decodeURI('%23');
+// "%23"
+decodeURIComponent('%23');
+// "#"
+encodeURI('#');
+// "#"
+```
+
+## 七、ajax、axios、fetch
+
+axios 既提供了并发的封装，也没有 fetch 的各种问题，而且体积也较小，当之无愧现在最应该选用的请求的方式。
+
+### 7.1 jQuery ajax
+
 ```js
-function pipe(args: any[]) {
-  return (subArgs) => {
-    return args.reduce((acc, func, index) => {
-      return func(acc);
-    }, subArgs);
-  };
+$.ajax({
+  type: 'POST',
+  url: url,
+  data: data,
+  dataType: dataType,
+  success: function () {},
+  error: function () {},
+});
+```
+
+传统 Ajax 指的是 `XMLHttpRequest（XHR）`， 最早出现的发送后端请求技术，隶属于原始 js 中，核心使用 XMLHttpRequest 对象，多个请求之间如果有先后关系的话，就会出现回调地狱。
+
+JQuery ajax 是对原生 XHR 的封装，除此以外还增添了对 `JSONP` 的支持。经过多年的更新维护，真的已经是非常的方便了，优点无需多言；如果是硬要举出几个缺点，那可能只有：
+
+1. 本身是针对 MVC 的编程,不符合现在前端 MVVM 的浪潮
+2. 基于原生的 XHR 开发，XHR 本身的架构不清晰。
+3. JQuery 整个项目太大，单纯使用 ajax 却要引入整个 JQuery 非常的不合理（采取个性化打包的方案又不能享受 CDN 服务）
+4. 不符合关注分离（Separation of Concerns）的原则
+5. 配置和调用方式非常混乱，而且基于事件的异步模型不友好。
+
+PS:`MVVM(Model-View-ViewModel)`, 源自于经典的 `Model–View–Controller（MVC）`模式。MVVM 的出现促进了 GUI 前端开发与后端业务逻辑的分离，极大地提高了前端开发效率。MVVM 的核心是 ViewModel 层，它就像是一个中转站（value converter），负责转换 Model 中的数据对象来让数据变得更容易管理和使用，该层向上与视图层进行双向数据绑定，向下与 Model 层通过接口请求进行数据交互，起呈上启下作用。View 层展现的不是 Model 层的数据，而是 ViewModel 的数据，由 ViewModel 负责与 Model 层交互，这就完全解耦了 View 层和 Model 层，**这个解耦是至关重要的，它是前后端分离方案实施的最重要一环**。
+
+<img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8d975c0670d24c29a23d75d70ccc8206~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.awebp" />
+
+### 7.2 axios
+
+```js
+axios({
+  method: 'post',
+  url: '/user/12345',
+  data: {
+    firstName: 'Fred',
+    lastName: 'Flintstone',
+  },
+})
+  .then(function (response) {
+    console.log(response);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });
+```
+
+axios 是一个基于 Promise 用于浏览器和 nodejs 的 HTTP 客户端，本质上也是对原生 XHR 的封装，只不过它是`Promise`的实现版本，符合最新的 ES 规范，它本身具有以下特征：
+
+1. 从浏览器中创建 XMLHttpRequest
+2. 支持 `Promise API`
+3. 客户端支持防止 CSRF
+4. 提供了一些并发请求的接口（重要，方便了很多的操作）
+5. 从 node.js 创建 http 请求
+6. 拦截请求和响应
+7. 转换请求和响应数据
+8. [控制并发](/interview/frontend-shred-code#56-实现控制并发)、[失败重试](/interview/frontend-shred-code#57-实现失败重试)、[取消请求等封装](/interview/frontend-shred-code#58-超时中断)
+9. 自动转换 JSON 数据
+
+PS:`防止CSRF`:就是让你的每个请求都带一个从 cookie 中拿到的 key, 根据浏览器同源策略，假冒的网站是拿不到你 cookie 中得 key 的，这样，后台就可以轻松辨别出这个请求是否是用户在假冒网站上的误导输入，从而采取正确的策略。
+
+### 7.3 fetch
+
+```ts
+try {
+  let response = await fetch(url);
+  let data = response.json();
+  console.log(data);
+} catch (e) {
+  console.log('Oops, error', e);
 }
 ```
 
-## 8、ajax、axios、fetch 的区别
+`fetch`号称是`AJAX`的替代品，是在 ES6 出现的，使用了 ES6 中的 promise 对象。Fetch 是基于 promise 设计的。Fetch 的代码结构比起 ajax 简单多了，参数有点像 jQuery ajax。但是，一定记住**fetch 不是 ajax 的进一步封装**，而是原生 js，没有使用 XMLHttpRequest 对象。
 
-## 9、sourcemap
+1. 语法简洁，更加语义化
+2. 基于标准 Promise 实现，支持 async/await
+3. 同构方便，使用 [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch)
+4. 更加底层，提供的 API 丰富（request, response）
+5. 脱离了 XHR，是 ES 规范里新的实现方式
 
-jQuery 1.9 发布。有很多新功能，其中一个就是支持 Source Map 打开压缩后的版本，滚动到底部，你可以看到`最后一行`是这样的：
+在使用 fetch 的时候，也遇到了不少的问题，可以封装以下：
 
-```js
-//@ sourceMappingURL=jquery.min.map
-```
-
-这就是 Source Map。它是一个独立的 map 文件，与源码在同一个目录下，你可以点击进去，看看它的样子。
-
-这是一个很有用的功能，以下将详细讲解这个功能。
-
-JavaScript 脚本正变得越来越复杂。大部分`源码（尤其是各种函数库和框架）`都要经过转换，才能投入生产环境。
-
-常见的源码转换，主要是以下三种情况：
-
-1. 压缩，减小体积。比如 jQuery 1.9 的源码，压缩前是 252KB，压缩后是 32KB。
-
-2. 多个文件合并，减少 HTTP 请求数。
-
-3. 其他语言编译成 JavaScript。最常见的例子就是 CoffeeScript。
-
-这三种情况，都使得实际运行的代码不同于开发代码，除错（debug）变得困难重重。
-
-通常，JavaScript 的解释器会告诉你，第几行第几列代码出错。但是，这对于转换后的代码毫无用处。举例来说，jQuery 1.9 压缩后只有 3 行，每行 3 万个字符，所有内部变量都改了名字。你看着报错信息，感到毫无头绪，根本不知道它所对应的原始位置。
-
-这就是 Source map 想要解决的问题。
-
-### 9.1 什么是 Source map
-
-简单说，Source map 就是一个信息文件，里面储存着位置信息。也就是说，转换后的代码的每一个位置，所对应的转换前的位置。
-
-有了它，出错的时候，除错工具将直接显示原始代码，而不是转换后的代码。这无疑给开发者带来了很大方便。
-
-目前，暂时只有 Chrome 浏览器支持这个功能。在 Developer Tools 的 Setting 设置中，确认选中"Enable source maps"。
-
-- 如何启用 Source map
-
-正如前文所提到的，只要在转换后的代码尾部，加上一行就可以了。
-
-```js
-//@ sourceMappingURL=/path/to/file.js.map
-```
-
-map 文件可以放在网络上，也可以放在本地文件系统。
-
-### 9.2 Source map 的属性
-
-打开 Source map 文件，整个文件就是一个 JavaScript 对象，可以被解释器读取。它大概是这个样子：
-
-```js
-　　{
-　　　　version : 3, //Source map的版本，目前为3
-　　　　file: "out.js", //转换后的文件名
-　　　　sourceRoot : "",  //转换前的文件所在的目录。如果与转换前的文件在同一目录，该项为空
-　　　　sources: ["foo.js", "bar.js"],  //转换前的文件。该项是一个数组，表示可能存在多个文件合并
-　　　　names: ["src", "maps", "are", "fun"], //转换前的所有变量名和属性名
-　　　　mappings: "AAgBC,SAAQ,CAAEA"  //记录位置信息的字符串，下文详细介绍。
-　　}
-```
-
-- mappings 属性
-
-两个文件的各个位置是如何一一对应的?
-
-关键就是 map 文件的`mappings`属性。这是一个很长的字符串，它分成三层。
-
-1. 第一层是行对应，以分号（;）表示，每个分号对应转换后源码的一行。所以，第一个分号前的内容，就对应源码的第一行，以此类推。
-
-2. 第二层是位置对应，以逗号（,）表示，每个逗号对应转换后源码的一个位置。所以，第一个逗号前的内容，就对应该行源码的第一个位置，以此类推。
-
-3. 第三层是位置转换，以 VLQ 编码表示，代表该位置对应的转换前的源码位置。
+1. fetch 只对网络请求报错，对 400，500 都当做成功的请求，服务器返回 400，500 错误码时并不会 reject，只有网络错误这些导致请求不能完成时，fetch 才会被 reject。
+2. fetch 默认不会带 cookie，需要添加配置项： fetch(url, {credentials: 'include'})
+3. fetch 不支持 `abort`，不支持超时控制，使用 setTimeout 及 Promise.reject 的实现的超时控制`并不能阻止`请求过程继续在后台运行，造成了流量的浪费
+4. fetch 没有办法原生监测请求的进度，而 XHR 可以
 
 ## 10、AMD 规范
 
