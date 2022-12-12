@@ -86,6 +86,40 @@ function flattenStage(arr: any[], stag: number) {
 }
 ```
 
+### 1.3 解析 URL
+
+```js
+function urlSearch(href) {
+  const json = {};
+  let str = decodeURI(href);
+  const patrol = str.split('://');
+
+  json['patrol'] = patrol[0];
+  json['host'] = patrol[1].split('/')[0];
+
+  let paramsArray = str.substring(str.indexOf('?') + 1).split('&');
+
+  for (const params of paramsArray) {
+    let index = params.indexOf('=');
+    if (index > 0) {
+      json[params.substring(0, index)] = params.substring(index + 1);
+    }
+  }
+  return json;
+}
+
+const urlStr = 'https://pages.tmall.com/wow/hdwk/act/2020nhj-single?wh_biz=tm&disableNav=YES';
+console.log(urlSearch(urlStr));
+/*console
+{
+  patrol: 'https',
+  host: 'pages.tmall.com',
+  wh_biz: 'tm',
+  disableNav: 'YES'
+}
+*/
+```
+
 ## 二、原型链
 
 ### 2.1 手撕 instanceof
@@ -316,6 +350,51 @@ function get(object, ...path) {
       .map((path) => (res = res && res[path]));
     return res;
   });
+}
+```
+
+### 3.6 柯里化（curry）
+
+当传入的参数数不足所需要的参数数时，返回一个可以传入剩余参数的高阶函数
+
+```js
+let add = function (a, b, c) {
+  return a + b + c;
+};
+
+function curry(fn, ...items) {
+  if (fn.length == items.length) fn(...items);
+  return (...rests) => curry(fn, ...items, ...rests); //递归添加参数
+}
+
+let addCurry = curry(add);
+console.log(
+  addCurry(1)(2, 4), //7
+  addCurry(9)(10)(10), //29
+);
+```
+
+### 5.2 函数组合（compose）
+
+组合函数，目的是将多个函数组合成一个函数
+
+```js
+function compose(...args: any[]) {
+  return (subArgs: any) => {
+    return args.reverse().reduce((acc, func, index) => func(acc), subArgs);
+  };
+}
+```
+
+### 5.3 函数管道（pipe）
+
+`compose`执行是从右到左的。而管道函数，执行顺序是从左到右执行的
+
+```js
+function pipe(args: any[]) {
+  return (subArgs) => {
+    return args.reduce((acc, func, index) => func(acc), subArgs);
+  };
 }
 ```
 
@@ -728,6 +807,33 @@ async function retry(request, limit, times = 1) {
     return retry(request, limit, ++times);
   }
 }
+```
+
+### 5.8 超时中断
+
+```js
+// 本质上利用了闭包
+let cancelToken = undefined;
+const myPromise = new Promise((resolve, reject) => {
+  let timeout = setTimeout(() => {
+    resolve('promise resolved!');
+  }, 3000);
+
+  cancelToken = () => {
+    clearTimeout(timeout);
+    reject('promise rejected!');
+  };
+});
+
+myPromise
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+cancelToken();
 ```
 
 ## 六、React
