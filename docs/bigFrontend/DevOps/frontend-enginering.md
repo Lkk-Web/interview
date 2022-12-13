@@ -262,6 +262,8 @@ getLCP(console.log);
 
 #### 3.2.1 SSR
 
+[React SSR 原理](https://github.com/lgwebdream/FE-Interview/issues/930)
+
 ### 3.3 构建渲染方面
 
 ### 3.4 缓存方面
@@ -289,3 +291,38 @@ CICD 是 持续集成（Continuous Integration）和持续部署（Continuous De
 ## 十二、Low Code
 
 ## 十三、webrtc
+
+## 十四、其他
+
+## 14.1 鉴权 - SSO
+
+单点登录 SSO(Single Sign On),是一个多系统共存的环境下，用户在一处登录后，就不用在其他系统中登录，也就是用户的一次登录得到其他所有系统的信任
+
+单点登录原理:
+
+单点登录有`同域`和`跨域`两种场景
+
+- 同域
+
+适用场景：都是企业自己的系统，所有系统都使用同一个一级域名通过不同的二级域名来区分。
+
+门户系统设置的`cookie`的 domain 为`一级域名`也是 zlt.com，这样就可以共享门户的 cookie 给所有的使用该域名 xxx.alt.com 的系统
+
+使用 Spring Session 等技术让所有系统共享 Session
+
+这样只要门户系统登录之后无论跳转应用 1 或者应用 2，都能通过门户 Cookie 中的 sessionId 读取到 Session 中的登录信息实现单点登录
+
+- 跨域
+
+单点登录之间的系统域名不一样，例如第三方系统。由于域名不一样`不能共享 Cookie` 了，需要的一个独立的授权系统，即一个独立的认证中心(passport),子系统的登录均可以通过 passport，子系统本身将不参与登录操作，当一个系统登录成功后，passprot 将会颁发一个令牌给子系统，子系统可以拿着令牌去获取各自的保护资源，为了减少频繁认证，各个子系统在被 passport 授权以后，会建立一个局部会话，在一定时间内无需再次向 passport 发起认证
+
+1. 用户第一次访问应用系统的时候，因为没有登录，会被引导到认证系统中进行登录；
+2. 根据用户提供的登录信息，认证系统进行身份校验，如果通过，返回给用户一个认证凭据-令牌；
+3. 用户再次访问别的应用的时候，带上令牌作为认证凭证；
+4. 应用系统接收到请求后会把令牌送到认证服务器进行校验，如果通过，用户就可以在不用登录的情况下访问其他信任的业务服务器。
+
+<img src="https://camo.githubusercontent.com/c18faf88be3e1a7af3c216083cf5b7e1922303fc788770068b4c13be70e9d1bc/687474703a2f2f696d672d7374617469632e796964656e6778756574616e672e636f6d2f77786170702f69737375652d696d672f7169642d3638392d73736f2e706e67" />
+
+如：
+
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1a48ed47dd4a46de9e6f4379628a2fb4~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.image" />
