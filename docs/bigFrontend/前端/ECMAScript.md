@@ -48,8 +48,8 @@ ES6 的第一个版本，是在 1015 年 6 月发布，正式名称就是《ECMA
 - Object.values()
 - Object.entries()
 - Object.getOwnPropertyDescriptors()
-- 尾逗号
-- 共享内存 and 原子操作
+- [尾逗号](/big-frontend/前端/ecmascript#75-尾逗号合法)
+- [共享内存 and 原子操作](/big-frontend/前端/ecmascript#76-共享内存与原子操作)
 
 `ES9(2018)`
 
@@ -68,6 +68,7 @@ ESNext
 - JSON improvements
 - Well-formed JSON.stringify()
 - Function.prototype.toString()
+- BigInt
 
 # ES6
 
@@ -486,6 +487,30 @@ const num = 2 ** 3;
 ```
 
 > 注：幂运算符是右结合的：a ** b ** c 等于 a ** (b ** c)。
+
+### 7.5 尾逗号合法
+
+函数定义参数和调用函数的参数中添加尾逗号合法，这个在 ES2015 中是不合法的。
+
+例如：
+
+```js
+const arr = [100, 200, 300, 400];
+const obj = { a: 1, b: 2 };
+```
+
+解决的问题：
+
+1. 处理数据不必再手动处理最后一个逗号的问题
+2. 函数参数尾逗号报错不友好
+
+### 7.6 共享内存与原子操作
+
+`共享内存`允许多个线程并发读写数据
+
+`原子操作`则能够进行并发控制，确保多个存在竞争关系的线程顺序执行。
+
+由于 Web Worker 的出现，我们可以通过 JavaScript 的内置对象 Worker 的创建一个后台任务，然后执行一些复杂的任务以避免主线程被堵塞
 
 ## 八、Set 和 Map 数据结构
 
