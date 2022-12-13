@@ -208,6 +208,16 @@ function withinErrorMargin(left, right) {
 withinErrorMargin(0.1 + 0.1, 0.3); // true
 ```
 
+### 3.3 isInteger
+
+isInteger() 函数用于检测指定参数是否为整数，如果是整数返回 true，否则返回 false。
+
+- 可以判断是否为偶数
+
+```js
+const numBool = Number.isInteger(number / 2);
+```
+
 ## 四、Object API
 
 ### 4.1 is()
