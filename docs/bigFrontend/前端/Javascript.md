@@ -417,6 +417,20 @@ export default () => (
 - [手撕 call](/interview/frontend-shred-code#25-手撕-call)
 - [手撕 bind](/interview/frontend-shred-code#26-手撕-bind)
 
+### 2.6 time & timeEnd
+
+`console.time`和`console.timeEnd`这两个方法可以用来让 WEB 开发人员测量一个 javascript 脚本程序执行消耗的时间
+
+console.time 方法是开始计算时间，console.timeEnd 是停止计时，输出脚本执行的时间。
+
+```js
+console.time('testForEach');
+
+// your code
+
+console.timeEnd('testForEach');
+```
+
 ## 三、性能优化函数
 
 ### 3.1 懒加载
