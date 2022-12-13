@@ -226,6 +226,32 @@ undefined == null      //true
 
 JSON (JavaScript Object Notation, JS 对象标记) 是一种轻量级的数据交换格式。它基于 ECMAScript (w3c 制定的 js 规范)的一个子集，采用完全独立于编程语言的文本格式来存储和表示数据。简洁和清晰的层次结构使得 JSON 成为理想的数据交换语言。
 
+#### 1.5.1 JSON.stringify
+
+1. 能够讲数据转为字符串
+2. 能够将字符串 parse 后创建新对象（新地址），即简单实现深拷贝
+
+```js
+let temp = JSON.parse(JSON.stringify(OBJ));
+```
+
+缺点：
+
+1. `性能差`,根据网上的数据大概比遍历慢几倍.
+
+2. 无法实现对函数 、RegExp 等特殊对象的克隆
+
+```js
+let temp = JSON.parse(JSON.stringify( fun: function name(params) {})); // {}
+let temp = JSON.parse(JSON.stringify({ name: /abc/ })); // {}
+```
+
+3. 会抛弃对象的 constructor,所有的构造函数会指向 Object
+
+4. 对象有循环引用,会报错
+
+5. 如果被拷贝的对象中某个属性的值为 undefined 或含有 symbol 属性名，则拷贝之后该属性会丢失
+
 ### 1.6 arguments
 
 `arguments`：arguments 是一个类似于数组的对象，对应于传递给函数的参数，他有 length 属性，arguments[ i ]来访问对象中的元素，但是它不能用数组的一些方法。例如 push、pop、slice 等。
