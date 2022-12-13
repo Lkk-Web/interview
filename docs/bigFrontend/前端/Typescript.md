@@ -311,7 +311,7 @@ import(“es6-modules.mjs”).then((module)=>{/*…*/}).catch((err)=>{/**…*/})
 })();
 ```
 
-#### 3.1.4 与 Commonjs 规范的区别
+#### 3.1.4 ESM 与 Commonjs 规范的区别
 
 `Commonjs`简言之，每个模块都有自己的函数包装器， Node 通过此种方式确保模块内的代码对它是私有的。
 
@@ -324,6 +324,12 @@ Construction (解析) -> Instantiation (实例化、建立链接) -> Evaluation 
 ```
 
 这些步骤是异步执行的，每一步都可以看作是相互独立的。这一点跟 CommonJS 有很大不同，对于 CommonJS 来说，每一步都是同步进行的。
+
+`Import` 和 `CommonJS` 在 webpack 打包过程中的不同：
+
+被调用的 es6 模块不会添加{**esModule:true}，只有调用者才会添加`{**esModule:true}`，并且可以进行`tree-shaking`操作，如果被调用的 es6 模块只是 import 进来，但是并没有被用到，那么被调用的 es6 模块将会被标记为/_ unused harmony default export _/，在压缩时此模块将会被删除（例外：如果被调用的 es6 模块里有立即执行语句，那么这些语句将会被保留）
+
+而 commonjs 模块会原样输出
 
 ## 四、注解
 
