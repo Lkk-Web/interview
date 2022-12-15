@@ -125,20 +125,18 @@ console.log(urlSearch(urlStr));
 ### 2.1 手撕 instanceof
 
 ```js
-function instanceof(L: Object, R: any){
-  let protoChain = Object.getPrototypeOf(L);
-  const Lprototype = R.prototype;
-  // 最坏情况递归查到Object.prototype === null
-  while(protoChain) {
-      // 两个对象指向同一个内存地址，则为同一个对象
-      if(protoChain === Lprototype) {
-        return true;
-      }
-      protoChain = Object.getPrototypeOf(protoChain);
+const instanceofs = (L, R) => {
+  if (typeof L !== 'object' || L === null) return false;
+  while (L) {
+    if (L.__proto__ == R.prototype) {
+      return true;
+    }
+    L = L.__proto__;
   }
-  // 找到终点还没找到，那就没有了呗
   return false;
-}
+};
+car instanceof String; // true
+instanceofs('car', String); // false
 ```
 
 ### 2.2 数据类型手撕
