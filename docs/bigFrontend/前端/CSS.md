@@ -770,7 +770,7 @@ module.exports = {
 
 ## 16.移动端
 
-### 16.1**viewport（视口）**
+### 16.1 viewport（视口）
 
 配置视口：
 
@@ -782,3 +782,5 @@ module.exports = {
 ```
 
 ![img](https://pic3.zhimg.com/80/v2-1c83186a01781649b393c9e0b055c4a2_720w.jpg)
+
+### !apng
