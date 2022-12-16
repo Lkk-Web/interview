@@ -8,6 +8,20 @@ order: 3
 
 从本质上讲，webpack 是现代 JavaScript 应用程序的静态模块打包器。当 webpack 处理你的应用程序时，它会在内部从一个或多个入口点构建一个依赖关系图，然后将项目所需的每个模块组合成一个或多个 `bundles`，这些 bundles 是提供内容的静态资产。
 
+webpack 工作的原理是什么？工作流程是什么？
+
+webpack 读取配置，根据入口开始遍历文件，解析依赖，使用 loader 处理各模块，然后将文件打包成 `bundle` 后输出到 output 指定的目录中。
+
+webpack 的工作流程是
+
+1. Webpack CLI 启动打包流程，解析配置项参数。
+2. 载入 Webpack 核心模块，创建 Compiler 对象。
+3. 注册 plugins。
+4. 使用 Compiler 对象开始编译整个项目。
+5. 从入口文件开始，解析模块为 AST，分析模块依赖，形成依赖关系树。
+6. 递归依赖树，将每个模块交给对应的 Loader 处理。
+7. 合并 Loader 处理完的结果，将打包结果输出到 dist 目录。
+
 ## 一、概念
 
 - entry:webpack 工作开始的地方，就是一个 js 文件。webpack 通过这个文件内的 import，收集其他模块文件，在通过其他模块文件内的 import 语句，收集其他依赖，最后将所有模块文件打包到一起，形成一个整体可运行的代码。 默认的入口文件是`src/index.js`。
