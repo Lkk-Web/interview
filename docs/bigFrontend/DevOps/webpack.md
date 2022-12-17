@@ -242,6 +242,25 @@ module.exports = {
 
 > 在 webpack 5 中 HMR 已自动支持。无需配置
 
+- 热更新原理:
+
+1. Webpack Compiler: 将 JS 编译成 Bundle
+2. Bundle Server: 提供文件在浏览器的访问，实际上就是一个服务器
+3. HMR Server: 将热更新的文件输出给 HMR Runtime
+4. HMR Runtime: 会被注入到 bundle.js 中，与 HRM Server 通过 `WebSocket` 链接，接收文件变化，并更新对应文件
+5. bundle.js: 构建输出的文件
+
+使用`webpack-dev-server`去启动本地服务，内部实现主要使用了 webpack、express、websocket。
+
+- 使用 express 启动本地服务，当浏览器访问资源时对此做响应。
+- 服务端和客户端使用 websocket 实现长连接
+- webpack 监听源文件的变化，即当开发者保存文件时触发 webpack 的重新编译。
+  - 每次编译都会生成 hash 值、已改动模块的 json 文件、已改动模块代码的 js 文件
+  - 编译完成后通过 socket 向客户端推送当前编译的 hash 戳
+- 客户端的 websocket 监听到有文件改动推送过来的 hash 戳，会和上一次对比
+  - 一致则走缓存
+  - 不一致则通过 ajax 和 jsonp 向服务端获取最新资源
+
 ## 三、Entry(入口)
 
 用法：`entry: <entryChunkName> string | [<entryChunkName> string] | {}`
