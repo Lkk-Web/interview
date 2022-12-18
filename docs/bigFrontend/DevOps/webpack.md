@@ -53,7 +53,9 @@ module.exports = {
 };
 ```
 
-由于 tree shaking 只支持 esmodule ，如果你打包出来的是 commonjs，此时 tree-shaking 就失效了。不过当前大家都用的是 vue，react 等框架，他们都是用 babel-loader 编译，以下配置就能够保证他一定是 esmodule.
+由于 tree shaking 只支持 esmodule ，如果你打包出来的是 `commonjs`，此时 tree-shaking 就失效了。不过当前大家都用的是 vue，react 等框架，他们都是用 babel-loader 编译，以下配置就能够保证他一定是 esmodule.
+
+> 因为 require 是运行时调用，所以 require 理论上可以运用在代码的任何地方，没有办法在编译时候就确定模块是否被用到，所以无法彻底地将不用的模块摇掉。
 
 ```json
 {
