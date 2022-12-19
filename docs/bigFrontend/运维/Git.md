@@ -265,7 +265,7 @@ git branch --set-upstream-to=origin/<远程分支> <本地分支>
 上传本地分支到远程，同是把上传后的远程分支设置为本地分支的上游分支：
 
 ```bash
-git push set-upstream origin HEAD:<远程分支>
+git push upstream origin HEAD:<远程分支>
 ```
 
 - 取消分支上游：
