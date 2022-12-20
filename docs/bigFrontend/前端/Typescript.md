@@ -351,6 +351,7 @@ let num: number;
 let str: string;
 let bool: boolean;
 let boolArray: boolean[];
+let DOM: HTMLElement;
 function identity(num: number): number {
   return num;
 }
