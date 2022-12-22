@@ -12,16 +12,60 @@ React 18:
 - [流式 SSR](/big-frontend/前端/react#75-流式-ssr)
 - 新 Hooks:[useDeferredValue](/big-frontend/前端/react#45-usedeferredvalue)、[useSyncExternalStore](/big-frontend/前端/react#46-usesyncexternalstore)、[useInsertionEffect](/big-frontend/前端/react#47-useinsertioneffect)
 
-React 基于浏览器的事件机制自身实现了一套事件机制，包括事件注册、事件的合成、事件冒泡、事件派发等，在 React 中这套事件机制被称之为合成事件。
+## 一、基础务实
 
-在原生事件中，可以通过返回 false 方式来阻止默认行为，但是在 React 中，需要显式使用 e.preventDefault() 方法来阻止。
+### 1.1 事件机制
 
-#### 1.1 setState 的同步与异步
+React 基于浏览器的事件机制自身实现了一套事件机制，包括`事件注册`、`事件合成`、`事件冒泡`、`事件派发`等，在 React 中这套事件机制被称之为合成事件。
+
+在原生事件中，可以通过返回 false 方式来阻止默认行为，但是在 React 中，需要显式使用 `e.preventDefault()` 方法来阻止。
+
+#### 1.1.1 事件在 JSX 中的转化
+
+以下代码为为我们在 jsx 中所书写的：
+
+```js
+class Index extends React.Component {
+  handerClick = (value) => console.log(value);
+  render() {
+    return (
+      <div>
+        <button onClick={this.handerClick}> 按钮点击 </button>
+      </div>
+    );
+  }
+}
+```
+
+首先会经过 babel 转换成 React.createElement 形式
+
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/effeeb9ea7f7475faa34eb552995b77c~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.awebp"/>
+
+最终然后会被转成 [fiber](/big-frontend/前端/react#71-fiber) 对象形式如下
+
+<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a499072aa0ad469e9e292ac986be7975~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.awebp"/>
+
+> fiber 对象上的 memoizedProps 和 pendingProps 保存了我们的事件。
+
+### 1.2 合成事件
+
+React 合成事件（SyntheticEvent）是 React 模拟原生 DOM 事件所有能力的一个事件对象，即浏览器原生事件的跨浏览器包装器。它根据 W3C 规范 来定义合成事件，兼容所有浏览器，拥有与浏览器原生事件相同的接口。
+
+即在 react 中，我们绑定的事件 onClick 等，并不是原生事件，而是由原生事件合成的 React 事件，比如 click 事件合成为 onClick 事件。比如 `blur` , `change` , `input` , `keydown` , `keyup` 等 , 合成为 onChange。在 React 中，所有事件都是合成的，不是原生 DOM 事件，但可以通过 e.nativeEvent 属性获取 DOM 事件.
+
+合成事件解决的问题：
+
+1. 进行浏览器兼容，实现更好的跨平台
+
+2. 避免垃圾回收
+   - 事件对象可能会被频繁创建和回收，因此 React 引入事件池，在事件池中获取或释放事件对象。即 React 事件对象不会被释放掉，而是存放进一个数组中，当事件触发，就从这个数组中弹出，避免频繁地去创建和销毁(垃圾回收) 。
+
+#### 1.2.1 setState 的同步与异步
 
 - 在组件生命周期或 React 合成事件中，setState 是异步；
 - 在 setTimeout 或者原生 dom 事件中，setState 是同步；
 
-##### 1.1.1 为什么设计异步？
+#### 1.1.2 为什么设计异步？
 
 `setState`设计为异步，可以显著的提升性能；
 
@@ -32,11 +76,9 @@ React 基于浏览器的事件机制自身实现了一套事件机制，包括�
 
 - state 和 props 不能保持一致性，会在开发中产生很多的问题；
 
-##### 1.1.2 setState 为 defer
+> Warning: setState 是一个伪异步，或者可以称为 defer，即延迟执行但本身还在一个事件循环，所以它的执行顺序在同步代码后、异步代码前。
 
-setState 是一个伪异步，或者可以称为 defer，即延迟执行但本身还在一个事件循环，所以它的执行顺序在同步代码后、异步代码前。
-
-## 2、生命周期
+## 二、生命周期
 
 ### 2.1 类式编写 生命周期
 
@@ -44,13 +86,13 @@ setState 是一个伪异步，或者可以称为 defer，即延迟执行但本�
 
 componentDidMount() 在组件挂载后 (插入 DOM 树后) 立即调用，componentDidMount() 是发送网络请求、启用事件监听方法的好时机，并且可以在 此钩子函数里直接调用 setState()
 
-componentDidUpdate
+- componentDidUpdate
 
-componentWillUnmount
+- componentWillUnmount
 
 ### 2.2 useEffect 模拟生命周期
 
-## 3、组件
+## 三、组件
 
 ### 3.1 HOC
 
@@ -79,6 +121,32 @@ export default () => (
 
 ### 4.5 useDeferredValue
 
+## 四、Hooks
+
+### 4.1 useState
+
+### 4.2 useEffect
+
+#### 4.2.1 useLayoutEffect
+
+`useLayoutEffect` 和 `useEffect` 的结构、功能相同，区别只是它们在事件循环中的调用时机不同。
+
+useEffect 的回调函数是`异步宏任务`，在下一轮事件循环才会执行。
+
+- `好处`：这使得它适用于许多常见的副作用场景，比如设置订阅和事件处理等情况，因为绝大多数操作不应阻塞浏览器对屏幕的渲染更新。
+
+- `坏处`：产生二次渲染问题，第一次渲染的是旧的状态，接着下一个事件循环中，执行改变状态的函数，组件又携带新的状态渲染，在视觉上，就是二次渲染。
+
+而 `useLayoutEffect` 与 componentDidMount、componentDidUpdate 生命周期钩子是`异步微任务`，在渲染线程被调用之前就执行。这意味着回调内部执行完才会更新渲染页面，没有二次渲染问题.
+
+- `好处`：没有二次渲染问题，页面视觉行为一致。
+
+- `坏处`：在回调内部有一些运行耗时很长的代码或者循环时，页面因为需要等 JS 执行完之后才会交给渲染线程绘制页面，等待时期就是白屏效果，即`阻塞了渲染`
+
+### 4.3 useCallback
+
+### 4.4 useMemo
+
 React 18 新 hook,useDeferredValue 可以让一个 state 延迟生效，**只有当前没有紧急更新时，该值才会变为最新值**。useDeferredValue 和 startTransition 一样，都是标记了一次非紧急更新。
 
 ```js
@@ -101,9 +169,15 @@ const state = useSyncExternalStore(subscribe, getSnapshot[, getServerSnapshot]);
 
 SPA（Single Page Application），即单页面应用。单页应用程序 (SPA) 是加载单个 HTML 页面并在用户与应用程序交互时动态更新该页面的 Web 应用程序。浏览器一开始会加载必需的 HTML 、 CSS 和 JavaScript ，所有的操作都在这张页面上完成，都由 JavaScript 来控制。
 
+### 4.8 useRef
+
+## 五、React-Router
+
+### 5.1 SPA & MPA
+
 MPA（Multi Page Application）指有多个独立的页面的应用，每个页面必须重复加载 js,css 等相关资源。多页应用跳转，需要整页资源刷新。
 
-#### 区别
+区别:
 
 | - | SPA | MPA |
 | :-: | :-: | :-: |
@@ -112,7 +186,29 @@ MPA（Multi Page Application）指有多个独立的页面的应用，每个页�
 | 适用场景(SEO) | 不利于 SEO（可借助 SSR 优化 SEO），适用于经常切换页面的场景和数据传递较多的场景 | 适用于对 SEO 要求较高的应用 |
 | 首屏时间 | 首屏时间慢，首屏时需要请求一次 html，同时还要发送一次 js 请求，两次请求回来了，首屏才会展示出来 | 首屏时间快，访问页面的时候，服务器返回一个 html，页面就会展示出来，这个过程只经历了一个 HTTP 请求 |
 
-## 4、HashRoute & HistoryRoute
+### 5.2 hash & history 的特点
+
+- hash 变化会触发网页跳转，即浏览器的前进和后退。
+
+- hash 可以改变 url ，但是不会触发页面重新加载（hash 的改变是记录在 window.history 中），即不会刷新页面。也就是说，所有页面的跳转都是在客户端进行操作。因此，这并不算是一次 http 请求，所以这种模式不利于 SEO 优化。hash 只能修改 # 后面的部分，所以只能跳转到与当前 url 同文档的 url 。
+
+- hash 通过 `window.onhashchange` 的方式，来监听 hash 的改变，借此实现无刷新跳转的功能。
+
+回到之前的问题，为什么会自动到根目录去寻找。首先因为没有配置 basePath，导致应用根据根路径来映射。然后是 SPA 应用，每次跳转页面，都会导致加上子路径重新变成根路径（并不是相对路径），因此需要配置 HashRoute。
+
+#### 5.2.1 hash 的原理
+
+hash 是通过监听浏览器 `onhashchange()` 事件变化，查找对应路由应用。通过改变 `location.hash` 改变页面路由。
+
+#### 5.2.2 history 的原理
+
+浏览器窗口有一个 history 对象，用来保存浏览历史。比如，该窗口先后访问了三个地址，那么 history 对象就包括三项，length 属性等于 3。而要监听路由变化则要使用订阅-发布模式实现。
+
+HTML5 为 history 对象添加了两个新方法，`history.pushState()` 和 `history.replaceState()`，用来在浏览历史中添加和修改记录。所有主流浏览器都支持该方法（包括 IE10）。
+
+`pushState`,允许用户可以手动的添加一条历史记录，主要特别注意的是，该条记录不会刷新页面
+
+#### 5.2.3 HashRoute & HistoryRoute
 
 今天部署遇到一个奇怪的问题，前端打包后的文件，在访问的时候没有 basePath，会自动到根目录去寻找，答案是少配置了 HashRoute/HistoryRoute。
 
@@ -124,6 +220,10 @@ MPA（Multi Page Application）指有多个独立的页面的应用，每个页�
 | 不需要服务器任何配置 | 需要在服务器配置一个回调路由 |
 
 ### 7.1 Fiber
+
+## 六、数据管理方案
+
+## 七、React 特性
 
 ### 7.2 React 18 Concurrent Mode
 
