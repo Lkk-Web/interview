@@ -286,6 +286,45 @@ module.exports = {
 
 ## 五、Loaders(加载器)
 
+loader 是文件加载器，能够加载资源文件，并对这些文件进行一些处理，诸如编译、压缩等，最终一起打包到指定的文件中，处理一个文件可以使用多个 loader， loader 接收源文件内容作为参数，其它 loader 接收前一个执行的 loader 的返回值作为参数，最后执行的 loader 会返回此模块的 JavaScript 源码.
+
+一个最简单的 loader 例子:
+
+```js
+module.exports = function (source) {
+  // source 为 compiler 传递给 Loader 的一个文件的原内容
+  // 该函数需要返回处理后的内容，这里简单起见，直接把原内容返回了，相当于该 Loader 没有做任何转换
+  return source;
+};
+```
+
+> loader 的执行顺序是从右向左的
+
+Loader 本身仅仅只是一个函数，接收模块代码的内容，然后返回代码内容转化后的结果，并且一个文件还可以链式的经过多个 loader 转化(比如 `scss-loader` => `css-loader` => `style-loader`)。
+
+### 5.1 常见 loader
+
+1. file-loader:文件加载
+2. url-loader：文件加载，可以设置阈值，小于时把文件 base64 编码
+3. image-loader：加载并压缩图片
+4. json-loader：webpack 默认包含了
+5. babel-loader：ES6+转成 ES5
+6. ts-loader：将 ts 转成 js
+7. awesome-typescript-loader：比上面那个性能好
+8. css-loader：处理@import 和 url 这样的外部资源
+9. style-loader：在 head 创建 style 标签把样式插入；
+10. postcss-loader：扩展 css 语法，使用 postcss 各种插件`autoprefixer`，`cssnext`，`cssnano`
+11. eslint-loader,tslint-loader:通过这两种检查代码，tslint 不再维护，用的 eslint
+12. vue-loader：加载 vue 单文件组件
+13. i18n-loader：国际化
+14. cache-loader：性能开销大的 loader 前添加，将结果缓存到磁盘；
+15. svg-inline-loader：压缩后的 svg 注入代码；
+16. source-map-loader：加载 source Map 文件，方便调试；
+17. expose-loader:暴露对象为全局变量
+18. imports-loader、exports-loader 等可以向模块注入变量或者提供导出模块功能
+19. raw-loader 可以将文件已字符串的形式返回
+20. 校验测试：mocha-loader、jshint-loader 、eslint-loader 等
+
 ## 六、Plugins(插件)
 
 ## 七、Mode(模式)
