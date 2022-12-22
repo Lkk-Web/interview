@@ -327,6 +327,55 @@ Loader 本身仅仅只是一个函数，接收模块代码的内容，然后返�
 
 ## 六、Plugins(插件)
 
+plugin 功能更强大，Loader 不能做的都是它做。它的功能要更加丰富。从打包优化和压缩，到重新定义环境变量，功能强大到可以用来处理各种各样的任务。
+
+plugin 让 webpack 的机制更加灵活，它在编译过程中留下的一系列生命周期的钩子，通过调用这些钩子来实现在不同编译结果时对源模块进行处理。
+
+它的编译是基于事件流来编译的，主要通过 taptable 来实现插件的绑定和执行的，taptable 主要是基于发布订阅执行的插件架构，是用来创建声明周期钩子的库。调用 complier.hooks.run.tap 开始注册，创建 compilation，基于配置创建 chunks，在通过 parser 解析 chunks，使用模块和依赖管理模块之间的依赖关系，最后使用 template 基于 compilation 数据生成结果代码
+
+### 6.1 plugin 实现
+
+plugin 的实现可以是一个类，使用时传入相关配置来创建一个实例，然后放到配置的 plugins 字段中，而 plugin 实例中最重要的方法是 `apply`，该方法在 webpack compiler 安装插件时会被调用一次，apply 接收 webpack compiler 对象实例的引用，你可以在 compiler 对象实例上注册各种事件钩子函数，来影响 webpack 的所有构建流程，以便完成更多其他的构建任务。
+
+一个最简单的 plugin 例子：
+
+```js
+class BasicPlugin {
+  // 在构造函数中获取用户给该插件传入的配置
+  constructor(options) {}
+
+  // Webpack 会调用 BasicPlugin 实例的 apply 方法给插件实例传入 compiler 对象
+  apply(compiler) {
+    compiler.plugin('compilation', function (compilation) {});
+  }
+}
+
+// 导出 Plugin
+module.exports = BasicPlugin;
+```
+
+### 6.2 常见 plugin
+
+1. ignore-plugin：忽略文件
+2. terser-webpack-plugin: 支持压缩 ES6 (Webpack4)
+3. `webpack-parallel-uglify-plugin`: 多进程执行代码压缩，提升构建速度
+4. mini-css-extract-plugin: 分离样式文件，CSS 提取为独立文件，支持按需加载
+5. serviceworker-webpack-plugin：为网页应用增加离线缓存功能
+6. clean-webpack-plugin: 目录清理
+7. speed-measure-webpack-plugin: 可以看到每个 Loader 和 Plugin 执行耗时
+8. webpack 内置 UglifyJsPlugin，压缩和混淆代码。
+9. webpack 内置 CommonsChunkPlugin，提高打包效率，将第三方库和业务代码分开打包。
+10. ProvidePlugin：自动加载模块，代替 require 和 import
+11. html-webpack-plugin:可以根据模板自动生成 html 代码，并自动引用 css 和 js 文件
+12. extract-text-webpack-plugin: 将 js 文件中引用的样式单独抽离成 css 文件
+13. DefinePlugin: 编译时配置全局变量，这对开发模式和发布模式的构建允许不同的行为非常有用。
+14. HotModuleReplacementPlugin: 热更新
+15. DllPlugin 和 DllReferencePlugin 相互配合，前者第三方包的构建，只构建业务代码，同时能解决 Externals 多次引用问题。DllReferencePlugin 引用 DllPlugin 配置生成的 manifest.json 文件，manifest.json 包含了依赖模块和 module id 的映射关系
+16. optimize-css-assets-webpack-plugin 不同组件中重复的 css 可以快速去重
+17. `webpack-bundle-analyzer`:一个 webpack 的 bundle 文件分析工具，将 bundle 文件以可交互缩放的 treemap 的形式展示。
+18. `compression-webpack-plugin`: 生产环境可采用 gzip 压缩 JS 和 CSS
+19. `happypack`：通过多进程模型，来加速代码构建
+
 ## 七、Mode(模式)
 
 ## 八、工程化样例
@@ -336,6 +385,32 @@ Loader 本身仅仅只是一个函数，接收模块代码的内容，然后返�
 ### 8.2 优雅降级
 
 ### 8.3 optimization(优化)
+
+- 提升构建速度：
+
+使用高版本的 webpack 和 nodejs
+
+多进程多实例构建
+
+多进程多实例并行压缩
+
+进一步分包：预编译资源模块
+
+充分利用缓存提升二次构建速度
+
+缩小构建目标
+
+使用 oneOf
+
+- 提升加载和运行时性能：
+
+使用 Tree Shaking 擦除无用的 js 和 css
+
+scope-hoisting
+
+使用 webpack 进行图片压缩
+
+优化 polyfill 方案
 
 #### 8.3.1 optimization.concatenateModules
 
