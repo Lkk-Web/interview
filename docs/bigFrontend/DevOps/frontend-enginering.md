@@ -260,9 +260,11 @@ getLCP(console.log);
 
 ### 3.2 请求方面
 
-#### 3.2.1 SSR
+#### 3.2.1 BSR、SSG、SSR
 
 [React SSR 原理](https://github.com/lgwebdream/FE-Interview/issues/930)
+
+[Next.js 的三种渲染方式（BSR、SSG、SSR）](https://zhuanlan.zhihu.com/p/341229054)
 
 ### 3.3 构建渲染方面
 
