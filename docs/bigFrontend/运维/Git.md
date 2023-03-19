@@ -24,6 +24,8 @@ git push
 
 cd ～/.ssh 如果提示 cd: no such file or directory: ～/.ssh 就说明是没有配置过，是正常的，继续操作即可
 
+> 也可通过 `git config -list` 查看配置
+
 git config --global user.name "你的账号名"
 
 git config --global user.email "你的 git 邮箱"
