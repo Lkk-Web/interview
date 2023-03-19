@@ -82,6 +82,10 @@ title: '考研record'
 
 3. 数据结构
 
+- 算法:
+  - 单链表
+  - [剑指 Offer 18. 删除链表的节点](https://leetcode.cn/problems/shan-chu-lian-biao-de-jie-dian-lcof/description/)
+
 - 对第一章进行归纳总结
 - 复习、整理 「blog 算法」
 
@@ -95,7 +99,7 @@ title: '考研record'
 
 - 这周“6 天新内容，1 天复习的目标”是否达标呢?
 
-#### 3/19
+#### 3/20
 
 😜Todo：
 
@@ -110,5 +114,7 @@ title: '考研record'
 
 3. 数据结构
 
+- 算法:
+  - 双链表（acwing 数一 46min）
 - 2.3 线性表的链式存储
 - 2.3 习题
