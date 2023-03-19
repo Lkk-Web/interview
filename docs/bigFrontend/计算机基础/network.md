@@ -1,7 +1,5 @@
 ---
-group:
-  order: 6
-order: 1
+order: 2
 ---
 
 # 计算机网络

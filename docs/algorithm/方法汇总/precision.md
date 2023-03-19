@@ -6,11 +6,11 @@ order: 3
 
 高精度读入时用字符串存储，用数组倒序存储每位的值，方便进位。
 
-### 高精度加法
+### 1. 高精度加法
 
 核心思想：模拟人工加法，t+=ai+bi+t，逢十进一，计算 t 的值，t%10 为当前位值，t/10 为进位值
 
-```C
+```c
 // C = A + B, A >= 0, B >= 0
 vector<int> add(vector<int> &A, vector<int> &B)
 {
@@ -31,11 +31,11 @@ vector<int> add(vector<int> &A, vector<int> &B)
 }
 ```
 
-### 高精度减法
+### 2. 高精度减法
 
 核心思想：模拟人工减法，t-=ai-bi-t，计算 t 的值，t%10 为当前位值，t 为借位值
 
-```C
+```c
 // C = A - B, 满足A >= B, A >= 0, B >= 0,计算结果为负数时即-(B-A)
 vector<int> sub(vector<int> &A, vector<int> &B)
 {
@@ -54,13 +54,13 @@ vector<int> sub(vector<int> &A, vector<int> &B)
 }
 ```
 
-### 高精度乘法
+### 3. 高精度乘法
 
 - 高精度乘低精度
 
 核心思想：模拟人工乘法，t+=(ai\*b)+t/10，计算 t 的值，t%10 为当前位值，t/10 为进位值
 
-```C
+```c
 // C = A * b, A >= 0, b >= 0
 vector<int> mul(vector<int> &A, int b)
 {
@@ -80,13 +80,13 @@ vector<int> mul(vector<int> &A, int b)
 }
 ```
 
-### 高精度除法
+### 4. 高精度除法
 
 - 高精度除低精度
 
 核心思想：模拟人工除法，r+=(r\*10)+ai/b，计算 r 的值，b 为除数，r 为余数
 
-```C
+```c
 // A / b = C ... r, A >= 0, b > 0
 vector<int> div(vector<int> &A, int b, int &r)
 {
