@@ -88,7 +88,7 @@ title: '考研record'
 3. 数据结构
 
 - 算法:
-  - 单链表
+  - acwing 单链表
   - [剑指 Offer 18. 删除链表的节点](https://leetcode.cn/problems/shan-chu-lian-biao-de-jie-dian-lcof/description/)
 
 - 对第一章进行归纳总结
@@ -106,7 +106,7 @@ title: '考研record'
 
 #### 3/20
 
-😜Todo：
+💪Todo：
 
 1. 英语
 
@@ -114,15 +114,16 @@ title: '考研record'
 
 2. 数学
 
-- 2.2 视频课
-- 2.1 & 2.2 的学习包习题
+- 第一章错题本的编写
+- 2.1 的习题纠错
 
 3. 数据结构
 
 - 算法:
-  - 双链表（acwing 数一 46min）
-- 2.3 线性表的链式存储
-- 2.3 习题
+  - 双链表（acwing 数据一 1h1min）
+  - [剑指 Offer 25. 合并两个排序的链表](https://leetcode.cn/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/)
+
+复盘：要起早点，这两天冷，偷懒了。再就是记单词不能占用2个小时以上的，不然一天做不了其他事情。晚上吃了烧烤，玩了三国杀（还是要少玩，没状态和时间学习）。
 
 
 #### 3/21
@@ -133,3 +134,14 @@ title: '考研record'
 
 - 恋恋有词 Unit 22、23
 
+2. 数学
+
+- 2.2 视频课
+- 2.1 & 2.2 的学习包习题
+
+3. 数据结构
+
+- 算法:
+  - 栈（acwing 数据一 1h1min）
+- 2.3 线性表的链式存储
+- 2.3 习题
