@@ -38,6 +38,38 @@ void remove(int k){
 
 双链表优化某些问题
 
+```c
+#include <iostream>;
+using namespace std;
+
+const int N = 100010;
+
+int m;
+int e[N], l[N], r[N], idx
+// e表示结点的值，l,r分别表示左链和右链，idx表示插入的点
+void init(){
+    // 1 为右端点，0 为左端点
+    r[0] = 1,l[1] = 0;
+    idx = 2; //idx 表示链表从2开始(0,1已经被占用)
+}
+
+// 在第k点的右边插入x
+void add(int k, int x){
+    e[idx] = x;
+    r[idx] = r[k];   //先插入，后改链
+    l[idx] = k; 
+    l[r[k]] = idx;
+    r[k] = idx;
+}
+
+// 删除第k个点
+void remove(int k){
+    r[l[k]] = r[k];
+    l[r[k]] = l[k]; 
+}
+
+```
+
 ## 二、Hash 表
 
 Hash 表是基于哈希函数建立的一种查找表，把庞大的数据结构映射到 0-N 的数，即 Key 值，由于是小的数据结构隐射到大的数据结构，因此会产生哈希冲突（一般取模为质数，这样冲突最少 ）。
