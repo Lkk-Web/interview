@@ -28,13 +28,63 @@ public:
 };
 ```
 
+### 24. 反转链表
+
+[剑指 Offer II 024. 反转链表](https://leetcode.cn/problems/UHnkqh/)
+
+给定单链表的头节点 head ，请反转链表，并返回反转后的链表的头节点。
+
+```
+输入：head = [1,2,3,4,5]
+输出：[5,4,3,2,1]
+```
+
+解法一：`思路(头指针后插入元素)`：创建一个新节点，用来存储反装链表当前值,然后循环插入到反转链表的头指针后。
+
+```c
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode *rever = new ListNode(-1);
+
+        while(head != nullptr){
+            //创建一个新节点，用来存储反装链表当前值
+            ListNode *current = new ListNode(head->val);
+            //在头结点后插入当前值
+            current->next = rever->next;
+            rever->next = current;
+            head = head->next;
+        }
+        return rever->next;
+    }
+};
+```
+
+解法二：`思路(单链表尾部添加元素)`：在遍历链表时，将当前节点的 next 指针改为指向前一个节点。由于节点没有引用其前一个节点，因此必须事先存储其前一个节点。在更改引用之前，还需要存储后一个节点。最后返回新的头引用。
+
+```c
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* prev = nullptr;
+        ListNode* curr = head;
+        while (curr) {
+            ListNode* next = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = next;
+        }
+        return prev;
+    }
+};
+
+```
+
 ### 25. 合并两个排序的链表
 
 [剑指 Offer 25. 合并两个排序的链表](https://leetcode.cn/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/)
 
 输入两个递增排序的链表，合并这两个链表并使新链表中的节点仍然是递增排序的。
-
-`思路(单链表尾部添加元素)`：比较2个链表的当前值，值小的添加到新的链表，并将指针往后挪一位，当其中1个链表没有值后，直接将有值的链表放在新链表后。
 
 ```
 输入：1->2->4, 1->3->4
