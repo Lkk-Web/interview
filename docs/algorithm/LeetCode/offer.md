@@ -115,3 +115,50 @@ public:
     }
 };
 ```
+
+### 27. 回文链表
+
+[剑指 Offer II 027. 回文链表](https://leetcode.cn/problems/aMhZSa/description/)
+
+给定一个链表的 头节点 head ，请判断其是否为回文链表。
+
+如果一个链表是回文，那么链表节点序列从前往后看和从后往前看是相同的。
+
+```
+输入: head = [1,2,3,3,2,1]
+输出: true
+```
+
+`思路(反转链表，比较回文数)`：在遍历链表的同时创建一个新的链表来存储反转链表，并记录链表长度，然后循环比较前 n/2 个回文数。因此时间复杂度为 O(2n),空间复杂度为 O(n).
+
+```c
+class Solution {
+public:
+    bool judgeIsPalind(ListNode* head,ListNode* reverse,int count){
+        for(int i = 0;i < count;i++){
+            if(reverse->val != head->val) return false;
+            head = head->next;
+            reverse = reverse->next;
+        }
+        return true;
+    }
+
+    bool isPalindrome(ListNode* head) {
+        ListNode *tmp = head;   //取一个新链表，是head的指针在头部位置不移动
+        if(tmp->next == nullptr) return true;  // 处理1位数
+        ListNode *reverse = new ListNode(-1);
+
+        int index = 0;
+        while(tmp != nullptr){
+            //反转链表
+            ListNode *newNode = new ListNode(tmp->val);
+            newNode->next = reverse->next;
+            reverse->next = newNode;
+            //设置索引，获得链表长度
+            ++index;
+            tmp = tmp->next;
+        }
+        return  judgeIsPalind(head,reverse->next,index>>1);
+    }
+};
+```
