@@ -162,3 +162,66 @@ public:
     }
 };
 ```
+
+### 77. 链表排序
+
+[剑指 Offer II 077. 链表排序](https://leetcode.cn/problems/7WHec2/description/)
+
+给定链表的头结点 head ，请将其按 升序 排列并返回 排序后的链表 。
+
+```
+输入：head = [4,2,1,3]
+输出：[1,2,3,4]
+```
+
+`思路(快慢指针找中点，归并排序)`：先用快慢指针找中点（快指针一次走2次，慢指针一次走1次，因此快指针指向尾结点时，慢指针到中点），然后在用[归并排序](/algorithm/方法汇总/sort#四归并排序)的方法实现链表排序。因此时间复杂度为 O(nlogn),空间复杂度为 O(1).
+
+```c
+class Solution {
+public:
+    ListNode* sortList(ListNode* head) {
+        return sortList(head,nullptr);
+    }
+
+    ListNode* sortList(ListNode* head,ListNode* tail){
+        //当链表只有一个元素时结束递归
+        if(head == tail){
+            return head;
+        }
+
+        if(head->next == tail){
+            head->next = nullptr;
+            return head;
+        }
+
+        //快慢指针找中点
+        ListNode* fast = head,*slow = head;
+        while(fast != tail){
+            slow = slow->next;
+            fast = fast->next;
+            if(fast != tail){
+                fast = fast->next;
+            }
+        }
+        ListNode* middle = slow;
+        return merge_sort(sortList(head,middle),sortList(middle,tail));
+    }
+    // 归并
+    ListNode* merge_sort(ListNode *head1,ListNode *head2){
+        ListNode *resList = new ListNode(-1);
+        ListNode *tmp = resList,*tmp1 = head1,*tmp2 = head2;
+        while(tmp1 != nullptr && tmp2 != nullptr){
+            if(tmp1->val < tmp2->val){
+                tmp->next = tmp1;
+                tmp1 = tmp1->next;
+            }else{
+                tmp->next = tmp2;
+                tmp2 = tmp2->next;
+            }
+            tmp = tmp->next;
+        }
+        tmp->next = tmp1 != nullptr ? tmp1 : tmp2;
+        return resList->next;
+    }
+};
+```
