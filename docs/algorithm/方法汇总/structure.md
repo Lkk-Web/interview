@@ -57,7 +57,7 @@ void init(){
 void add(int k, int x){
     e[idx] = x;
     r[idx] = r[k];   //先插入，后改链
-    l[idx] = k; 
+    l[idx] = k;
     l[r[k]] = idx;
     r[k] = idx;
 }
@@ -65,10 +65,66 @@ void add(int k, int x){
 // 删除第k个点
 void remove(int k){
     r[l[k]] = r[k];
-    l[r[k]] = l[k]; 
+    l[r[k]] = l[k];
 }
 
 ```
+
+## 二、栈、队列
+
+### 2.1 栈
+
+受限的线性表，先进后出
+
+```c
+#include <iostream>
+using namespace std;
+
+const int N = 100010;
+
+int stack[N];
+int top = -1;
+
+// 插入x,入栈
+stack[++top] = x;
+// 弹出，出栈
+top--;
+// 栈顶
+int stack_top = stack[top];
+// 判断栈为空
+if(top > 0) not empty
+    eles empty
+```
+
+### 2.1.1 单调栈
+
+### 2.2 队列
+
+受限的线性表，先进先出（队头入队，出队）
+
+```c
+#include <iostream>
+using namespace std;
+
+const int N = 100010;
+
+int queue[N];
+int head = 0,tail = -1;
+
+// 插入x，入队
+queue[++tail] = x;
+// 弹出,出队
+head++;
+// 队尾
+int queue_tail = queue[tail];
+// 判断队为空
+if(head > tail)  'empty'
+    eles 'not empty'
+```
+
+### 2.2.1 单调队列
+
+滑动窗口
 
 ## 二、Hash 表
 
