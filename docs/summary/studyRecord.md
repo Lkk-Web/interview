@@ -249,7 +249,6 @@ title: '考研record'
 
 - 算法:（1h）
   - [141. 环形链表](https://leetcode.cn/problems/linked-list-cycle/description/)
-- 3.1 栈 & 队列 习题
 
 复盘：莫名摆烂了。
 
@@ -263,7 +262,7 @@ title: '考研record'
 
 #### 3/27
 
-😜Todo：
+💪Task：
 
 1. 英语
 
@@ -271,8 +270,27 @@ title: '考研record'
 
 2. 数学
 
-- 3.1 的学习包习题（2h）
-- 3.1 视频课（2h）
+- 3.1-3.5 视频课 + 课后习题（4h）
+
+3. 数据结构
+
+- 算法:（1h）
+  - [58. 最后一个单词的长度](https://leetcode.cn/problems/length-of-last-word/description/)
+- 3.1 栈 & 队列 习题
+
+复盘：题做太慢了，思维要集中，题才能做快。
+
+#### 3/28
+
+😜Todo：
+
+1. 英语
+
+- 恋恋有词 Unit 29（2h）
+
+2. 数学
+
+- 3.1 - 3.3 的学习包习题（5h）
 
 3. 数据结构
 
