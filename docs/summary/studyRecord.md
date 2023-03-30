@@ -325,7 +325,6 @@ title: '考研record'
 
 1. 英语
 
-- 恋恋有词 Unit 20-25
 - 《不背单词》100 个
 
 2. 数学
@@ -335,8 +334,11 @@ title: '考研record'
 3. 数据结构
 
 - 算法:（1h）
-  - KMP（acwing 数据一 1h57min）
+- [67. 二进制求和](https://leetcode.cn/problems/add-binary/description/)
+- KMP（acwing 数据一 1h57min）
 - 4.1 串 & KMP
+
+复盘：今天放假一天！今天的放松是为了更好的冲刺！
 
 #### 3/31
 
@@ -361,5 +363,3 @@ title: '考研record'
 4. 月度规划
 
 #### 4/1
-
-放假！
