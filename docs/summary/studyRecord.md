@@ -301,7 +301,7 @@ title: '考研record'
 
 #### 3/29
 
-😜Todo：
+💪Task：
 
 1. 英语
 
@@ -315,13 +315,23 @@ title: '考研record'
 
 - 算法:（1h）
   - [66. 加一](https://leetcode.cn/problems/plus-one/description/)
-- 3.1 栈 & 队列 习题（1h）
 
 复盘：上午在搞财务的事情，英语总算过完了一轮。加油加油！！
 
 #### 3/30
 
-😜Todo：
+💪Task：
+
+3. 数据结构
+
+- 算法:（1h）
+- [67. 二进制求和](https://leetcode.cn/problems/add-binary/description/)
+
+复盘：今天放假一天！今天的放松是为了更好的冲刺！
+
+#### 3/31
+
+💪Task：
 
 1. 英语
 
@@ -329,7 +339,7 @@ title: '考研record'
 
 2. 数学
 
-- 3.3 - 3.5 的学习包习题（5h）
+- 3.3 的学习包习题
 
 3. 数据结构
 
