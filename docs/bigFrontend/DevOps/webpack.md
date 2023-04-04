@@ -275,7 +275,7 @@ module.exports = {
       import: './src/app.js', //启动时加载的模块
       runtime: false | <string>, //运行时块的名称。设置后，将创建一个新的运行时块。它可以设置为false避免从 webpack 5.43.0 开始出现新的运行时块。
     },
-    // vendor: './src/vendor.js',多页应用
+    // vendor: './src/vendor.js',MPA多页应用
   },
 };
 ```
@@ -283,6 +283,24 @@ module.exports = {
 注：runtime 并且 dependOn 不应在单个条目上一起使用，否则会配置无效并会引发错误
 
 ## 四、Output(输出)
+
+配置 output 选项可以控制 webpack 如何向硬盘写入编译文件。注意，即使可以存在多个入口起点，但只指定一个输出配置。
+
+将一个单独的 bundle.js 文件输出到 `/dist` 目录中
+
+```js
+const config = {
+  output: {
+    filename: 'bundle.js', // 用于输出文件的文件名。
+    path: '/dist', //目标输出目录 path 的绝对路径。
+    asyncChunks :true // 创建按需加载的异步 chunk
+    /* 使用 CDN 和资源 hash */
+    publicPath: '/',
+  },
+};
+
+module.exports = config;
+```
 
 ## 五、Loaders(加载器)
 
