@@ -1,4 +1,6 @@
 # ssh root@
 git pull 
-yarn install
+git add .
+git commit -m 'feat: add the tomorrow plan' 
+git push
 yarn docs:build

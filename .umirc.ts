@@ -14,7 +14,7 @@ export default {
     {
       name: 'keywords',
       content:
-        'blog, dumi, 前端博客, 前端面经, 面试题, 算法, 运维, 算法, 数据结构, 前端全栈, 技术文档',
+        'blog, dumi, 前端博客, 前端面经, 面试题, 算法, 运维, 算法, 数据结构, 前端全栈, 技术文档, 考研',
     },
     {
       name: 'description',
@@ -29,10 +29,10 @@ export default {
   // logo: 'https://oss.kyingsoft.cn/import/logo.jpg',
   ...defineConfig({
     mode: 'site', //doc | site
-    title: `每日一寄`,
-    dynamicImport: {
-      // loading: ''
-    }, // 启用按需加载
+    title: `思必行-醒来就想躺`,
+    // dynamicImport: {
+    //   // loading: ''
+    // }, // 启用按需加载
     // description: '----<>',
     locales: [
       ['en-US', 'English'],
@@ -49,26 +49,26 @@ export default {
     ],
     // more config: https://d.umijs.org/config
   }),
-  chunks: ['vendors', 'umi'],
-  chainWebpack: function (config, { webpack }) {
-    config.merge({
-      optimization: {
-        splitChunks: {
-          chunks: 'all',
-          minSize: 30000,
-          minChunks: 3,
-          automaticNameDelimiter: '.', //默认情况下，webpack 将使用 chunk 的来源和名称生成名称（例如 vendors~main.js），定用于生成名称的分隔符
-          cacheGroups: {
-            vendor: {
-              name: 'vendors',
-              test({ resource }) {
-                return /[\\/]node_modules[\\/]/.test(resource);
-              },
-              priority: 10,
-            },
-          },
-        },
-      },
-    });
-  },
+  // chunks: ['vendors', 'umi'],
+  // chainWebpack: function (config, { webpack }) {
+  //   config.merge({
+  //     optimization: {
+  //       splitChunks: {
+  //         chunks: 'all',
+  //         minSize: 30000,
+  //         minChunks: 3,
+  //         automaticNameDelimiter: '.', //默认情况下，webpack 将使用 chunk 的来源和名称生成名称（例如 vendors~main.js），定用于生成名称的分隔符
+  //         cacheGroups: {
+  //           vendor: {
+  //             name: 'vendors',
+  //             test({ resource }) {
+  //               return /[\\/]node_modules[\\/]/.test(resource);
+  //             },
+  //             priority: 10,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  // },  // 分包，太多文件了 不影响性能
 };
