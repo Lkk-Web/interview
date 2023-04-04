@@ -48,6 +48,8 @@ title: '考研Record'
   1.  数据结构前三章
   2.  相关算法
 
+  <img src='https://oss.kyingsoft.cn/blogSource/March_studyRecord.jpg' style='width:25vw' />
+
 ### 第一周
 
 离考研还有 282 天。
@@ -367,6 +369,8 @@ title: '考研Record'
 
 ## 四月（基础阶段）
 
+  <img src='https://oss.kyingsoft.cn/blogSource/April_plan.png' />
+
 💯 本月的学习目标：
 
 - 英语
@@ -444,7 +448,7 @@ Todo：
 
 - 这周“6 天新内容，1 天复习的目标”是否达标呢?
 
-#### 4/2
+#### 4/3
 
 💪Task：
 
@@ -458,7 +462,7 @@ Todo：
 
 复盘：状态一般，保证每天 2 小时+的专业课 + 1 小时语法。
 
-#### 4/3
+#### 4/4
 
 😜Todo：
 
