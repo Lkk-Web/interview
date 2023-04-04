@@ -31,6 +31,14 @@ Bash 是目前最常用的 Shell，除非特别指明，下文的 Shell 和 Bash
 [user@hostname] $
 ```
 
+#### mac 环境
+
+执行 sh 脚本：`sh ./文件名`
+
+#### windows 环境
+
+执行 sh 脚本：`./文件名`
+
 ## 3、进入和退出方法
 
 如果你的 Shell 不是 Bash，可以输入`bash`命令启动 Bash。
