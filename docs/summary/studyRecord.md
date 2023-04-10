@@ -369,7 +369,14 @@ title: '考研Record'
 
 ## 四月（基础阶段）
 
-  <img src='https://oss.kyingsoft.cn/blogSource/April_plan.png' />
+```tsx
+import React from 'react';
+import { Image } from 'interview';
+
+export default () => (
+  <Image path={'https://oss.kyingsoft.cn/blogSource/April_plan.png'} title="四月规划"></Image>
+);
+```
 
 💯 本月的学习目标：
 
