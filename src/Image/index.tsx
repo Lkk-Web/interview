@@ -23,10 +23,10 @@ interface ImageView {
 export default ({ title, description, path }: ImageView) => {
   return (
     <PhotoProvider>
+      <div className='imageMarkdownTitle'>{title}</div>
       <PhotoView src={path}>
         <img src={path} alt="#资源未加载" className='imageSize' />
       </PhotoView>
-      <div className='imageMarkdownTitle'>{title}</div>
       <div className='imageMarkdownDes'>{description}</div>
     </PhotoProvider>
   );
