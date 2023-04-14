@@ -96,6 +96,11 @@ if(top > 0) not empty
     eles empty
 ```
 
+经典应用：
+
+1. 括号匹配：[有效的括号](/algorithm/leet-code/1-100#20-有效的括号)
+2. 中缀表达式->后缀表达式
+
 ### 2.1.1 单调栈
 
 ### 2.2 队列
@@ -125,6 +130,96 @@ if(head > tail)  'empty'
 ### 2.2.1 单调队列
 
 滑动窗口
+
+## 三、串
+
+### 3.1 模板朴素算法
+
+时间复杂度：O(mn)
+
+- 王道模板：
+
+```c
+int Index(SString S,SString T){
+    int i = 1,j = 1;
+    while(i < S.length && j < T.length){
+        if(S.ch[i] == T.ch[j]){
+            ++i;++j;
+        }else{
+            i = i - j + 2; // i-j+1 为初始位置，j为当前比较数（偏差值）
+            j = 1;
+        }
+    }
+    if(j > T.length) return i-T.length;
+    else return 0;
+}
+```
+
+### 3.2 KMP 算法
+
+KMP 算法的关键在于可以将已匹配`相等的前缀序列和后缀序列`(称为模板匹配值)，向后滑动到与这些相等字符对齐的位置。相对于朴素算法，指针 i 不会回溯。
+
+> next[ j ]的含义（模板匹配值）：在子串的第 j 个字符与主串发生失配时，则跳到子串的 next[j]位置重新与主串当前位置进行比较。
+
+- 王道模板：时间复杂度：O(m + n)
+
+```c
+// 求模式串的Next数组：ne[]
+void get_ne(SString T,int ne[]){
+    int i = 1,j = 0;
+    ne[1] = 0;
+    while(i < T.length){
+        if(j == 0 || T.ch[i] == T.ch[j]){
+            ++i,++j;
+            if(T.ch[i] != T.ch[j]) ne[i] = j;
+            else ne[i] = ne[j]; // ne[]的优化，相当于找ne[ne[j]]
+        }else{
+            j = ne[j];
+        }
+    }
+}
+
+// S长文本，T是模式串
+int Index(SString S,SString T){
+    int i = 1,j = 1;
+    while(i < S.length && j < T.length){
+        if(S.ch[i] == T.ch[j]){
+            ++i;++j;
+        }else{
+            j = ne[j];    //其他一致。只需更改1、i不回溯 2、j的初始值为ne[j]
+        }
+    }
+    if(j > T.length) return i-T.length;
+    else return 0;
+}
+```
+
+- acwing 模板：时间复杂度：O(2m) => O(n)
+
+```c
+char p[],s[];
+int n,m;
+int ne[];
+// s[]是长文本，p[]是模式串，n是s的长度，m是p的长度
+// 求模式串的Next数组：ne[]
+for (int i = 2, j = 0; i <= m; i ++ )   // ne[1]必为 0，因此i从2开始匹配
+{
+    while (j && p[i] != p[j + 1]) j = ne[j];
+    if (p[i] == p[j + 1]) j ++ ;
+    ne[i] = j;
+}
+
+// 匹配
+for (int i = 1, j = 0; i <= n; i ++ )
+{
+    while (j && s[i] != p[j + 1]) j = ne[j];
+    if (s[i] == p[j + 1]) j ++ ;
+    if (j == m)
+    {
+        j = ne[j];
+        // 匹配成功后的逻辑
+    }
+```
 
 ## 二、Hash 表
 
