@@ -25,22 +25,22 @@ ES6 的第一个版本，是在 1015 年 6 月发布，正式名称就是《ECMA
 - 模板字符串
 - 解构赋值
 - 展开运算符
-- [箭头函数](/big-frontend/前端/ecmascprit#72-箭头函数)
-- [类](/big-frontend/前端/ecmascprit#十二class)
-- [增强的对象字面量](/big-frontend/前端/ecmascprit#73-对象字面量)
-- [for...in|of 循环](/big-frontend/前端/ecmascprit#for--in-和-for--of-的区别)
-- [Promise](/big-frontend/前端/ecmascprit#一promise)
-- [模块](/big-frontend/前端/ecmascprit#十三module)
-- [String 新方法](/big-frontend/前端/ecmascprit#六string-api)
-- [Object 新方法](/big-frontend/前端/ecmascprit#四object-api)
-- [Array 新方法](/big-frontend/前端/ecmascprit#五array-api)
-- [Set、Map](/big-frontend/前端/ecmascprit#八set-和-map-数据结构)
-- [Generators](/big-frontend/前端/ecmascprit#二generator)
+- [箭头函数](/big-frontend/前端/ecmascript#72-箭头函数)
+- [类](/big-frontend/前端/ecmascript#十二class)
+- [增强的对象字面量](/big-frontend/前端/ecmascript#73-对象字面量)
+- [for...in|of 循环](/big-frontend/前端/ecmascript#for--in-和-for--of-的区别)
+- [Promise](/big-frontend/前端/ecmascript#一promise)
+- [模块](/big-frontend/前端/ecmascript#十三module)
+- [String 新方法](/big-frontend/前端/ecmascript#六string-api)
+- [Object 新方法](/big-frontend/前端/ecmascript#四object-api)
+- [Array 新方法](/big-frontend/前端/ecmascript#五array-api)
+- [Set、Map](/big-frontend/前端/ecmascript#八set-和-map-数据结构)
+- [Generators](/big-frontend/前端/ecmascript#二generator)
 
 `ES7(2016)`
 
 - Array.prototype.includes()
-- [求幂运算符](/big-frontend/前端/ecmascprit#74-求幂运算符)
+- [求幂运算符](/big-frontend/前端/ecmascript#74-求幂运算符)
 
 `ES8(2017)`
 
