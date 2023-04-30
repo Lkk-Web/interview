@@ -224,6 +224,23 @@ Function.prototype.mybind = function (context, ...bindArgs) {
 
 ### 3.1 手撕深拷贝
 
+简易版：
+
+```js
+//构建深拷贝函数
+const deepCopy = (target) => {
+  let newObj = target instanceof Object ? {} : target;
+  if (target instanceof Object) {
+    for (let item in target) {
+      newObj[item] = deepCopy(target[item]);
+    }
+  }
+  return newObj;
+};
+```
+
+完整版：
+
 ```js
 let oldobj = {
   name: 'Yang',
@@ -240,7 +257,7 @@ const deepCopy = (target, map = new Map()) => {
   if (reg.test(target.constructor.name)) {
     return new target.constructor(target);
   }
-  let newObj = target instanceof Array ? [] : {};
+  let newObj = target instanceof Object ? {} : target;
   if (target instanceof Object) {
     if (map.get(target)) {
       return map.get(target);
@@ -254,9 +271,9 @@ const deepCopy = (target, map = new Map()) => {
   return newObj;
 };
 
-let newobj = myDeepCopy({}, oldobj);
+let newobj = deepCopy(oldobj);
 console.log(newobj);
-//age: 18	name: "Yang" pet: {pet_name: 'Bai', pet_age: 5} [[Prototype]]: Object
+// { name: 'Yang', age: 18, pet: { pet_name: 'Bai', pet_age: 3 } }
 
 newobj.pet.pet_age = 5;
 console.log(newobj.pet.pet_age); //5
