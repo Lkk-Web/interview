@@ -106,3 +106,110 @@ Babel 默认只转换新的 JavaScript 句法（syntax），而不转换新的 A
 ### 五、在线转换
 
 Babel 提供一个 [REPL 在线编译器](https://babeljs.io/repl/#)，可以在线将 ES6 代码转为 ES5 代码。转换后的代码，可以直接作为 ES5 代码插入网页运行。
+
+## Webpack、Rollup、Vite、Esbuild、Babel、Tsc、Swc 有什么不同
+
+### 第一类叫做 Bundle 型
+
+#### Webpack - `Bundle`
+
+特点：
+
+通过`构建依赖图谱` 最终将产物放到 `main.js` 中
+
+对于除 js 之外的其他资源 bundle、transform 能力也同样优异
+
+#### Rollup - `Bundle`
+
+特点：
+
+通过`构建依赖图谱` 最终将产物打包到 `main.js` 中
+
+`大力支持ESModule`
+
+### 第二类叫做 No-Bundle 型
+
+#### Vite：
+
+#### development 阶段：- `No-Bundle`
+
+使用 ESbuild 对 ts、tsx、jsx 文件 进行 transform 进行`平行编译之后` 不 Bundle
+
+而是通过`浏览器原生支持 ESModule` 的特点，使用 `script标签` `type = 'module'` 引入
+
+#### production 阶段： - `Bundle`
+
+使用`Rollup`进行`全量Bundle` 将产物打包到 `main.js` 中
+
+### 第三类叫做 Bundless 型 有些开源库作者也喜欢叫 `Transform` 型
+
+#### TSC - typescript compiler
+
+#### Esbuild
+
+#### Babel
+
+#### Swc
+
+他们的 **`特点`**是什么：**`编译生成 js 代码`**
+
+比如我们上一小节中 将 ts 代码编译成了 js 代码
+
+实际上 **上面四个都可以完成代码的`编译/转换`** 达到我们想要的效果
+
+但是他们的能力 **`仅限于`** 例如 **`ts js jsx tsx`** ... 而`不包括其他资源`例如：css、图片、字体 ...
+
+### 所以什么是 Bundless？
+
+`Bundless` 即`文件到文件`的构建模式，它不对依赖做任何处理，只对`源码`做`平行编译输出` -- (引自辟起老师)
+
+以下是示例：
+
+```
+└── src
+    ├── index.less
+    ├── index.ts
+    └── test.js
+```
+
+它会被编译成
+
+```
+└── src
+    ├── index.d.ts
+    ├── index.js
+    ├── index.less
+    └── test.js
+```
+
+## 还记得本小节开头的问题吗？
+
+上一小节我们**使用 `tsc`** 将 我们的 **ts 代码 全部 `转换`成了 js、js.map、d.ts 的代码**
+
+请问这是 **`打包`** 吗？
+
+答案是 -- **`不是`**
+
+这是 **`Bundless`** 的方案
+
+## 所以 什么是 Bundle、Bundless、No-Bundle？
+
+相信你看到这里，对于三种模式已经有了自己的理解了 如果还是一知半解 建议`反复观看前面举的例子`
+
+### 总结一下：
+
+**Bundle** 就是通过 **`分析依赖图谱`** **将所有文件`打入一个文件`** 里面去使用
+
+**Bundless** 就是**只对 所有`源文件`** 进行 **`平行编译/transform` `不会去分析依赖关系`进行打包**
+
+**No-Bundle** 例如**Vite** 就是 **利用`Bundless` `编译/transform` 之后**通过 **`浏览器原生支持ESModule`** 的特性使用 **script`标签`引入 `type = 'module'`** 做 development 开发
+
+## 小结：
+
+**本小节我们**
+
+**1.首先带大家系统回顾了一下`模块化发展`的过程，引出了我们现在最常用的`CommonJs、ESModule、IIFE、UMD`等**
+
+**2.主要介绍了这个 `Treeshaking` 优异的能力，它是通过 `ESModule` `静态分析` 的特点来实现的**
+
+**4.总结了什么是 Bundle、Bundless、No-Bundle，即 `Bundle`--通过 `分析依赖图谱 `将所有文件`打入一个文件`，`Bundless`--只对 所有`源文件`进行 `平行编译/transform` `不会去分析依赖关系`进行打包，`No-Bundle`--利用 `Bundless 编译/transform` 之后通过`浏览器原生支持ESModule`的特性使用 script`标签引入 type = 'module'`**

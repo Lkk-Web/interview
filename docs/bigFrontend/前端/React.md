@@ -88,13 +88,66 @@ componentDidMount() 在组件挂载后 (插入 DOM 树后) 立即调用，compon
 
 - componentDidUpdate
 
+组件更新结束之后执行，在初始化 render 时不执行
+
+tips:在 componentDidMount 里面 setState 导致组件更新，组件更新后会执行 componentDidUpdate，此时你又在 componentDidUpdate 里面 setState 又会导致组件更新，造成成死循环了，如果要避免死循环，需要谨慎的在 componentDidUpdate 里面使用 setState。
+
 - componentWillUnmount
 
+componentWillUnmount() 方法在组件卸载及销毁之前直接调用。
+
+componentWillUnmount() 方法中不应调用 setState()，因为该组件将永远不会重新渲染。组件实例卸载后，将永远不会再挂载它。
+
 ### 2.2 useEffect 模拟生命周期
+
+- 实现 `componentDidMount`
+
+```js
+const Home: React.FC<Iprops> = () => {
+  useEffect(() => {
+    getList() // 调用方法发起异步请求
+  }, [])；
+
+ return (
+      <div> hello world</div>
+  )
+}
+```
+
+useEffect 的第二个参数，传入了一个[]，表示我们只需在页面初始化时候执行副作用，此处为发起请求。
+
+- 实现 `componentDidUpdate`
+
+```js
+const Home: React.FC<Iprops> = () => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    getList(); // 调用发起异步请求
+  }, [count]); // 仅在count更改时更新
+  return <div>hello world</div>;
+};
+```
+
+useEffect 的第二个参数，传入[count]，只有 count 的值发生改变，执行副作用 此处为重新发起请求。count 也可换成其他依赖项。
+
+- 实现 componentDidUpdate
+
+```js
+useEffect(() => {
+  getList();
+  return () => {
+    console.log('组件注销, 实现componentWillUnmount');
+  };
+}, []);
+```
+
+useEffect 第一个参数， return 一个函数，可以用来清除副作用.
 
 ## 三、组件
 
 ### 3.1 HOC
+
+> 高阶组件（HOC）是 React 中用于复用组件逻辑的一种高级技巧。HOC 自身不是 React API 的一部分，它是一种基于 React 的组合特性而形成的设计模式。
 
 ### 3.2 受控组件和非受控组件
 
@@ -126,6 +179,36 @@ export default () => (
 ### 4.1 useState
 
 ### 4.2 useEffect
+
+用途：
+
+- 获取数据
+- 事件监听或订阅
+- 监控/改变 DOM
+- 设置定时器，输出日志
+- 该 Hook 接收一个包含命令式、且可能有副作用代码的函数。
+
+```js
+useEffect(() => {
+  console.log('执行副作用'); // 普通函数，执行副作用，可以实现componentDidMount、componentDidUpdate
+  return () => {
+    // return函数, 组件销毁时清除副作用，可以实现componentWillUnmount
+    console.log('清除副作用');
+  };
+}, [count]);
+```
+
+- useEffect 是在 render 结束之后才执行的
+
+每次重新渲染，都会导致原组件（包含子组件）的销毁，以及新组件（包含子组件）的诞生。
+
+结论：
+
+1、首先渲染，并不会执行 useEffect 中的 return
+
+2、变量修改后，导致的重新 render，会先执行 useEffect 中的 return，再执行 useEffect 内除了 return 部分代码。
+
+3、return 内的回调，可以用来清理遗留垃圾，比如订阅或计时器 ID 等占用资源的东西。
 
 #### 4.2.1 useLayoutEffect
 
@@ -220,6 +303,10 @@ HTML5 为 history 对象添加了两个新方法，`history.pushState()` 和 `hi
 | 不需要服务器任何配置 | 需要在服务器配置一个回调路由 |
 
 ### 7.1 Fiber
+
+`React Fiber` 是针对就协调器重写的完全向后兼容的一个版本。React 的这种新的协调算法被称为 Fiber Reconciler，它经常被用来表示 DOM 树的节点。
+
+这就是 React Fiber 协调器使之有可能将工作分为多个工作单元。它设置每个工作的优先级，并使**暂停、重用和中止工作单元**成为可能。在 fiber 树中，单个节点保持跟踪，这是使上述事情成为可能的需要。每个 fiber 都是一个链表的节点，它们通过子、兄弟节点和返回引用连接起来。
 
 ## 六、数据管理方案
 

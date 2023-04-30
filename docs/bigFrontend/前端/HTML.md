@@ -51,17 +51,21 @@ svg：可伸缩矢量图形
 
 `defer`要等到整个页面在内存中正常渲染结束（DOM 结构完全生成，以及其他脚本执行完成），才会`执行`；
 
-HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一个延迟脚本会先于第二个延迟脚本执行，而这两个脚本会先于[DOMContentLoaded](/big-frontend/前端/html#111-domcontentloaded)事件执行。**在现实当中**，延迟脚本并不一定会按照顺序执行，也不一定会在`DOMContentLoad`时间触发前执行，因此最好只包含一个延迟脚本。
+HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一个延迟脚本会先于第二个延迟脚本执行，而这两个脚本会先于[DOMContentLoaded](/big-frontend/前端/html#111-domcontentloaded)事件执行。
+
+**在实现当中**，延迟脚本并不一定会按照顺序执行，也不一定会在`DOMContentLoad`时间触发前执行，因此最好只包含一个延迟脚本。这一点在 HTML5 中已经明确规定，因此支持 HTML5 的实现会忽略给嵌入脚本设置的 defer 属性。
 
 #### 4.2.2 async
 
 `async`一旦下载完，渲染引擎就会中断渲染，执行这个脚本以后，再继续渲染。
 
-与`defer`不同的是，标记为`async`的脚本并不保证按照它们的先后顺序执行。第二个脚本文件可能会在第一个脚本文件之前执行。因此确保两者之间互不依赖非常重要。指定`async`属性的目的是不让页面等待两个脚本下载和执行，从而异步加载页面其他内容。
+与`defer`不同的是，标记为`async`的脚本并不保证按照它们的先后顺序执行。第二个脚本文件可能会在第一个脚本文件之前执行。因此确保两者之间互不依赖非常重要。
+
+指定`async`属性的目的是不让页面等待两个脚本下载和执行，从而异步加载页面其他内容。
 
 #### 4.2.3 跨源策略
 
-要允许跨源访问，`<script>`标签需要具有 crossorigin 特性（attribute），并且远程服务器必须提供特殊的 header。
+要允许跨源访问，`<script>`标签需要具有 crossorigin 特性，并且远程服务器必须提供特殊的 header。
 
 这里有三个级别的跨源访问：
 
@@ -191,7 +195,7 @@ span 行内元素，一般用于一行。
 
 ## 5.HTML5 离线缓存
 
-在 html 标签中引入 `manifest` 文件，这个属性指向一个 manifest 的文件，这个文件指明了当前页面哪些资源需要进行离线缓存
+在 html 标签中引入 `manifest` 属性，这个属性指向一个 manifest 的文件，这个文件指明了当前页面哪些资源需要进行离线缓存
 
 - 离线浏览 - 用户可在应用离线时使用它们。
 - 速度 - 已缓存资源加载得更快。
@@ -330,7 +334,7 @@ name属性
 
 <!-- 页面作者 -->
 
-<meta name="author" content="yangzai" />
+<meta name="author" content="Xing" />
 
 <!-- 页面描述 -->
 
@@ -448,7 +452,7 @@ doctype 声明不属于 HTML 标签；tag; 它是一条指令，告诉浏览器�
 
 HTML 4.01 中的 doctype 需要对 DTD 进行引用，因为 HTML 4.01 基于 SGML。而 HTML 5 不基于 SGML，因此不需要对 DTD 进行引用，但是需要 doctype 来规范浏览器的行为（让浏览器按照它们应该的方式来运行。）。
 
-浏览器本身分为两种模式，一种是标准模式，一种是怪异模式，浏览器通过 doctype 来区分这两种模式，doctype 在 html 中的作用就是触发浏览器的标准模式，如果 html 中省略了 doctype，浏览器就会进入到 Quirks 模式的怪异状态，在这种模式下，有些样式会和标准模式存在差异，而 html 标准和 dom 标准值规定了标准模式下的行为，没有对怪异模式做出规定，因此不同浏览器在怪异模式下的处理也是不同的，所以一定要在 html 开头使用 doctype。
+**浏览器本身分为两种模式，一种是标准模式，一种是怪异模式，浏览器通过 doctype 来区分这两种模式，doctype 在 html 中的作用就是触发浏览器的标准模式，如果 html 中省略了 doctype，浏览器就会进入到 Quirks 模式的怪异状态**，在这种模式下，有些样式会和标准模式存在差异，而 html 标准和 dom 标准值规定了标准模式下的行为，没有对怪异模式做出规定，因此不同浏览器在怪异模式下的处理也是不同的，所以一定要在 html 开头使用 doctype。
 
 注：<!DOCTYPE> 对大小写不敏感。
 
@@ -524,7 +528,7 @@ DOMContentLoaded 事件发生在 `document` 对象上。
 
 我们必须使用 `addEventListener` 来捕获它：
 
-在示例中，DOMContentLoaded 处理程序在文档加载完成后触发，所以它可以查看所有元素，包括它下面的 `<img>`元素。
+在示例中，DOMContentLoaded 处理程序在页面加载完成后触发，所以它可以查看所有元素，包括它下面的 `<img>`元素。
 
 但是，它不会等待图片加载。因此，alert 显示其大小为零。
 
@@ -547,7 +551,7 @@ DOMContentLoaded 事件发生在 `document` 对象上。
 
 - 不会阻塞 DOMContentLoaded 的脚本此规则：
 
-  1. 具有 async 特性（attribute）的脚本不会阻塞 DOMContentLoaded。
+  1. 具有 async 特性的脚本不会阻塞 DOMContentLoaded。
   2. 使用 document.createElement('script') 动态生成并添加到网页的脚本也不会阻塞 DOMContentLoaded。
 
 #### 11.1.2 DOMContentLoaded 和样式

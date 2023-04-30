@@ -30,7 +30,7 @@ JS 拥有以下数据类型：
 
 其他类型：`Set`、`WeakSet`、`Map`、`WeakMap`、`Date`、`RegExp`
 
-[Set、Map](/big-frontend/前端/ecmascprit#八set-和-map-数据结构)
+[Set、Map](/big-frontend/前端/ecmascript#八set-和-map-数据结构)
 
 为什么基本数据类型存在栈内存，引用数据类型存在堆内存?（变量存在于栈中）
 
@@ -39,10 +39,10 @@ JS 拥有以下数据类型：
 
 对于 javascript 而言
 
-- 栈内存(stack)：栈内存是当前函数作用域的内存，与当前执行上下文绑定
+- 栈内存(stack)：栈内存是当前**函数作用域**的内存，与当前执行上下文绑定
 - 堆内存(heap)：堆内存是区别于栈区、代码区，是独立的另一个内存区域。
 
-const 修饰的引用类型可以被修改，因为对象是引用类型的，P 中保存的仅是对象的指针，这就意味着，const 仅保证指针不发生改变，修改对象的属性不会改变对象的指针，所以是被允许的。也就是说 const 定义的引用类型只要指针不发生改变，其他的不论如何改变都是允许的。
+**const 修饰的引用类型可以被修改**，因为对象是引用类型的，**其中保存的仅是对象的指针**，这就意味着，const 仅保证指针不发生改变，修改对象的属性不会改变对象的指针，所以是被允许的。也就是说 const 定义的引用类型只要指针不发生改变，其他的不论如何改变都是允许的。
 
 - 怎么让 const 修饰的引用类型不可以被修改？
 
@@ -249,6 +249,14 @@ let temp = JSON.parse(JSON.stringify({ name: /abc/ })); // {}
 3. 会抛弃对象的 constructor,所有的构造函数会指向 Object
 
 4. 对象有循环引用,会报错
+
+```js
+const obj1 = {
+  a: 1,
+};
+obj1.b = obj1; // obj1的属性b引用了obj自己
+console.log(obj1); // { a: 1, b: [Circular *1] }
+```
 
 5. 如果被拷贝的对象中某个属性的值为 undefined 或含有 symbol 属性名，则拷贝之后该属性会丢失
 
@@ -564,7 +572,7 @@ Person.prototype;
 
 普通函数创建时，引擎会按照特定的规则为这个函数创建一个 prototype 属性（指向原型对象）。默认情况下，所有原型对象自动获得一个名为 `constructor` 的属性，指回与之关联的构造函数。
 
-创建箭头函数时，引擎不会为其创建 `prototype` 属性，箭头函数没有 constructor 供 new 调用，因此使用 new 调用[箭头函数](/big-frontend/前端/ecmascprit#21-箭头函数)会报错！
+创建箭头函数时，引擎不会为其创建 `prototype` 属性，箭头函数没有 constructor 供 new 调用，因此使用 new 调用[箭头函数](/big-frontend/前端/ecmascript#21-箭头函数)会报错！
 
 [手撕 new 操作符](/interview/frontend-shred-code#23-手撕-new-操作符)
 
@@ -787,7 +795,7 @@ JQuery ajax 是对原生 XHR 的封装，除此以外还增添了对 `JSONP` 的
 4. 不符合关注分离（Separation of Concerns）的原则
 5. 配置和调用方式非常混乱，而且基于事件的异步模型不友好。
 
-PS:`MVVM(Model-View-ViewModel)`, 源自于经典的 `Model–View–Controller（MVC）`模式。MVVM 的出现促进了 GUI 前端开发与后端业务逻辑的分离，极大地提高了前端开发效率。MVVM 的核心是 ViewModel 层，它就像是一个中转站（value converter），负责转换 Model 中的数据对象来让数据变得更容易管理和使用，该层向上与视图层进行双向数据绑定，向下与 Model 层通过接口请求进行数据交互，起呈上启下作用。View 层展现的不是 Model 层的数据，而是 ViewModel 的数据，由 ViewModel 负责与 Model 层交互，这就完全解耦了 View 层和 Model 层，**这个解耦是至关重要的，它是前后端分离方案实施的最重要一环**。
+
 
 <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8d975c0670d24c29a23d75d70ccc8206~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.awebp" />
 
@@ -850,6 +858,8 @@ try {
 2. fetch 默认不会带 cookie，需要添加配置项： fetch(url, {credentials: 'include'})
 3. fetch 不支持 `abort`，不支持超时控制，使用 setTimeout 及 Promise.reject 的实现的超时控制`并不能阻止`请求过程继续在后台运行，造成了流量的浪费
 4. fetch 没有办法原生监测请求的进度，而 XHR 可以
+
+PS:`MVVM(Model-View-ViewModel)`, 源自于经典的 `Model–View–Controller（MVC）`模式。MVVM 的出现促进了 GUI 前端开发与后端业务逻辑的分离，极大地提高了前端开发效率。MVVM 的核心是 ViewModel 层，它就像是一个中转站（value converter），负责转换 Model 中的数据对象来让数据变得更容易管理和使用，该层向上与视图层进行双向数据绑定，向下与 Model 层通过接口请求进行数据交互，起呈上启下作用。View 层展现的不是 Model 层的数据，而是 ViewModel 的数据，由 ViewModel 负责与 Model 层交互，这就完全解耦了 View 层和 Model 层，**这个解耦是至关重要的，它是前后端分离方案实施的最重要一环**。
 
 ## 10、AMD 规范
 
