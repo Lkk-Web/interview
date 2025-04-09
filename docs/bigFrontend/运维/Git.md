@@ -393,9 +393,17 @@ git reset --soft HEAD^ : 用于撤销的 commit
 
 -hard 参数撤销工作区中所有未提交的修改内容，将暂存区与工作区都回到上一次版本，并删除之前的所有信息提交：
 
+如果远程分支已经提交则执行`git push origin HEAD --force`
+
+如果受保护分支（protected branch）,该项目的维护者（或管理员）：
+
+- 打开项目后台（你这个是 git.code.tencent.com）
+- 找到项目设置 → 分支保护规则（Branch Protection）
+- 取消 master 分支的保护、或允许 force push
+
 ### 3.1 git revert
 
-git revert 命令用于将某次 commit 的更改取消，可以用作某次 commit 的回退，在工作树上会有一次重新提交的记录。
+⭐️⭐️⭐️（强烈推荐！）：git revert 命令用于将某次 commit 的更改取消，可以用作某次 commit 的回退，在工作树上会有一次重新提交的记录。
 
 ```bash
 git revert HEAD   # 撤销前一个commit
