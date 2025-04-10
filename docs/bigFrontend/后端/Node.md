@@ -72,7 +72,7 @@ var example = require('./example.js');
 
 - 如果想得到 require 命令加载的确切文件名，使用 `require.resolve()`方法。
 
-### 1.2.1、require.main
+#### 1.2.1、require.main
 
 require 方法有一个 main 属性，可以用来判断模块是直接执行，还是被调用执行。
 
