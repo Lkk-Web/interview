@@ -504,7 +504,7 @@ chmod +x .husky/commit-msg
 ### 5. 编写 commit-msg hook 内容
 
 ```bash
-#!/bin/sh
+#在 .husky/commit-msg 文件中编写以下内容：
 
 message="$(cat $1)"
 types="feat|fix|docs|style|refactor|perf|test|chore|revert|build|ci|wip"
