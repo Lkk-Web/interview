@@ -1,0 +1,27 @@
+#!/bin/sh
+
+message="$(cat $1)"
+types="feat|fix|docs|style|refactor|perf|test|chore|revert|build|ci|wip"
+
+if echo "$message" | grep -qE "^($types):.*"; then
+    type=$(echo "$message" | sed -E "s/^($types):.*/\1/")
+    content=$(echo "$message" | sed -E "s/^($types)://")
+    case $type in
+        "feat")     emoji="✨";;
+        "fix")      emoji="🐛";;
+        "docs")     emoji="📝";;
+        "style")    emoji="💄";;
+        "refactor") emoji="♻️";;
+        "perf")     emoji="⚡️";;
+        "test")     emoji="✅";;
+        "chore")    emoji="🔧";;
+        "revert")   emoji="⏪";;
+        "build")    emoji="📦";;
+        "ci")       emoji="👷";;
+        "wip")      emoji="🚧";;
+    esac
+    echo "$type: $content" > $1
+    sed -i '' "1s/^/$emoji /" "$1"
+fi
+
+# npx --no -- commitlint --edit $1  提交信息符合类型格式时会添加对应的 emoji，不符合时则保持原样，不会有任何限制。

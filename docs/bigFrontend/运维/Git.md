@@ -469,6 +469,101 @@ git push [origin] :refs/tags/<tagname>   # 删除远程标签
 
 ## 六、git message Emoji
 
+如何配置自动添加 Emoji 到 Git Commit Message 的完整步骤：
+
+### 1. 安装必要依赖
+
+```bash
+npm install --save-dev husky
+```
+
+### 2. 配置 package.json
+
+```json
+{
+  "scripts": {
+    "prepare": "husky install"
+  }
+}
+```
+
+### 3. 初始化 husky
+
+```bash
+npm run prepare
+```
+
+### 4. 创建 commit-msg hook
+
+```bash
+mkdir -p .husky
+touch .husky/commit-msg
+chmod +x .husky/commit-msg
+```
+
+### 5. 编写 commit-msg hook 内容
+
+```bash
+#!/bin/sh
+
+message="$(cat $1)"
+types="feat|fix|docs|style|refactor|perf|test|chore|revert|build|ci|wip"
+
+if echo "$message" | grep -qE "^($types):.*"; then
+    type=$(echo "$message" | sed -E "s/^($types):.*/\1/")
+    content=$(echo "$message" | sed -E "s/^($types)://")
+    case $type in
+        "feat")     emoji="✨";;
+        "fix")      emoji="🐛";;
+        "docs")     emoji="📝";;
+        "style")    emoji="💄";;
+        "refactor") emoji="♻️";;
+        "perf")     emoji="⚡️";;
+        "test")     emoji="✅";;
+        "chore")    emoji="🔧";;
+        "revert")   emoji="⏪";;
+        "build")    emoji="📦";;
+        "ci")       emoji="👷";;
+        "wip")      emoji="🚧";;
+    esac
+    echo "$type: $content" > $1
+    sed -i '' "1s/^/$emoji /" "$1"
+fi
+
+# npx --no -- commitlint --edit $1  提交信息符合类型格式时会添加对应的 emoji，不符合时则保持原样，不会有任何限制。
+```
+
+### 使用示例
+
+当你提交代码时，如果使用以下格式的提交信息：
+
+```bash
+git commit -m "feat: 添加新功能"
+```
+
+将自动转换为：
+
+```
+✨ feat: 添加新功能
+```
+
+支持的类型和对应的 Emoji：
+
+- feat: ✨ (新功能)
+- fix: 🐛 (修复)
+- docs: 📝 (文档)
+- style: 💄 (样式)
+- refactor: ♻️ (重构)
+- perf: ⚡️ (性能)
+- test: ✅ (测试)
+- chore: 🔧 (构建)
+- revert: ⏪ (回退)
+- build: 📦 (打包)
+- ci: 👷 (CI)
+- wip: 🚧 (开发中)
+
+如果提交信息不符合上述类型格式，将保持原样不添加 Emoji。
+
 ```ts
 'use strict';
 
