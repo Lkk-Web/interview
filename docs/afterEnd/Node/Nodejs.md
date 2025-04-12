@@ -5,11 +5,11 @@ group:
 order: 1
 ---
 
-# Node.js
+# Nodejs
 
 官方文档：[Node](https://nodejs.org/en/docs/)
 
-## 1、简介
+## 简介
 
 消息队列？
 
@@ -25,11 +25,9 @@ redis
 
 cnpm 、 npm 、pnpm 的区别
 
-## 1、基本概念
+## 1、基本概念 Node 是什么？
 
-### Node 是什么？
-
-## 1、CommonJS 规范
+## CommonJS 规范
 
 > 现 ES6 的 Module 基本取代了 Commandjs 规范和 AMD 规范
 
