@@ -422,6 +422,22 @@ ip.substring(0, 3); // 127
 ip.substring(3); // .0.0.1
 ```
 
+### 6.3 padStart()
+
+字符串排序问题中，需要将字符串格式化为三位数，例如：1 -> 001, 10 -> 010
+
+```ts
+const formattedPackageNumber = String(i).padStart(3, '0');
+```
+
+### 6.3 startsWith()
+
+用来判断一个字符串是否以指定的子串开头，返回布尔值 true 或 false，例如：actoryline_1 -> true
+
+```ts
+const route = route.path.startsWith('factoryline_');
+```
+
 ## 七、基础夯实
 
 ### 7.1 暂时性死区
