@@ -184,6 +184,19 @@ NodeJS 中的 EventLoop 使 NodeJS 能够进行非阻塞的 I/O 操作，尽管 
 ```
 
 - `timers（计时阶段）`：这个阶段执行由 setTimeout() 和 setInterval() 调度的回调。
+
+  · NodeJS.Timeout 是 Node.js 定义的类型，表示定时器对象。
+
+  ```ts
+      // 启动一个 30 秒的定时器, 踢出未准备的玩家
+      const removeTimer = setTimeout(() => { this.leave(undefined, deskInfo) }, 30000)
+      DeskClubService.timers.set(deskID, removeTimer)
+      // 定时器返回值为id，node环境为 NodeJS.Timeout 类型
+      const removeTimer = DeskClubService.timers.get(deskID)
+      removeTimer && clearTimeout(removeTimer)
+      static timers: Map<string, NodeJS.Timeout> = new Map();  // 所有房间
+  ```
+
 - `pending callbacks（回调待处理阶段）`：这个阶段执行延迟到下一次循环迭代的 I/O 回调。
 - `idle, prepare（闲置阶段）`：仅仅被 NodeJS 内部使用。（这里是根据官方文档描述的，不能甚解）
 - `poll（轮询阶段）`：这个阶段检索 I/O 事件，执行 I/O 事件对应的回调函数（除了关闭回调、计时器调度的回调和 setImmediate() 之外的几乎所有异步操作），都将会在这个阶段被处理。
