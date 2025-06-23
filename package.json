@@ -7,7 +7,6 @@
     "docs:build": "dumi build",
     "docs:deploy": "gh-pages -d docs-dist",
     "build": "father build",
-    "deploy": "npm run docs:build && npm run docs:deploy",
     "prettier": "prettier --write \"**/*.{js,jsx,tsx,ts,less,md,json}\"",
     "test": "umi-test",
     "test:coverage": "umi-test --coverage",
@@ -16,7 +15,9 @@
     "lint-staged:js": "eslint --fix --format=pretty",
     "lint:js": "eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty",
     "lint:prettier": "prettier --check \"src/**/*\" --end-of-line auto",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "upload": "node upload-to-r2.js",
+    "deploy": "npm run docs:build && npm run upload"
   },
   "files": [
     "dist"
@@ -38,8 +39,10 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.832.0",
     "@commitlint/cli": "^17.1.2",
     "@commitlint/config-conventional": "^17.1.0",
+    "dotenv": "^16.5.0",
     "react": "^18.0.0",
     "react-photo-view": "^1.2.3"
   },
