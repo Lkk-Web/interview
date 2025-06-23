@@ -274,6 +274,69 @@ getLCP(console.log);
 
 CICD 是 持续集成（Continuous Integration）和持续部署（Continuous Deployment）简称。指在开发过程中自动执行一系列脚本来减低开发引入 bug 的概率，在新代码从开发到部署的过程中，尽量减少人工的介入。
 
+| 阶段     | 简称 | 内容                                                |
+| -------- | ---- | --------------------------------------------------- |
+| 持续集成 | CI   | 自动化测试、构建、检查代码质量（但不部署）          |
+| 持续部署 | CD   | 构建后将产物发布上线（如上传到服务器、存储桶、CDN） |
+
+```yaml
+# CI：
+- checkout 源码
+- 安装依赖
+- 运行构建命令（如 npm run build）
+- 跑测试
+
+# CD：
+- 清空  R2 某目录
+- 上传 dist/ 到 R2
+- 自动更新缓存或触发 CDN 刷新
+```
+
+### 5.1 CI
+
+### 5.2 CD
+
+#### 5.2.1 cloudflare R2
+
+使用 S3 凭证访问 R2 存储桶
+
+✅ 步骤一：创建 R2 存储桶
+
+1. 登录 Cloudflare 控制台：https://dash.cloudflare.com/
+2. 选择你的账户 > 进入 R2 控制面板
+3. 点击【创建存储桶】
+   - 存储桶名称：例如 my-bucket
+   - 区域（Region）：默认就好（如 auto）
+
+✅ 步骤二：创建 S3 API Access 密钥
+
+1. 在左侧选择【API Tokens】 > 【R2 兼容密钥】
+2. 点击【创建访问密钥】
+3. 记录以下信息（仅出现一次）：
+
+```yaml
+Default Region: auto
+Access Key: （你的 access key）
+Secret Key: （你的 secret）
+S3 Endpoint: <account_id>.r2.cloudflarestorage.com
+Use HTTPS: Yes
+```
+
+✅ 步骤三：package.json 脚本执行
+
+1. `npm install @aws-sdk/client-s3`
+2. 项目根目录创建 [upload-to-r2.js](https://stb.kying.org/data/script/upload-to-r2.js)
+3. 添加 package.json 脚本
+
+```json
+{
+  "scripts": {
+    "upload": "node upload-to-r2.js",
+    "deploy": "npm run docs:build && npm run upload"
+  }
+}
+```
+
 ### 3.1 webhooks
 
 ## 六、微前端
@@ -328,3 +391,4 @@ CICD 是 持续集成（Continuous Integration）和持续部署（Continuous De
 如：
 
 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1a48ed47dd4a46de9e6f4379628a2fb4~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.image" />
+```
