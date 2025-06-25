@@ -78,6 +78,10 @@ order: 1
 
 🚀 步骤一：登录 MySQL
 
+如果你是用 Homebrew 安装的，运行：`brew services list`
+
+如果 MySQL 是 stopped，执行启动命令：`brew services start mysql`
+
 ```sql
 -- 无密码时：
 mysql -u root
