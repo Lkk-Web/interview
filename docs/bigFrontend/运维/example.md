@@ -95,14 +95,26 @@ ssh your_user@your.server.ip
 
 如果你经常连多台服务器，还可以在 ~/.ssh/config 文件里加快捷方式：
 
-```
-Host myserver
-  HostName your.server.ip
-  User your_user
-  ServerAliveInterval 60
-  ServerAliveCountMax 5
-  TCPKeepAlive yes
-  IdentityFile ~/.ssh/id_rsa
+```sh
+Host *
+    HostKeyAlgorithms +ssh-rsa
+    PubkeyAcceptedKeyTypes +ssh-rsa
+    
+Host github.com-server1
+    HostName github.com
+    User git
+    ServerAliveInterval 60
+    ServerAliveCountMax 5
+    TCPKeepAlive yes
+    IdentityFile ~/.ssh/id_ed25519
+
+Host server2
+    HostName ec2-54-255-234-25.ap-southeast-1.compute.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/KyeLeoServe.pem
+    ServerAliveInterval 60
+    ServerAliveCountMax 5
+    TCPKeepAlive yes
 ```
 
 这样你只需要：
@@ -110,3 +122,44 @@ Host myserver
 `ssh myserver`
 
 🏅 就能自动连上服务器，且不断线、免密！
+
+## 3、海外服务器
+
+1. 注册、购买
+
+需要 visa 卡，可在亚马逊、oracle 等注册、申请；
+
+- 私钥，需要保存，用来登陆
+
+- 安全组，`出战进站`允许 0.0.0.0/0
+
+2. 连接
+
+- SSH 基本连接命令
+
+```sh
+ssh -i ~/.ssh/KyeLeoServe.pem ubuntu@ec2-54-255-234-25.ap-southeast-1.compute.amazonaws.com
+```
+
+- `-i ~/.ssh/KyeLeoServe.pem` : 指定私钥文件路径
+
+- `ubuntu@` : 登录用户名
+
+若连接卡住无响应，可能是网络、防火墙、安全组或用户名错误。
+
+- 私钥文件存放位置
+
+建议将 .pem 文件放在：`~/.ssh/`，然后修改只读权限，不然连接不了服务器。
+
+```sh
+chmod 400 ~/.ssh/KyeLeoServe.pem
+```
+
+- 连接成功后系统提示信息
+
+```sh
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+New release '24.04.2 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+```
