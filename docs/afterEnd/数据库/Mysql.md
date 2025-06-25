@@ -19,7 +19,7 @@ order: 1
   - 使用工具：Navicat / DBeaver / MySQL Workbench
   - [基本数据类型](/after-end/数据库/mysql#12-基本数据类型)：INT、VARCHAR、TEXT、DATE、FLOAT 等
 - 基本 SQL 操作：
-  - CREATE TABLE、INSERT、SELECT、UPDATE、DELETE
+  - [CREATE TABLE](/after-end/数据库/mysql#211-create-table)、[INSERT](/after-end/数据库/mysql#212-insert)、[SELECT](/after-end/数据库/mysql#213-select)、UPDATE、DELETE
   - 条件语句 WHERE、逻辑操作符 AND、OR、NOT
   - 排序 ORDER BY，分页 LIMIT
   - 聚合函数：COUNT、SUM、AVG、MAX、MIN
@@ -431,7 +431,7 @@ SELECT id, username, age FROM users;
 3. 使用 WHERE 进行条件过滤
 
 ```sql
-SLECT * FROM users WHERE age > 18 AND salary >= 5000;
+SELECT * FROM users WHERE age > 18 AND salary >= 5000;
 ```
 
 - SQL 常用运算符整理
@@ -495,7 +495,7 @@ WHERE 条件
 GROUP BY age;
 ```
 
-使用了 SELECT \* 和 GROUP BY 同时出现，但没有使用 `聚合函数`，这是 SQL 语法规范 中的大忌，尤其在 MySQL 的严格模式（如 ONLY_FULL_GROUP_BY）下会报错。
+使用了 SELECT \* 和 GROUP BY 同时出现，但没有使用 `聚合函数`，这是 SQL 语法规范中的大忌，尤其在 MySQL 的严格模式（如 ONLY_FULL_GROUP_BY）下会报错。
 
 1. ✅ 方式一：聚合 + 显式字段（推荐）
 
