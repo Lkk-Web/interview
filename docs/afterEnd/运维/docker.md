@@ -107,3 +107,20 @@ FLUSH PRIVILEGES;
 ```sql
 SELECT host, user FROM mysql.user WHERE user = 'root';
 ```
+
+## 二、Docker Volume 映射
+
+Volume 映射就是在 docker run 或 docker-compose 时，把宿主机的目录挂载到容器的某个目录中。
+
+- `-v 宿主机路径:容器路径`
+
+Nginx 会访问“容器路径”，但实际访问的是“宿主机路径”的文件。
+
+```sh
+docker run -d \
+  --name my-openresty \
+  -v /home/index:/home/index \
+  -p 80:80 \
+  -p 443:443 \
+  openresty/openresty:alpine
+```
