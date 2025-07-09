@@ -381,15 +381,15 @@ server {
 }
 ```
 
-这时候访问 https://k.cn 就会访问到网站 A 的 /home/index/index.html 文件。
+这时候访问 `https://k.cn` 就会访问到网站 A 的 /home/index/index.html 文件。
 
-访问 https://abc.k.cn 就会访问到网站 B 的 /home/index2/index.html 文件。
+访问 `https://abc.k.cn`就会访问到网站 B 的 /home/index2/index.html 文件。
 
-访问 https://abc.k.cn/abcd 就会访问到网站 C 的 /home/index3/index.html 文件。
+访问 `https://abc.k.cn/abcd`就会访问到网站 C 的 /home/index3/index.html 文件。
 
 ### 3.3 反向代理服务端 api
 
-以下是一段典型的 Nginx `反向代理`配置，用于将访问 https://你的域名/jk1/ 的请求转发到本地的某个后端服务（在这里是 http://127.0.0.1:9009/）。
+以下是一段典型的 Nginx `反向代理`配置，用于将访问 `https://你的域名/jk1/` 的请求转发到本地的某个后端服务（在这里是 http://127.0.0.1:9009/）。
 
 ```sh
 location ^~ /jk1/ {
@@ -408,8 +408,8 @@ location ^~ /jk1/ {
 }
 ```
 
-- `proxy_pass http://127.0.0.1:9009/;` 核心反向代理功能：将 /jk1/ 的请求代理到本地 9009 端口的服务（比如 Node.js、Python、Go 写的 web 服务等）。
+- `proxy_pass http://127.0.0.1:9009/;`
+
+核心反向代理功能：将 /jk1/ 的请求代理到本地 9009 端口的服务（比如 Node.js、Python、Go 写的 web 服务等）。
 
 Nginx 对 proxy_pass 的规则（官方定义）：proxy_pass 末尾是否带 /,带 `/`会去掉 /jk1 前缀，否则会保留 /jk1 前缀。
-
-
