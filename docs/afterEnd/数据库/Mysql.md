@@ -560,3 +560,17 @@ INNER JOIN B
   AND A.b = B.b;
 ```
 
+#### 3.2.2 LEFT JOIN 左连接
+
+LEFT JOIN 用于返回左表 A 中的所有记录，即使在右表 B 中没有匹配也会保留；右表 B 无匹配的字段将以 NULL 填充。
+
+```sql
+SELECT *
+FROM A
+LEFT JOIN B
+  ON A.a = B.a
+  AND A.b = B.b;
+```
+
+- 匹配成功的 A 和 B 记录 ✅ 会合并返回；
+- 只在 A 表中存在、B 表中没有匹配的记录也会返回，B 的字段填 NULL；
