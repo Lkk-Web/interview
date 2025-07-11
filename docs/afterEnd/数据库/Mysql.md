@@ -574,3 +574,10 @@ LEFT JOIN B
 
 - 匹配成功的 A 和 B 记录 ✅ 会合并返回；
 - 只在 A 表中存在、B 表中没有匹配的记录也会返回，B 的字段填 NULL；
+
+```tsx
+import React from 'react';
+import { Image } from 'interview';
+
+export default () => <Image title="" path={'leftJoin'}></Image>;
+```
