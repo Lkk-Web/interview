@@ -1,5 +1,9 @@
 import { defineConfig } from 'dumi';
 import { styles } from './app.style';
+import dotenv from 'dotenv';
+
+// 加载 .env 文件
+dotenv.config();
 
 export default {
   // ssr: {
@@ -49,6 +53,9 @@ export default {
     ],
     // more config: https://d.umijs.org/config
   }),
+  define: {
+    REACT_APP_SERVER_SOURCE_URL: process.env.REACT_APP_SERVER_SOURCE_URL,
+  },
   // chunks: ['vendors', 'umi'],
   // chainWebpack: function (config, { webpack }) {
   //   config.merge({

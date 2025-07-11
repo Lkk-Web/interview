@@ -78,6 +78,68 @@ React 合成事件（SyntheticEvent）是 React 模拟原生 DOM 事件所有能
 
 > Warning: setState 是一个伪异步，或者可以称为 defer，即延迟执行但本身还在一个事件循环，所以它的执行顺序在同步代码后、异步代码前。
 
+### 1.3 .env 环境变量
+
+`.env` 文件用于配置项目运行时的环境变量，例如接口地址、CDN 路径、API 密钥等。
+
+```env
+REACT_APP_API_URL=https://api.example.com
+```
+
+env 变量读取
+
+```ts
+import dotenv from 'dotenv';
+
+//通过 defineConfig().define 注入变量
+dotenv.config();
+```
+
+- 在 `CRA（Create React App）`中使用: 变量名必须以 `REACT_APP_`开头
+
+tsx 中访问
+
+```
+const SERVER_URL = process.env.REACT_APP_SERVER_SOURCE_URL;
+```
+
+- 在 `Vite + React` 中使用: 变量名必须以 `VITE_`开头
+
+```
+const api = import.meta.env.VITE_API_URL;
+```
+
+- 在 `Dumi / Umi` 中使用，`.env `不会自动注入 process.env，需要手动配置
+
+```ts
+import { defineConfig } from 'dumi';
+export default defineConfig({
+  define: {
+    REACT_APP_SERVER_SOURCE_URL: process.env.REACT_APP_SERVER_SOURCE_URL,
+  },
+});
+```
+
+tsx 中使用
+
+```
+// ✅ 直接写变量名
+console.log(REACT_APP_SERVER_SOURCE_URL);
+```
+
+需要创建类型声明：根目录创建 `env.d.ts`文件
+
+```ts
+// env.d.ts
+declare const REACT_APP_SERVER_SOURCE_URL: string;
+```
+
+Tips:
+
+1. .env 文件不要上传到 Git（可用 .gitignore 忽略）
+2. 可以创建 .env.production、.env.development 来分环境管理
+3. 在浏览器项目中不要写敏感密钥（比如数据库密码、私钥）
+
 ## 二、生命周期
 
 ### 2.1 类式编写 生命周期
@@ -302,15 +364,15 @@ HTML5 为 history 对象添加了两个新方法，`history.pushState()` 和 `hi
 | 实际的 url 之前使用哈希字符，这部分 url 不会发送到服务器，不需要在服务器层面上进行任何处理 | 每访问一个页面都需要服务器进行路由匹配生成 html 文件再发送响应给浏览器，消耗服务器大量资源 |
 | 不需要服务器任何配置 | 需要在服务器配置一个回调路由 |
 
+## 六、数据管理方案
+
+## 七、React 特性
+
 ### 7.1 Fiber
 
 `React Fiber` 是针对就协调器重写的完全向后兼容的一个版本。React 的这种新的协调算法被称为 Fiber Reconciler，它经常被用来表示 DOM 树的节点。
 
 这就是 React Fiber 协调器使之有可能将工作分为多个工作单元。它设置每个工作的优先级，并使**暂停、重用和中止工作单元**成为可能。在 fiber 树中，单个节点保持跟踪，这是使上述事情成为可能的需要。每个 fiber 都是一个链表的节点，它们通过子、兄弟节点和返回引用连接起来。
-
-## 六、数据管理方案
-
-## 七、React 特性
 
 ### 7.2 React 18 Concurrent Mode
 
