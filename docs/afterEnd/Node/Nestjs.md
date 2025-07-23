@@ -50,6 +50,18 @@ async update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
 
 每个方法在`Controller`中都需要在控制器类中使用相应的装饰器，并且可以通过@Param()获取 URL 参数，通过@Body()获取请求体数据。服务层方法通常返回 Promise，支持异步操作。记得在使用前导入所需的装饰器和类型。
 
+## 守卫（Guard）：控制请求是否进入路由
+
+执行时机，在所有中间件和拦截器之后、在控制器处理前
+
+作用为控制权限（如：是否登录、是否有角色、是否通过 token 验证）
+
+返回值 true 则允许继续执行，false 或抛异常则拦截请求
+
+适合处理的事情 身份验证（token 校验）、权限控制（RBAC）、路由访问控制等。类似于 CanActivate 函数的权限闸门。
+
+## 管道（Pipe）：转换或验证传入数据
+
 ## ORM 框架
 
 ## sequelize
