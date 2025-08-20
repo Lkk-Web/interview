@@ -117,7 +117,7 @@ remotePort = 10270
 
 ```
 
-2. 下载 frp 客户端
+2. 下载 frp 服务端
 
 ```bash
 # 进入 home 目录
@@ -128,22 +128,11 @@ wget https://github.com/fatedier/frp/releases/download/v0.58.0/frp_0.58.0_linux_
 
 # 解压
 tar -zxvf frp_0.58.0_linux_amd64.tar.gz
-cd frp_0.58.0_linux_amd64
 
 # 创建配置文件 frps.ini
+cd frp_0.58.0_linux_amd64
 vim frps.ini
 ```
-
-运行 frps 服务 ： `./frps -c frps.ini`
-
-持久化运行并输出日志：`nohup ./frps -c ./frps.ini > frps.log 2>&1 &`
-
-- nohup：不挂断运行程序，即使退出终端也不会被杀死
-- ./frps -c ./frps.ini 启动 frps，并指定配置文件为 frps.ini
-- \> 将标准输出（stdout）重定向到指定文件
-- frps.log 输出日志的文件名（保存运行信息）
-- 2>&1 将标准错误（stderr）也重定向到标准输出，即也写入 frps.log
-- & 表示在后台运行该命令（不会阻塞终端）
 
 ### 1.2 配置 frp
 
@@ -152,15 +141,72 @@ vim frps.ini
 ```ini
 [common]
 bind_port = 7010
+bind_addr = 0.0.0.0
+token = Yz8K4bR9udwafjo122v412NcPaf7g
 dashboard_port = 7500          # Web面板端口（可选）
 dashboard_user = admin         # 登录Web面板用户名
 dashboard_pwd = admin123       # 登录Web面板密码
 vhost_http_port = 8080         # 如果你反代 HTTP 服务可开启
 vhost_https_port = 8443        # 如果你反代 HTTPS 服务可开启
-token = Yz8K4bR9udwafjo122v412NcPaf7g    # 推荐开启，防止别人乱连
 ```
 
 ### 1.3 输出日志
+
+```sh
+#运行 frps 服务
+./frps -c frps.ini
+#持久化运行并输出日志
+nohup ./frps -c ./frps.ini > frps.log 2>&1 &
+```
+
+永久运行：
+
+```sh
+sudo vim /etc/systemd/system/frps.service
+
+# 按 i 输入内容
+
+[Unit]
+Description=FRP Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/frp_0.58.0_linux_amd64
+ExecStart=/root/frp_0.58.0_linux_amd64/frps -c /root/frp_0.58.0_linux_amd64/frps.ini
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+#输入完成后按 Esc，然后 :wq 保存并退出
+```
+
+- 重新加载 systemd 并启动服务：
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl start frps
+sudo systemctl enable frps
+sudo systemctl status frps
+```
+
+管理服务命令：
+
+```sh
+sudo systemctl stop frps       # 停止
+sudo systemctl restart frps    # 重启
+sudo systemctl status frps     # 查看状态
+```
+
+- nohup：不挂断运行程序，即使退出终端也不会被杀死
+- ./frps -c ./frps.ini 启动 frps，并指定配置文件为 frps.ini
+- \> 将标准输出（stdout）重定向到指定文件
+- frps.log 输出日志的文件名（保存运行信息）
+- 2>&1 将标准错误（stderr）也重定向到标准输出，即也写入 frps.log
+- & 表示在后台运行该命令（不会阻塞终端）
 
 ```log
 2025-07-01 13:32:45.815 [I] [client/service.go:295] [d03ee0eef7d84c18] try to connect to server...
@@ -169,6 +215,9 @@ token = Yz8K4bR9udwafjo122v412NcPaf7g    # 推荐开启，防止别人乱连
 2025-07-01 13:32:58.872 [I] [client/control.go:168] [d03ee0eef7d84c18] [test] start proxy success
 ```
 
+1. 断开终端 → frps 不会退出
+2. 重启服务器 → frps 会自动启动
+
 ### 1.4 常见问题与排查
 
 | 问题 | 排查 |
@@ -176,12 +225,13 @@ token = Yz8K4bR9udwafjo122v412NcPaf7g    # 推荐开启，防止别人乱连
 | 域名访问无响应 | 确保 DNS 解析正确，域名绑定公网 IP (配置 A 记录，AAA 记录解析为 IPV6) |
 | 浏览器显示 502 Bad Gateway | 本地服务未启动或端口配置错误 |
 | frpc 启动后不工作 | 查看 frpc 日志，确认与 frps 通信成功 |
+| token 不匹配 | frps.ini token 后面不能写注释 |
 
 ## 二、HTTPS 配置（ TLS ）
 
 ### Nginx / OpenResty 配置 TLS（HTTPS）
 
-TLS （Transport Layer Security），HTTPS 的基础，加密数据传输保障安全。
+TLS （Transport Layer Security），HTTPS 的基础，加密数 据传输保障安全。
 
 ### 2.1 安装运行 Nginx
 
@@ -413,3 +463,90 @@ location ^~ /jk1/ {
 核心反向代理功能：将 /jk1/ 的请求代理到本地 9009 端口的服务（比如 Node.js、Python、Go 写的 web 服务等）。
 
 Nginx 对 proxy_pass 的规则（官方定义）：proxy_pass 末尾是否带 /,带 `/`会去掉 /jk1 前缀，否则会保留 /jk1 前缀。
+
+## 四、pm2 部署
+
+### 4.1 安装必要环境
+
+1. 安装源
+
+```bash
+sudo apt update && sudo apt upgrade -y  # ubuntu
+sudo yum makecache && sudo yum update -y # centos
+```
+
+2. 安装构建工具（npm、pm2、cross-env）
+
+```bash
+sudo apt install -y nodejs npm
+sudo npm install -g pm2 cross-env
+
+# centos
+sudo yum install -y nodejs npm
+sudo npm install -g pm2 cross-env
+```
+
+3. 检查安装结果
+
+```bash
+node -v
+npm -v
+pm2 -v
+```
+
+4. 设置服务器开机自启
+
+```sh
+pm2 startup
+# 保存当前进程
+pm2 save
+```
+
+### 4.2 产物构建
+
+1. 拉取项目代码
+
+`git clone <你的仓库地址>`、`cd <项目目录>`
+
+2. 安装依赖并构建产物
+
+```bash
+npm install
+npm run build   # 或 yarn build，看你的项目定义
+```
+
+### 4.3 PM2 启动服务
+
+启动 pm2: `pm2 start dist/main.js --name server_name`
+
+✅ 可写入 package.json 脚本
+
+```jsonc
+"scripts": {
+  "prod": "cross-env RUN_ENV=prod.env pm2 start dist/main.js --name server_name"
+}
+```
+
+🔍 查看状态 & 管理服务
+
+```bash
+pm2 list                        # 查看所有进程
+pm2 logs server_name        # 查看日志
+pm2 restart server_name     # 重启
+pm2 stop server_name        # 停止
+pm2 delete server_name      # 删除进程
+```
+
+开机自启
+
+```bash
+pm2 startup              # 输出一条命令，复制粘贴执行
+sudo env PATH=$PATH:/home/ubuntu/.nvm/versions/node/v18.17.0/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+pm2 save                 # 保存当前进程状态
+```
+
+🧪 结束后检查
+
+```sh
+curl http://localhost:端口
+```
