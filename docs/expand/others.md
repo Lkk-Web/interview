@@ -51,6 +51,12 @@ order: 6
 curl -sSL https://resource.1panel.pro/quick_start.sh -o quick_start.sh && sudo bash quick_start.sh
 ```
 
+如果遇到 Docker 安装失败等问题，可以尝试运行以下脚本：
+
+```sh
+bash <(curl -sSL https://linuxmirrors.cn/docker.sh)
+```
+
 tips：
 
 1. 最好换端口
