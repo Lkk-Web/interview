@@ -550,3 +550,34 @@ pm2 save                 # 保存当前进程状态
 ```sh
 curl http://localhost:端口
 ```
+
+### 4.4 pm2 开启负载均衡
+
+因为 Node.js 本身是单线程，如果你只用 node app.js，其实只能利用一个 CPU 核心。要跑满多核，常见方法就是 用 pm2 做进程管理 + 负载均衡
+
+- 启动集群模式
+
+```sh
+# 根据 CPU 核数自动开启多个进程
+pm2 start app.js -i max
+
+# 或者手动指定进程数，比如开 4 个
+pm2 start app.js -i 4
+
+
+# 查看进程
+pm2 list
+
+# 查看负载情况（CPU/内存占用）
+pm2 monit
+
+# 平滑重启集群
+pm2 reload app
+
+# 停止/删除
+pm2 stop app
+pm2 delete app
+```
+
+    •	单机多核负载均衡：`pm2 start app.js -i max` 就能搞定。
+    •	多机多核负载均衡：Nginx/云负载均衡（转发） + 每台机器 pm2（多进程）。
