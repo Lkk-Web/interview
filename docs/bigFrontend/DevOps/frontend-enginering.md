@@ -343,6 +343,29 @@ Use HTTPS: Yes
 
 ## 七、monorepo
 
+```txt
+monorepo-root/
+│── apps/                # 存放应用（产品级项目）
+│   ├── web/             # 前台 Web 应用 (Next.js / React)
+│   ├── admin/           # 管理后台 (React + Ant Design)
+│   ├── mobile/          # H5 或 React Native
+│   └── landing/         # 官网/营销页
+│
+│── packages/            # 可复用的业务模块或工具库
+│   ├── ui/              # 组件库 (Button, Modal, Table)
+│   ├── hooks/           # 自定义 React hooks
+│   ├── utils/           # 通用工具函数
+│   ├── api/             # 请求 SDK（封装 axios/fetch）
+│   └── config/          # 配置共享（eslint, prettier, tsconfig）
+│
+│── node_modules/        # workspace 管理后的依赖
+│── package.json         # root 依赖 & workspace 配置
+│── pnpm-workspace.yaml  # workspace 定义
+│── tsconfig.base.json   # 统一的 TypeScript 配置
+│── .eslintrc.js         # 统一的 ESLint 配置
+│── turbo.json / nx.json # 构建工具配置
+```
+
 ## 八、埋点平台
 
 ## 九、ServeLess
@@ -355,11 +378,11 @@ Use HTTPS: Yes
 
 ## 十二、Low Code
 
-## 十三、webrtc
+## 十三、webrtc 实时音视频通信
 
 ## 十四、其他
 
-## 14.1 鉴权 - SSO
+### 14.1 鉴权 - SSO
 
 单点登录 SSO(Single Sign On),是一个多系统共存的环境下，用户在一处登录后，就不用在其他系统中登录，也就是用户的一次登录得到其他所有系统的信任
 
@@ -392,3 +415,41 @@ Use HTTPS: Yes
 
 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1a48ed47dd4a46de9e6f4379628a2fb4~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.image" />
 ```
+
+### 14.2 SEO 优化
+
+SEO（Search Engine Optimization，搜索引擎优化）是提升网站在搜索引擎中排名、增加自然流量。
+
+1. SSR 技术层面优化
+
+- 服务端渲染 SSR（如 Next.js / Nuxt.js）
+
+2. 预渲染（Prerendering） SPA
+
+3. 准确的 TDK 使用：title description keywords
+
+```ts
+<title>SEO优化指南</title>
+<meta name="description">
+<meta name="keywords" content="SEO优化, 关键词优化, 网站推广, 搜索引擎优化">
+```
+
+4. 合理使用语语义化标签
+
+```ts
+Header / Nav / ASide / Footer / H1 / H2 便于搜索引擎识别，如：
+<ASide>侧导航</ASide>
+<H1>SEO标题</H1>
+<img src="seo-guide.jpg" alt="SEO优化步骤示意图">
+```
+
+5. 内部链接使用有意义的锚文本，如：
+
+```ts
+<a href="/blog/seo-basics">SEO基础知识</a>
+
+外部链接建议使用 `rel="nofollow"`（如果不想传递权重）
+<a href="https://example.com" rel="nofollow">第三方资源</a>
+```
+
+## 十五、自动化测试（Jest、Cypress、Playwright）
