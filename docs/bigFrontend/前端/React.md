@@ -78,6 +78,33 @@ React 合成事件（SyntheticEvent）是 React 模拟原生 DOM 事件所有能
 
 > Warning: setState 是一个伪异步，或者可以称为 defer，即延迟执行但本身还在一个事件循环，所以它的执行顺序在同步代码后、异步代码前。
 
+### 1.1.3 为什么在循环或同步中用会出问题？
+
+```js
+for (let i = 0; i < 5; i++) {
+  setCount(count + 1);
+}
+```
+
+    •	这里的 count 是闭包捕获的旧值。
+    •	React 会把这 5 次更新合并成一次，结果只加了 1，而不是 5。
+
+✅ 正确写法是函数式更新：
+
+```js
+for (let i = 0; i < 5; i++) {
+  setCount((prev) => prev + 1);
+}
+```
+
+React 的 state 更新 默认异步批量，不能指望同步拿到新值，可以用 `Redux` 数据流解决或者 `useRef`
+
+    •	推荐做法：
+    •	用函数式更新拿到最新值；
+    •	用 useEffect 处理更新后的逻辑；
+    •	临时需要同步值 → 用 useRef；
+    •	极特殊场景 → 用 flushSync 强制刷新。
+
 ### 1.3 .env 环境变量
 
 `.env` 文件用于配置项目运行时的环境变量，例如接口地址、CDN 路径、API 密钥等。
@@ -240,6 +267,39 @@ export default () => (
 
 ### 4.1 useState
 
+1. 保存组件的内部数据
+
+适合保存影响 UI 展示的数据，比如：
+
+- 表单输入内容
+- 开关/选中状态
+- 计数器数值
+- 异步请求的结果
+
+2. 触发组件重新渲染
+
+当调用 setCount 修改状态时：
+
+- React 会把新的值保存起来
+- 然后触发组件重新渲染
+- 组件重新执行时，useState 返回最新的状态值
+
+⚡ 这是和 useRef 最大的区别：
+
+- useState 改变值会触发渲染
+- useRef 改变值不会触发渲染
+
+3. 延迟初始化（优化性能）
+
+如果初始值计算比较耗时，可以传入函数，只会执行一次：
+
+```ts
+const [data, setData] = useState(() => {
+  // 比如从 localStorage 里取数据
+  return JSON.parse(localStorage.getItem('data') || '[]');
+});
+```
+
 ### 4.2 useEffect
 
 用途：
@@ -316,6 +376,29 @@ SPA（Single Page Application），即单页面应用。单页应用程序 (SPA)
 
 ### 4.8 useRef
 
+1. 获取并保存 DOM 节点
+
+当你需要直接操作某个 DOM 元素时，可以用 useRef 来获取它的引用。
+
+```ts
+import { useRef, useEffect } from 'react';
+
+function InputFocus() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus(); // 页面加载时自动聚焦输入框
+  }, []);
+
+  return <input ref={inputRef} placeholder="请输入..." />;
+}
+```
+
+2. 存储任意可变值（类似实例属性）
+
+- useRef 保存的值在组件整个生命周期内 不会因为重新渲染而丢失。
+- 改变 ref.current 的值不会触发组件重新渲染。
+
 ## 五、React-Router
 
 ### 5.1 SPA & MPA
@@ -365,6 +448,34 @@ HTML5 为 history 对象添加了两个新方法，`history.pushState()` 和 `hi
 | 不需要服务器任何配置 | 需要在服务器配置一个回调路由 |
 
 ## 六、数据管理方案
+
+### 6.1 单向数据流
+
+Redux 明确遵循 Flux 架构，它的核心就是 单向数据流：
+
+1.  View 触发 Action 用户点击按钮，组件 dispatch(action)。
+2.  Action 传给 Reducer Reducer 是纯函数，接收 state 和 action，返回新的 state。
+3.  State 更新，驱动 View Store 更新后，订阅它的组件会重新渲染。
+
+单向数据流指两个相互独立的数据流之间，只能从一个方向来修改状态。
+
+数据流动方向： View → Action → Reducer → State → View
+
+- vue/react 中的单向数据流：
+
+父组件总是通过 props 向子组件传递数据；子组件不可以直接修改 props；
+
+父级组件发生更新时，子组件中的 props 将会刷新为最新的值；
+
+优点：
+
+所有状态的改变可记录、可跟踪，源头易追溯；所有的数据，具有唯一出口和入口，使得数据操作更直观更容易理解，可维护性强；当数据变化时，页面会自动变化
+
+缺点：
+
+页面渲染完成后，有新数据不能自动更新，需要手动整合新数据和模板重新渲染代码量上升，数据流转过程变长，代码重复性变大在处理局部状态较多的场景时，代码会变得繁琐
+
+- 双向绑定（Vue 的 v-model 那种）是：输入框值变 → 数据自动变，数据变 → 输入框自动变。
 
 ## 七、React 特性
 
