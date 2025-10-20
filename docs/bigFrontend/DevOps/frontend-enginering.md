@@ -73,17 +73,84 @@ order: 1
 
 它要求在编写某个功能的代码之前先编写好测试代码，然后只编写使测试通过的功能代码，通过测试来推动整个开发的进行。这有助于编写简洁可用和高质量的代码，并加速开发过程。
 
-### 2.2 灰度策略
+#### 测试驱动开发的优缺点
+
+测试驱动开发最大的优点就是重构了，不断迭代，不断地对现有代码进行重构，不断优化代码的内部结构，最终实现对整体代码的改进。以此不断减少一些设计冗余、代码冗余、接口复杂度等等。
+
+另外，对于一些前期需求不明确，甚至需求信息量特别少，且后期又会有大量业务功能修改时，传统的开发模式需要加班加点以此赶工开发，测试，缺陷修复，人工、时间成本且不说，最重要的产品质量也无法得到保证。当然 ，这种模式下也最适合采用原型法、敏捷开发模式了，毕竟拥抱变化是敏捷的宗旨 。而测试驱动开发也是敏捷开发模式的基础，这样无论是来自客户的紧急需求还是项目团队的一次技术改革，都可以通过重构设计、增加测试脚本来实现了。
+
+### 2.2 DDD(领域驱动开发)
+
+DDD（Domain-Driven Design，领域驱动设计） 是现代后端架构里非常重要的思想，尤其是在 微服务、复杂业务系统（如 ERP / MES / 电商 / 金融） 中广泛使用。
+
+传统项目（尤其是快速堆功能的 CRUD 系统）容易变成：
+
+1. “逻辑散落在各个 controller / service / utils”
+2. “代码一改就牵一发而动全身”
+3. “业务规则埋在几十个 if else 里”
+
+DDD 出现就是为了解决：
+
+复杂业务系统的混乱、重复、耦合问题。
+
+📍 1. 四层架构（分层思想）
+
+| 层级              | 名称            | 职责                                           |
+| ----------------- | --------------- | ---------------------------------------------- |
+| Interface 层      | 接口层 / 表现层 | 对外暴露 API（HTTP、RPC）                      |
+| Application 层    | 应用层          | 调用领域服务，组织业务流程，不处理具体业务规则 |
+| Domain 层         | 领域层          | 核心业务逻辑（实体、值对象、领域服务）         |
+| Infrastructure 层 | 基础设施层      | 数据库、缓存、消息队列等技术实现               |
+
+传统写法（Service 混乱）：
+
+```ts
+// OrderService.ts
+createOrder(userId, items) {
+  const user = userRepo.find(userId)
+  if (!user.isActive) throw new Error('用户未激活')
+  const total = items.reduce((a, b) => a + b.price * b.count, 0)
+  if (total < 100) throw new Error('最低订单额为100')
+  const order = { userId, items, total, status: 'NEW' }
+  db.save(order)
+}
+```
+
+DDD 写法（职责清晰）：
+
+```ts
+// domain/entities/Order.ts
+export class Order {
+  constructor(private items: Item[], private user: User) {}
+
+  validate() {
+    const total = this.getTotal();
+    if (total < 100) throw new Error('最低订单额为100');
+  }
+
+  getTotal() {
+    return this.items.reduce((sum, i) => sum + i.price * i.count, 0);
+  }
+}
+
+// application/services/OrderService.ts
+export class OrderService {
+  constructor(private orderRepo: OrderRepository) {}
+
+  async createOrder(userId, items) {
+    const user = await userRepo.find(userId);
+    const order = new Order(items, user);
+    order.validate();
+    await this.orderRepo.save(order);
+  }
+}
+```
+
+### 2.3 灰度策略
 
 灰度，就是存在于黑与白之间的一个平滑过渡的区域。对于互联网产品来说，上线和未上线就是黑与白之分，而实现未上线功能平稳过渡的一种方式就叫做灰度发布。
 
 AB test 就是一种灰度发布方式，让一部分用户继续用 A，一部分用户开始用 B，如果用户对 B 没有什么反对意见，`那么逐步扩大范围`，把所有用户都迁移到 B 上面来。灰度发布可以保证整体系统的稳定，在初始灰度的时候就可以发现、调整问题，以保证其影响度。
-
-#### 测试驱动开发的优缺点
-
-从以上的 TDD 周期图中也可以看出，测试驱动开发最大的优点就是重构了，不断迭代，不断地对现有代码进行重构，不断优化代码的内部结构，最终实现对整体代码的改进。以此不断减少一些设计冗余、代码冗余、接口复杂度等等。
-
-另外，对于一些前期需求不明确，甚至需求信息量特别少，且后期又会有大量业务功能修改时，传统的开发模式需要加班加点以此赶工开发，测试，缺陷修复，人工、时间成本且不说，最重要的产品质量也无法得到保证。当然 ，这种模式下也最适合采用原型法、敏捷开发模式了，毕竟拥抱变化是敏捷的宗旨 。而测试驱动开发也是敏捷开发模式的基础，这样无论是来自客户的紧急需求还是项目团队的一次技术改革，都可以通过重构设计、增加测试脚本来实现了。
 
 ## 三、页面指标
 
