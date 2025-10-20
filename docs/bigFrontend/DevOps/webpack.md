@@ -22,6 +22,19 @@ webpack 的工作流程是
 6. 递归依赖树，将每个模块交给对应的 Loader 处理。
 7. 合并 Loader 处理完的结果，将打包结果输出到 dist 目录。
 
+- Loader 和 Plugin 的区别
+
+loader 是一个文件转换器，让 webpack 能够理解和处理非 JavaScript 文件。
+
+    •	运行在模块加载阶段。
+    •	典型场景：把 TypeScript 转成 JS、把 SCSS 转成 CSS、把图片转成 base64。
+
+plugin 用于 扩展 webpack 的功能，可以在打包的 整个生命周期（编译、优化、输出等）中介入，做更广泛的事情。
+
+    •	操作的是 webpack 的 编译过程 和 输出结果，而不仅仅是单个文件。
+    •	运行在 打包生命周期的不同阶段（通过 hooks）。
+    •	典型场景：压缩代码、生成 HTML 文件、清理目录、注入环境变量。
+
 ## 一、概念
 
 - entry:webpack 工作开始的地方，就是一个 js 文件。webpack 通过这个文件内的 import，收集其他模块文件，在通过其他模块文件内的 import 语句，收集其他依赖，最后将所有模块文件打包到一起，形成一个整体可运行的代码。 默认的入口文件是`src/index.js`。
@@ -42,7 +55,7 @@ Webpack 5 在 Node.js 版本 10.13.0+ 上运行。
 
 ### 2.1 Tree Shaking
 
-作用： 如果我们的项目中引入了 lodash 包，但是我只有了其中的一个方法。其他没有用到的方法是不是冗余的？此时 tree-shaking 就可以把没有用的那些东西剔除掉，来减少最终的 bundle 体积。
+作用： 如果我们的项目中引入了 lodash 包，但是我只有了其中的一个方法。其他没有用到的方法是不是冗余的？此时 tree-shaking 就`可以把没有用的那些东西剔除掉，来减少最终的 bundle 体积`。
 
 ```javascript
 module.exports = {
@@ -374,10 +387,10 @@ module.exports = BasicPlugin;
 
 ### 6.2 常见 plugin
 
-1. ignore-plugin：忽略文件
-2. terser-webpack-plugin: 支持压缩 ES6 (Webpack4)
+1. `ignore-plugin`：忽略文件
+2. `terser-webpack-plugin`: 支持压缩 ES6 (Webpack4)
 3. `webpack-parallel-uglify-plugin`: 多进程执行代码压缩，提升构建速度
-4. mini-css-extract-plugin: 分离样式文件，CSS 提取为独立文件，支持按需加载
+4. `mini-css-extract-plugin`: 分离样式文件，CSS 提取为独立文件，支持按需加载
 5. serviceworker-webpack-plugin：为网页应用增加离线缓存功能
 6. clean-webpack-plugin: 目录清理
 7. speed-measure-webpack-plugin: 可以看到每个 Loader 和 Plugin 执行耗时
@@ -393,6 +406,7 @@ module.exports = BasicPlugin;
 17. `webpack-bundle-analyzer`:一个 webpack 的 bundle 文件分析工具，将 bundle 文件以可交互缩放的 treemap 的形式展示。
 18. `compression-webpack-plugin`: 生产环境可采用 gzip 压缩 JS 和 CSS
 19. `happypack`：通过多进程模型，来加速代码构建
+20. `SplitChunksPlugin`，cacheGroups 配置缓存组，提升打包速度
 
 ## 七、Mode(模式)
 
