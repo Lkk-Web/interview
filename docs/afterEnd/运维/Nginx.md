@@ -517,6 +517,8 @@ npm run build   # 或 yarn build，看你的项目定义
 
 ### 4.3 PM2 启动服务
 
+#### 4.3.1 Nestjs 项目
+
 启动 pm2: `pm2 start dist/main.js --name server_name`
 
 ✅ 可写入 package.json 脚本
@@ -525,6 +527,38 @@ npm run build   # 或 yarn build，看你的项目定义
 "scripts": {
   "prod": "cross-env RUN_ENV=prod.env pm2 start dist/main.js --name server_name"
 }
+```
+
+#### 4.3.2 Nextjs 项目
+
+启动 pm2: `pm2 start pm2.config.js`
+
+```js
+// pm2.config.js
+module.exports = {
+  apps: [
+    {
+      name: 'nextjs-devops', //pm2 name
+      script: 'npm',
+      args: 'start',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 30003,
+        NEXT_PUBLIC_BASE_PATH: '/nextjs',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 30003,
+        NEXT_PUBLIC_BASE_PATH: '/nextjs',
+      },
+    },
+  ],
+};
 ```
 
 🔍 查看状态 & 管理服务
