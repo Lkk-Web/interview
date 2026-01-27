@@ -23,11 +23,7 @@ RPC
 
 redis
 
-cnpm 、 npm 、pnpm 的区别
-
-## 1、基本概念 Node 是什么？
-
-## CommonJS 规范
+## 1、CommonJS 规范
 
 > 现 ES6 的 Module 基本取代了 CommonJS 规范和 AMD 规范
 
@@ -202,6 +198,53 @@ NodeJS 中的 EventLoop 使 NodeJS 能够进行非阻塞的 I/O 操作，尽管 
 - `poll（轮询阶段）`：这个阶段检索 I/O 事件，执行 I/O 事件对应的回调函数（除了关闭回调、计时器调度的回调和 setImmediate() 之外的几乎所有异步操作），都将会在这个阶段被处理。
 - `check（检测阶段）`：setImmediate()函数的回调函数将会在这里被处理。
 - `close callbacks（关闭回调阶段）`：例如：socket.on('close', ...)
+
+## 4、cnpm、npm 、pnpm
+
+Node.js 是 JavaScript 的**运行时环境**，npm 是 Node.js **内置的包管理器**，cnpm 和 pnpm 是 npm 的替代 / 增强工具，三者都依赖 Node.js 才能运行，nvm 则是用来管理 Node.js 版本的工具。
+
+### 4.1 npm (Node Package Manager)
+
+todo 如何做公司内部包管理方案
+
+npm 是 Node.js 官方内置 的包管理器，是 Node.js 生态的核心组成部分，只要你安装了 Node.js，默认就会自带 npm
+
+- 安装包时默认采用嵌套依赖（每个包的依赖都放在自己的 node_modules 下），导致 node_modules 体积庞大、嵌套层级深；
+
+- 存在依赖幽灵（未声明的包也能被引用）、依赖分身（同一个包可能被多次安装）等问题
+
+### 4.2 cnpm (China NPM)
+
+cnpm 是淘宝团队为解决 npm 国内访问慢的问题开发的npm 国内镜像版，本质是 npm 的 “国内适配版”。不随 Node.js 内置，需要手动安装，且运行仍依赖 Node.js 环境。
+
+功能和 npm 完全一致，唯一核心差异是默认下载源是淘宝 npm 镜像（registry.npmmirror.com），国内下载速度极快；
+早期版本曾采用全局扁平安装，后来逐步和 npm 对齐。
+
+兼容性：部分场景下（如依赖路径严格的包），cnpm 可能出现兼容问题，不如 npm 原生稳定。
+
+- 基本使用命令：
+
+```sh
+npm install -g cnpm       # 全局安装 cnpm
+cnpm install 包名          # 安装包（用法和 npm 几乎一致）
+```
+
+### 4.3 pnpm (Performant NPM)
+
+pnpm 是新一代高性能包管理器，主打 “高效、节省磁盘空间”，是 npm 的增强替代工具。同样不随 Node.js 内置，需手动安装，依赖 Node.js 运行
+
+- 核心差异（对比 npm/cnpm）：
+
+1. 磁盘空间节省：采用内容寻址存储（CAS），同一个包的不同版本仅存储差异部分，全局共享缓存，安装多个项目时重复包只存一份；
+
+2. 安装速度快：比 npm 快 2-3 倍，比 yarn 也快，因为复用缓存且避免重复下载
+
+3. 依赖结构清晰：采用符号链接 + 虚拟存储，node_modules 是扁平结构但无依赖分身，解决了 npm 的 “依赖幽灵” 问题；
+    - pnpm 不会把包文件复制到项目的 node_modules，而是创建硬链接（指向全局缓存的文件）和符号链接（指向硬链接）：
+    - 硬链接：让多个文件路径指向同一个物理文件（磁盘上仅存一份）；
+    - 符号链接：相当于 “快捷方式”，指向硬链接的位置。 
+
+4. 兼容性好：完全兼容 npm 的 package.json 和 lock 文件（package-lock.json）
 
 ### 4.4 nvm (Node Version Manager)
 
