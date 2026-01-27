@@ -202,3 +202,23 @@ NodeJS 中的 EventLoop 使 NodeJS 能够进行非阻塞的 I/O 操作，尽管 
 - `poll（轮询阶段）`：这个阶段检索 I/O 事件，执行 I/O 事件对应的回调函数（除了关闭回调、计时器调度的回调和 setImmediate() 之外的几乎所有异步操作），都将会在这个阶段被处理。
 - `check（检测阶段）`：setImmediate()函数的回调函数将会在这里被处理。
 - `close callbacks（关闭回调阶段）`：例如：socket.on('close', ...)
+
+### 4.4 nvm (Node Version Manager)
+
+nvm 是 Node.js 版本管理工具，和包管理器（npm/cnpm/pnpm）是完全不同维度的工具，核心解决 Node.js 版本切换的问题。
+切换 Node.js 版本后，对应的内置 npm 版本也会跟着切换（不同 Node.js 版本内置的 npm 版本不同）；
+
+- 核心作用
+
+1. 多版本 Node.js 共存：比如你的电脑上同时需要 **Node.js 14（适配旧项目）**、Node.js 20（适配新项目），nvm 可以快速切换，无需卸载重装；
+
+2. 快速安装 / 卸载版本：一行命令安装指定版本的 Node.js，无需手动下载安装包。
+
+- 常用命令
+```sh
+nvm list                # 查看已安装的 Node.js 版本
+nvm install 20.10.0     # 安装指定版本的 Node.js
+nvm use 20.10.0         # 切换到指定版本
+nvm alias default 20.10.0 # 设置默认版本
+nvm uninstall 14.17.0   # 卸载指定版本
+```
