@@ -265,3 +265,7 @@ nvm use 20.10.0         # 切换到指定版本
 nvm alias default 20.10.0 # 设置默认版本
 nvm uninstall 14.17.0   # 卸载指定版本
 ```
+
+3. 添加插件 - 终端自动 nvm use `nvmrc`
+
+vscode 插件市场 搜索 `vsc-nvm`
