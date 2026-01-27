@@ -13,7 +13,7 @@ Jest 是 Facebook 出品的一个测试框架，相对其他测试框架，其�
 
 (官方地址)[https://www.charlesproxy.com/download/]
 
-#### 抓包 macos
+#### 抓包 macOS
 
 1. 下载证书
 
@@ -22,6 +22,8 @@ Help -> SSL Proxying -> Install Charles Root Certificate
 2. 在钥匙串中信任
 
 钥匙串访问 -> search 「charles」 -> 信任 「始终信任」
+
+3. Proxy -> 勾选 macOS Proxy 开始抓包
 
 #### 抓包ios
 
