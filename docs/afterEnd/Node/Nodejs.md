@@ -213,6 +213,188 @@ npm 是 Node.js 官方内置 的包管理器，是 Node.js 生态的核心组成
 
 - 存在依赖幽灵（未声明的包也能被引用）、依赖分身（同一个包可能被多次安装）等问题
 
+#### 4.1 依赖冲突
+
+**依赖冲突 ≠ 安装报错**
+
+真正的依赖冲突包括 3 类：
+
+1. 版本冲突（最常见）
+
+
+```sh
+Could not resolve dependency:
+foo@^2.0.0
+bar requires foo@^1.0.0
+```
+
+2. peerDependencies 冲突（npm v7+ 重灾区）
+    - 查看 peer 要求
+    - 升级宿主包
+    - 或换插件版本
+```sh
+ERESOLVE unable to resolve dependency tree
+peer react@"^18" from xxx
+```
+
+3. 运行期冲突（能装，但跑不起来）
+
+```sh
+TypeError: xxx is not a function
+```
+
+#### 4.2 私有包
+
+发布 `私有 npm 包`（Private Package）其实和发布公开包类似，但涉及权限、访问控制和 Registry 配置
+
+- npm 私有包发布流程
+
+1. 设置 npm 账号
+
+```sh
+npm login
+
+输入：Username、Password、Email
+```
+成功后，npm 会在 ~/.npmrc 保存 token
+
+2. 初始化 package.json
+
+```
+mkdir my-private-lib
+cd my-private-lib
+npm init -y
+```
+
+- 修改 package.json：
+
+```json
+{
+  "name": "@my-org/my-private-lib", // @casstime/copilot
+  "version": "1.0.0",
+  "private": false,       // ❌ 注意不能设置 true，否则不能 publish
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
+
+// @my-org → 命名空间，建议组织名
+// publishConfig.access = "restricted" → 发布私有包
+// private: true → 仅禁止发布，非必填
+```
+
+3. 发布包
+
+```sh
+npm publish
+```
+
+发布后包默认私有，其他团队成员可以：`npm install @my-org/my-private-lib`。前提是：已 npm login，拥有组织访问权限
+
+#### 4.3 自建 npm Registry
+
+自建 Registry 能解决什么？
+
+✅ 内网访问
+
+✅ 私有包不出公司
+
+✅ 公共包缓存（加速安装）
+
+✅ 完全控制权限 & 版本
+
+✅ 可接入 CI/CD
+
+|方案	|	适合谁|	特点|
+| ---- | ---------- | ------------------------------------ |
+| Verdaccio	|	中小团队|	轻量、npm 原生、上手快|
+| Nexus Repository	| 技术团队	|	企业	多仓库类型、权限复杂|
+| Artifactory | 大厂	|	商业化、全制品管理 |
+
+- ⭐️ Verdaccio（够用）
+
+1. 安装
+
+```sh
+npm install -g verdaccio
+verdaccio
+```
+
+端口：4873
+
+地址：http://localhost:4873
+
+访问浏览器即可看到 Registry UI。
+
+2. npm 指向私有 Registry
+
+在项目根目录 `.npmrc`
+
+```env
+registry=http://localhost:4873
+# 或者 scoped
+@my-org:registry=http://localhost:4873
+```
+👉 公共包仍走官方，私有包走自建
+
+3. 创建用户 & 登录 & 发布
+
+```sh
+# 创建用户
+npm adduser --registry http://localhost:4873
+# 发布
+npm publish --registry http://localhost:4873
+# 安装
+npm install @my-org/utils
+```
+
+4. Verdaccio 工作原理
+```
+npm install
+   ↓
+Verdaccio Registry
+   ↓
+├─ 私有包 → 本地 storage
+└─ 公共包 → 代理 npmjs.org（缓存）
+```
+
+5. 权限 & 安全（生产配置）
+
+- Verdaccio 配置文件
+
+```sh
+verdaccio --config ./config.yaml 
+verdaccio --config ~/.config/verdaccio/config.yaml  # macos
+```
+
+关键配置（简化）：
+
+```yaml
+auth:
+  htpasswd:
+    file: ./htpasswd
+
+packages:
+  '@my-org/*':
+    access: $authenticated
+    publish: $authenticated
+
+  '**':
+    access: $all # authenticated 则要鉴权
+    publish: $authenticated
+```
+`@my-org/*` → 只有登录用户可访问 & 发布
+
+公共包任何人可 install，但不能 publish
+
+6. 常见问题
+
+❌ package.json 写了 "private": true → 永远不能 publish
+
+❌ 没做备份 → Registry 挂了 = 全公司依赖挂
+
+❌ registry 全局替换 → npm install 慢 / 404 ✅ 用 scoped registry
+
 ### 4.2 cnpm (China NPM)
 
 cnpm 是淘宝团队为解决 npm 国内访问慢的问题开发的npm 国内镜像版，本质是 npm 的 “国内适配版”。不随 Node.js 内置，需要手动安装，且运行仍依赖 Node.js 环境。
