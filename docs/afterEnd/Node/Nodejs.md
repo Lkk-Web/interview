@@ -199,7 +199,7 @@ NodeJS 中的 EventLoop 使 NodeJS 能够进行非阻塞的 I/O 操作，尽管 
 - `check（检测阶段）`：setImmediate()函数的回调函数将会在这里被处理。
 - `close callbacks（关闭回调阶段）`：例如：socket.on('close', ...)
 
-## 4、cnpm、npm 、pnpm
+## 4、cnpm、npm 、pnpm、yarn
 
 Node.js 是 JavaScript 的**运行时环境**，npm 是 Node.js **内置的包管理器**，cnpm 和 pnpm 是 npm 的替代 / 增强工具，三者都依赖 Node.js 才能运行，nvm 则是用来管理 Node.js 版本的工具。
 
@@ -246,7 +246,58 @@ pnpm 是新一代高性能包管理器，主打 “高效、节省磁盘空间�
 
 4. 兼容性好：完全兼容 npm 的 package.json 和 lock 文件（package-lock.json）
 
-### 4.4 nvm (Node Version Manager)
+### 4.4 yarn (Node Version Manager)
+
+早期 npm（v3 之前）的问题：
+
+- 安装慢（串行）
+
+- 依赖树不稳定
+
+- 没有强一致性 lock 机制
+
+- CI 经常 “我本地能跑，服务器不行”
+
+Facebook / Google / Exponent（RN） 受不了 → Yarn 诞生
+
+`Yarn 的核心设计（重点）`
+
+1️⃣ yarn.lock —— Yarn 的灵魂
+
+同一个 package.json,不同时间、不同机器,安装结果必须一样
+
+2️⃣ 依赖解析 & Hoisting
+
+> 什么是 Hoisting？
+
+**把多个包共用的依赖，提升到 node_modules 顶层**
+
+```ts
+node_modules/
+  react
+  lodash
+  axios
+
+而不是
+
+a/node_modules/lodash
+b/node_modules/lodash
+```
+Yarn 的特点
+
+- 更激进 hoist
+
+- 安装结果更扁平
+
+- 老项目更容易跑起来
+
+3️⃣ 并行下载 & 离线缓存
+
+缓存机制：所有下载过的包都会进全局 cache
+
+下次安装：不走网络、直接命中缓存
+
+### 4.5 nvm (Node Version Manager)
 
 nvm 是 Node.js 版本管理工具，和包管理器（npm/cnpm/pnpm）是完全不同维度的工具，核心解决 Node.js 版本切换的问题。
 切换 Node.js 版本后，对应的内置 npm 版本也会跟着切换（不同 Node.js 版本内置的 npm 版本不同）；
