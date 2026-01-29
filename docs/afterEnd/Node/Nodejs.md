@@ -458,6 +458,37 @@ packages:
 合并
 ```
 
+#### 4.5 peerDependencies 与 dependencies
+
+- `dependencies`
+
+```json
+"dependencies": {
+  "axios": "1.6.2"
+}
+```
+1. 你的包运行时必须依赖
+
+2. npm会自动安装
+
+3. 放进 node_modules 里
+
+- `peerDependencies`
+
+1. 不自动安装
+
+2. 告诉使用者：「你项目里必须有这个依赖，而且版本要符合」
+
+```
+安装你的包
+  ↓
+npm 检查 peerDependencies
+  ↓
+项目里有没有？
+    ├─ 有且版本满足 → OK
+    └─ 没有 / 不满足 → warning / error
+```
+
 ### 4.2 cnpm (China NPM)
 
 cnpm 是淘宝团队为解决 npm 国内访问慢的问题开发的npm 国内镜像版，本质是 npm 的 “国内适配版”。不随 Node.js 内置，需要手动安装，且运行仍依赖 Node.js 环境。
