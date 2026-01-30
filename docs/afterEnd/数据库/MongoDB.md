@@ -36,7 +36,6 @@ order: 4
 
 - [CRUD：Create / Read / Update / Delete](/after-end/数据库/mongo-db#一crud)
   - [基本数据类型和操作命令](/after-end/数据库/mysql#12-基本数据类型)：String、Hash、List、Set、ZSet 等
-- [查询]()
 - [Nodejs - Mongoose]()
 
 ```
@@ -229,4 +228,119 @@ db.users.insertMany([
   { name: "Alice", age: 20 },
   { name: "Bob", age: 22 }
 ])
+```
+
+### 1.2 Read(查询)
+
+1. 查询字段
+
+```js
+db.users.find({ age: 18 })
+```
+
+2. 条件操作符
+
+```js
+// 大于 / 小于
+db.users.find({ age: { $gt: 18 } })
+
+// in
+db.users.find({ age: { $in: [18, 20] } })
+
+// not equal
+db.users.find({ status: { $ne: "deleted" } })
+```
+
+3. 模糊查询（正则）
+
+```js
+// 匹配 name 中包含 "xx" 的文档，忽略大小写
+db.users.find({
+  name: { $regex: "xx", $options: "i" }
+})
+```
+> 正则 + i = 极容易慢查询 -> 后面优化：前缀正则 + 索引
+
+关键：`$options` 支持的匹配选项,MongoDB 支持 4 种核心匹配选项，可单独使用也可组合使用：
+
+| 选项 | 含义 | 说明 |
+|------|------|------|
+| `i`  | 忽略大小写（ignore case） | `$options: "i"` 匹配 "to"、"To"、"TO" 等大小写形式 |
+| `m`  | 多行匹配（multi line） | 针对包含换行符 `\n` 的字段，`^` 和 `$` 会匹配每行的开头/结尾（而非整个字符串的开头/结尾） |
+| `x`  | 忽略正则中的空白字符（extended） | 用于格式化复杂正则，忽略正则表达式中的空格和 `#` 开头的注释内容 |
+| `s`  | 单行匹配（dot all） | 让正则中的 `.` 匹配任意字符（包括换行符 `\n`，默认情况下 `.` 不匹配 `\n`） |
+
+场景 1：前缀匹配（字段以指定字符串开头） 
+
+使用正则元字符 `^`（匹配字符串开头）
+
+```js
+// 匹配 name 以 "to" 开头（忽略大小写）
+// 写法1：$regex
+db.users.find({
+  name: { $regex: "^to", $options: "i" }
+})
+```
+
+场景 2：后缀匹配（字段以指定字符串结尾）
+
+使用正则元字符 `$`（匹配字符串结尾）
+
+```js
+// 匹配 name 以 "to" 结尾（忽略大小写）
+db.users.find({
+  name: { $regex: "to$", $options: "i" }
+})
+```
+
+场景 3：精确匹配（等同于 $eq，无模糊效果，了解即可）
+
+同时使用 `^` 和 `$`，限制整个字符串完全匹配
+
+```js
+// 匹配 name 恰好是 "to"（忽略大小写，等同于 { name: { $eq: "to", $options: "i" } }）
+db.users.find({
+  name: { $regex: "^to$", $options: "i" }
+})
+```
+
+场景 4：匹配包含多个关键词中的任意一个
+
+使用正则的 `|`（或）语法
+
+```js
+// 匹配 name 中包含 "to" 或 "tom" 或 "jack"（忽略大小写）
+db.users.find({
+  name: { $regex: "to|tom|jack", $options: "i" }
+})
+```
+
+- 注意事项
+
+索引优化：如果字段建立了索引，**前缀匹配（^to）可以利用索引提升查询效率**；而包含匹配（to）、后缀匹配（to$）无法利用索引，数据量大时查询会很慢。
+
+创建单字段升序索引（最常用，满足大部分场景）
+```sh
+# 为 users 集合的 name 字段创建单字段索引（1 表示升序，-1 表示降序，对前缀匹配无影响）
+db.users.createIndex({ name: 1 })
+```
+
+特殊字符转义：如果查询的关键词包含正则元字符（如 .、*、+、? 等），需要先转义，否则会被当作正则语法解析，导致查询结果错误。
+
+4. 投影
+
+```js
+db.users.find(
+  { age: 18 },
+  { name: 1, age: 1, _id: 0 } // 1 取字段，0不取
+)
+```
+
+5. 分页
+
+```js
+db.users.find({})
+  .skip(20)
+  .limit(10)
+  .sort({ createdAt: -1 })
 ```
