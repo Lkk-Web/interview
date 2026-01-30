@@ -6,7 +6,7 @@ order: 4
 
 # MongoDB
 
-系统学习 MongoDB，可以按照从基础概念到实战优化的路线，分阶段进行。以下是一套推荐的学习路线，适合前端开发人员或初学者从入门到进阶掌握：
+系统学习 MongoDB，可以按照从基础概念到实战优化的路线，分阶段进行。
 
 - 核心认知
 
@@ -34,7 +34,7 @@ order: 4
 
 学习内容：
 
-- [CRUD]()
+- [CRUD：Create / Read / Update / Delete](/after-end/数据库/mongo-db#一crud)
   - [基本数据类型和操作命令](/after-end/数据库/mysql#12-基本数据类型)：String、Hash、List、Set、ZSet 等
 - [查询]()
 - [Nodejs - Mongoose]()
@@ -196,3 +196,37 @@ MongoDB + GraphQL
 MongoDB + Redis（冷热分层）
 
 MongoDB Atlas（云）
+
+
+### 一、CRUD
+
+本质：对 Collection（表）里的 Document（JSON）做增删改查
+
+| SQL         | MongoDB    |
+| ----------- | ---------- |
+| table       | collection |
+| row         | document   |
+| column      | field      |
+| primary key | `_id`      |
+
+### 1.1 Create
+
+1. 插入一条
+
+```js
+db.users.insertOne({
+  name: "Tom",
+  age: 18,
+  tags: ["node", "mongodb"],
+  createdAt: new Date()
+})
+```
+
+2. 插入多条
+
+```js
+db.users.insertMany([
+  { name: "Alice", age: 20 },
+  { name: "Bob", age: 22 }
+])
+```
