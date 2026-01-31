@@ -1,7 +1,7 @@
 ---
 group:
   # title: '后端'
-order: 4
+order: 3
 ---
 
 # MongoDB
@@ -344,3 +344,48 @@ db.users.find({})
   .limit(10)
   .sort({ createdAt: -1 })
 ```
+
+### 1.3 Update
+
+
+```js
+$set      // 设置字段
+$unset    // 删除字段
+$inc      // 自增
+$push     // 数组追加
+$pull     // 数组删除
+
+db.users.updateOne(
+  { name: "Tom" },
+  { $set: { age: 19 } }
+)
+
+// upsert（没有就插）
+db.users.updateOne(
+  { email: "a@b.com" },
+  { $set: { name: "A" } },
+  { upsert: true }
+)
+```
+
+❗️不加 $set = 整条文档被覆盖
+
+
+### 1.4 Delete
+
+```js
+db.users.deleteOne({ name: "Tom" })
+db.users.deleteMany({ age: { $lt: 18 } })
+```
+
+- 真实项目 很少物理删除 - 软删除方案
+
+```js
+db.users.updateOne(
+  { _id },
+  { $set: { status: "deleted" } }
+)
+
+status: { $ne: IS_DELETE }
+```
+
