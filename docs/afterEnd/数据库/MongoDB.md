@@ -35,7 +35,7 @@ order: 3
 学习内容：
 
 - [CRUD：Create / Read / Update / Delete](/after-end/数据库/mongo-db#一crud)
-  - [基本数据类型和操作命令](/after-end/数据库/mysql#12-基本数据类型)：String、Hash、List、Set、ZSet 等
+  - [基本数据类型](/after-end/数据库/mongo-db#二基本数据类型)
 - [Nodejs - Mongoose]()
 
 ```
@@ -389,3 +389,21 @@ db.users.updateOne(
 status: { $ne: IS_DELETE }
 ```
 
+## 二、基本数据类型
+
+### 2.1 BSON
+
+MongoDB 用的是 BSON（Binary JSON）
+
+| 类型           | 示例                   | 说明     |
+| ------------ | -------------------- | ------ |
+| `String`     | `"hello"`            | 字符串    |
+| `NumberInt`  | `NumberInt(18)`      | 32 位整数 |
+| `NumberLong` | `NumberLong(100000)` | 64 位整数 |
+| `Double`     | `3.14`               | 浮点数    |
+| `Boolean`    | `true`               | 布尔     |
+| `Array`      | `["a", "b"]`         | 数组     |
+| `Object`     | `{ a: 1 }`           | 内嵌文档   |
+| `Date`       | `new Date()`         | 日期时间   |
+| `ObjectId`   | `ObjectId("...")`    | 默认主键   |
+| `Null`       | `null`               | 空值     |
