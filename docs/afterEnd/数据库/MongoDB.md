@@ -32,48 +32,12 @@ order: 3
 
 目标：搞清 MongoDB 是什么、为什么用、怎么在项目里“正确地用”
 
-学习内容：
-
 - [CRUD：Create / Read / Update / Delete](/after-end/数据库/mongo-db#一crud)
   - [基本数据类型](/after-end/数据库/mongo-db#二基本数据类型)
-- [Nodejs - Mongoose]()
-
-```
-db.users.insertOne()
-db.users.find()
-db.users.updateOne()
-db.users.deleteOne()
-$set
-
-$inc
-
-$push / $pull
-
-$in / $gte / $lte
-```
-
-查询
-
-- 条件查询
-
-- 排序 / 分页
-
-- 投影（只返回需要的字段）
-
-- 模糊查询（regex）
-
-Nodejs - Mongoose
-
-- Schema & Model
-
-- 类型约束
-
-- 默认值
-
-- timestamps
-
-- 中间件（pre / post）
-
+  - [类型约束](/after-end/数据库/mongo-db#21-bson)
+- [Nodejs - Mongoose](/after-end/数据库/mongo-db#三mongoose)
+  - [Schema & Model](/after-end/数据库/mongo-db#31-schema-定义)
+  - [中间件（pre / post）](/after-end/数据库/mongo-db#32-中间件pre--post)
 
 ✅ 第二阶段：进阶应用
 
@@ -389,7 +353,7 @@ db.users.updateOne(
 status: { $ne: IS_DELETE }
 ```
 
-## 二、基本数据类型
+## 二、基本数据类型 & 命令
 
 ### 2.1 BSON
 
@@ -407,3 +371,35 @@ MongoDB 用的是 BSON（Binary JSON）
 | `Date`       | `new Date()`         | 日期时间   |
 | `ObjectId`   | `ObjectId("...")`    | 默认主键   |
 | `Null`       | `null`               | 空值     |
+
+### 3.1 语法糖
+
+```text
+$set   → 改字段
+$push  → 数组加
+$pull  → 数组删
+$in    → 在不在这堆里
+$inc   → 数字加减
+$gte   → 大于等于
+$lte   → 小于等于
+```
+#### 4.1 $inc —— 数字自增 / 自减
+
+示例
+```js
+db.users.updateOne(
+  { _id },
+  { $inc: { score: 1 } }
+)
+```
+
+等价于：
+
+`score = score + 1`
+
+自减
+```js
+$inc: { score: -1 }
+```
+1. 线程安全
+2. 适合计数 / 库存 / 点击量
