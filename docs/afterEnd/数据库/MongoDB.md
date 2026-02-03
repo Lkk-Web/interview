@@ -403,3 +403,116 @@ $inc: { score: -1 }
 ```
 1. 线程安全
 2. 适合计数 / 库存 / 点击量
+
+#### 4.2 $lookup -- JOIN（左外连接）
+
+> $lookup = MongoDB 在聚合管道里的 JOIN（左外连接）
+
+```js
+{
+  _id: ObjectId("u1"),
+  name: "Tom",
+}
+
+{
+  _id: ObjectId("o1"),
+  userId: ObjectId("u1"),
+  amount: 100,
+}
+
+db.orders.aggregate([
+  {
+    $lookup: {
+      from: 'users',          // collection 名
+      localField: 'userId',   // orders 的字段
+      foreignField: '_id',    // users 的字段
+      as: 'user',
+    },
+  },
+]);
+
+// 返回
+{
+  amount: 100,
+  user: [
+    {
+      _id: 'u1',
+      name: 'Tom'
+    }
+  ]
+}
+```
+
+- 什么时候别用 $lookup
+
+✅ 实时高并发接口
+✅ join 链路很深
+✅ 结果字段特别多
+
+- `工程级别`
+```js
+ChannelSchema.aggregate([
+  {
+    $match: {
+      $and: [keywordString, channelCondition],  // 主表筛选 - 越早 match 越好（性能）
+    },
+  },
+  {
+    $lookup: {  // 高级 JOIN
+    // 去 channelstores 表里找「同 channelId」且「没被删除」结果放到 channelStores 数组里
+      let: {
+        channelId: '$channelId',
+      },
+      from: 'channelstores',
+      as: 'channelStores',
+      pipeline: [ // 定义 “怎么查子表”
+        {
+          $match: { // 子表筛选器
+            $expr: { // 允许“动态比较”
+              $and: [ // 两个条件必须同时满足
+                { $eq: ['$channelId', '$$channelId'] },
+                { $ne: ['$status', ChannelStatusDesc.IS_DELETE] },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    $sort: { createdAt: -1 },
+  },
+  {
+    $skip: (pageNum - 1) * pageSize,
+  },
+  {
+    $facet: {
+      data: [{ $limit: pageSize }],
+    },
+  },
+]).exec()
+
+// 返回
+
+[
+  {
+    "data": [
+      {
+        "_id": "ObjectId(...)",
+        "channelId": "CH001",
+        "name": "渠道A",
+        "createdAt": "2024-01-01T10:00:00Z",
+        "channelStores": [
+          {
+            "_id": "ObjectId(...)",
+            "channelId": "CH001",
+            "storeName": "门店1",
+            "status": 1
+          }
+        ]
+      }
+    ]
+  }
+]
+
+```
