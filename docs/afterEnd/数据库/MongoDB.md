@@ -566,3 +566,102 @@ $expr: {
 | 字段 vs 字段 | `$expr`     |
 | join 条件  | `$expr`     |
 
+
+## 三、Mongoose
+
+> Mongoose = MongoDB 的 Schema + Model + 校验 + 中间件
+
+解决 4 件事：
+
+1. 数据结构约束（Schema）
+
+2. 类型转换（string → ObjectId / Date）
+
+3. 常用 CRUD API
+
+4. 钩子（pre / post）
+
+5. 把操作命令原封不动地“转交”给 MongoDB
+
+### 3.1 Schema 定义
+
+```js
+import { Schema, model } from 'mongoose';
+
+const UserSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    age: { type: Number, min: 0 },
+    email: { type: String, unique: true },
+    status: {
+      type: String,
+      enum: ['active', 'disabled'],
+      default: 'active',
+    },
+  },
+  {
+    timestamps: true, // createdAt / updatedAt
+    versionKey: false, // 去掉 __v
+    _id: false, autoIndex: false // 自定义id
+  }
+);
+
+const UserInfoSchema = new Scheme(
+  {
+    userInfo: {
+      require: true,
+      type: UserSchema,
+    },
+  }
+)
+
+export const UserModel = model('User', UserSchema);
+
+```
+
+### 3.2 中间件（pre / post）
+
+- `中间件（pre / post）就是：在“某个操作执行前 / 执行后，自动插一段你的代码”`
+
+pre 钩子  —— 在操作「之前」
+
+post 钩子 —— 在操作「之后」
+
+```js
+// 保存用户前，把密码加密
+UserSchema.pre('save', function (next) {
+  this.password = hash(this.password);
+  next();
+});
+
+const user = new User({ password: '123456' });
+await user.save();
+```
+
+- pre / post 的 this 是什么？
+
+```js
+schema.pre('save', function () {
+  console.log(this); // 当前 document
+});
+```
+
+- next() 是干嘛的？
+
+老写法：
+```js
+schema.pre('save', function (next) {
+  // 不调用 next()，流程就卡死
+  next();
+});
+```
+
+新写法（推荐）：
+```js
+schema.pre('save', async function () {
+  await doSomething();
+});
+```
+👉 async 函数自动 next
+
+> MongoDB 没有中间件, Mongoose 才有中间件
