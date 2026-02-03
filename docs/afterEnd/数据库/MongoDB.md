@@ -516,3 +516,53 @@ ChannelSchema.aggregate([
 ]
 
 ```
+
+#### 4.3 $expr
+
+> $expr 的作用：让你在 `$match` 里，使用“表达式”，而不是只能写死值。
+
+普通 $match 只能这样
+
+```js
+{ age: { $gte: 18 } }
+// 你想这样（但不行）, MongoDB：❌ 不认识
+A.age > B.minAge
+```
+
+✅ 用 $expr 之后
+
+```js
+{
+  $expr: {
+    $gte: ['$age', '$minAge']
+  }
+}
+
+// 进阶
+
+$expr: {
+  $and: [
+    { $eq: ['$channelId', '$$channelId'] }, // '$channelId' ： 当前 channelstores 文档里的字段，'$$channelId'来自 $lookup.let 的 外层变量
+    { $ne: ['$status', ChannelStatusDesc.IS_DELETE] },
+  ],
+}
+```
+
+✅ 下面这些情况，没有 `$expr` 基本写不了
+
+1. $lookup.pipeline 里做关联
+
+2. 字段和字段比较
+
+3. 字段和表达式比较
+
+- 性能
+
+能不用 `$expr`就不用
+
+| 情况       | 写法          |
+| -------- | ----------- |
+| 字段 vs 常量 | 普通 `$match` |
+| 字段 vs 字段 | `$expr`     |
+| join 条件  | `$expr`     |
+
