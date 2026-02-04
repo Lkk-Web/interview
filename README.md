@@ -1,24 +1,32 @@
-# interview
+# 📘 Personal Tech Blog / Knowledge Base
 
 Hi~ 👋 我是醒来就想躺，这是我的开源博客，欢迎提 PR😉
 
-```bash
-node:internal/crypto/hash:69
-  this[kHandle] = new _Hash(algorithm, xofLen);
+👋 关于我 | About Me
 
-Error: error:0308010C:digital envelope routines::unsupported
-```
+- 👨‍💻 职业：React / Node.js / Golang / Mysql / MongoDB / ...
+- 🌱 关注方向：
+	- Web 全栈架构
+	- 工程化 & 性能优化
+	- 后端 / 数据库 / 分布式
+	- AI 在业务中的落地
 
-是 Node.js 在使用加密模块（如 crypto）时发生的错误，通常出现在 Node.js v17+ 之后运行基于 Webpack 的项目，尤其是使用了 md5、sha256 等哈希算法的场景。
+✍️ 写作目的 | Writing Purpose
 
-解决方法：
+- 把学习过程变成长期资产
+- 多输入多输出
+- 记录职业生涯
 
-使用 nvm 切换到 Node.js v16 版本即可。
+📮 联系我 | Contact
 
-- nvm install 16
-- nvm use 16
+- GitHub: https://github.com/Lkk-Web
+- Blog: https://stb.kying.org/blog/index.html
+- Email: workhardcl@icloud.com
 
+如果这些内容对你有帮助，欢迎 Star 🌟
 正在持续维护...
 
-                                tag1:2022.10.17
-                                tag2:2025.06.24
+
+🚀 最近更新 | Recent Updates
+
+- ✅ tag v1.0.0 2026-02-04 - 2026-02-07《MongoDB Schema设计、聚合管道（Aggregation Pipeline）、事务与一致性、索引》
