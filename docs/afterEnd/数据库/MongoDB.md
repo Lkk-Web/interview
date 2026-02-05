@@ -666,6 +666,37 @@ db.users.aggregate([
   }
 }
 ```
+#### 4.7 $unwind
+
+> $unwind = 把数组字段“拆成多行文档”
+
+- 对数组元素做筛选
+- 对数组元素 group / 统计
+- JOIN → 拆 → 再 JOIN 
+
+
+```js
+
+{
+  "channelId": "C001",
+  "channelStores": [{...}, {...}]
+}
+
+[
+  { $lookup: {...} },
+  { $unwind: '$channelStores' }
+]
+//unwind 后
+{
+  "channelId": "C001",
+  "channelStores": { "name": "A" }
+}
+{
+  "channelId": "C001",
+  "channelStores": { "name": "B" }
+}
+
+```
 
 ## 三、Mongoose
 
