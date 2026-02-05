@@ -43,80 +43,10 @@ order: 3
 
 目标：能设计数据结构，避免“用着爽，后期崩”
 
-学习内容：
-
-- [Schema 设计]()
-- [聚合管道（Aggregation Pipeline）【必会】]()
-- [事务与一致性]()
-- [索引（从“能跑”到“跑得快”）]()
-
-嵌套 vs 引用
-
-```
-// 嵌套
-{
-  orderId,
-  items: [{ productId, price }]
-}
-
-// 引用
-{
-  orderId,
-  userId
-}
-```
-
-什么时候嵌套？
-
-1. 强关联
-
-2. 小数据量
-
-3. 高频一起查
-
-什么时候引用？
-
-1. 数据量大
-
-2. 生命周期不同
-
-3. 多对多
-
-聚合管道（Aggregation Pipeline）【必会】
-
-这是 MongoDB 的核心竞争力。
-
-$match
-
-$group
-
-$project
-
-$lookup（类似 join）
-
-$unwind
-
-MongoDB 支持事务（4.0+）,但成本高不适合高频
-
-索引
-
-单字段索引
-
-复合索引
-
-唯一索引
-
-TTL 索引
-
-问题
-
-ObjectId vs string
-
-查询字段顺序不命中索引
-
-文档无限膨胀
-
-$lookup 滥用
+- [Schema 设计](/after-end/数据库/mongo-db#四schema-设计)
+- [聚合管道（Aggregation Pipeline）](/after-end/数据库/mongo-db#五聚合管道aggregation-pipeline)
+- [事务一致性](/after-end/数据库/mongo-db#41-事务一致性)
+- [索引设计（从“能跑”到“跑得快”）](/after-end/数据库/mongo-db#六索引设计) 
 
 ✅ 第三阶段：性能优化与实战
 
@@ -161,7 +91,7 @@ MongoDB + Redis（冷热分层）
 MongoDB Atlas（云）
 
 
-### 一、CRUD
+## 一、CRUD
 
 本质：对 Collection（表）里的 Document（JSON）做增删改查
 
@@ -565,6 +495,35 @@ $expr: {
 | 字段 vs 常量 | 普通 `$match` |
 | 字段 vs 字段 | `$expr`     |
 | join 条件  | `$expr`     |
+
+#### 4.4 $facet
+
+> `$facet` = 在同一份数据上，同时跑多条“子管道”，一次返回多种结果
+
+```js
+db.users.aggregate([
+  {
+    $facet: {
+      list: [{ $limit: 10 }],
+      total: [{ $count: 'count' }],
+    },
+  },
+]);
+// 返回 
+[
+  {
+    "list": [ /* 前 10 条用户 */ ],
+    "total": [
+      { "count": 128 }
+    ]
+  }
+]
+```
+- 每个 `facet` 的值 都是数组
+
+- `facet` 是 MongoDB 提供的“一次查询，多路输出”能力，尤其适合分页、统计、报表类场景。
+
+这是 MongoDB 的核心竞争力。
 
 
 ## 三、Mongoose
