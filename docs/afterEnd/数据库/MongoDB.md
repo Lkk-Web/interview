@@ -525,6 +525,54 @@ db.users.aggregate([
 
 这是 MongoDB 的核心竞争力。
 
+#### 4.5 $match
+
+1. $and
+
+```js
+{
+  $match: {
+    $and: [
+      { status: 1 },
+      { type: 'ONLINE' }
+    ]
+  }
+}
+// 下面这个更好：
+{
+  $match: {
+    status: 1,
+    type: 'ONLINE'
+  }
+}
+```
+
+2. $or（常用）
+
+```js
+
+{
+  $match: {
+    $or: [
+      { name: { $regex: keyword } },
+      { code: { $regex: keyword } }
+    ]
+  }
+}
+```
+
+3. $expr
+
+```js
+{
+  $match: {
+    $expr: {
+      $eq: ['$channelId', '$otherField']
+    }
+  }
+}
+```
+
 
 ## 三、Mongoose
 
