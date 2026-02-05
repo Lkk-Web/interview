@@ -573,6 +573,99 @@ db.users.aggregate([
 }
 ```
 
+#### 4.6 $project
+
+`$project` = 聚合管道里的“字段选择 + 字段改造器”
+
+- 和 Mongoose .select() 的区别
+
+| 能力    | select | $project |
+| ----- | ------ | -------- |
+| 字段筛选  | ✅      | ✅        |
+| 字段重命名 | ❌      | ✅        |
+| 计算字段  | ❌      | ✅        |
+| 条件逻辑  | ❌      | ✅        |
+| 数值运算  | ❌      | ✅        |
+
+1. 只保留指定字段
+
+```js
+{
+  $project: {
+    channelId: 1,
+    name: 1,
+    createdAt: 1
+  }
+}
+// 排除字段（不推荐混用）
+// 要么全 1，要么全 0
+// ❌ 不能混着来（除了 _id）
+{
+  $project: {
+    password: 0,
+    _id: 0
+  }
+}
+```
+
+2. 字段重命名（超常用）
+
+```js
+{
+  $project: {
+    id: '$_id',
+    channelId: 1,
+    name: 1,
+    _id: 0
+  }
+}
+// 返回
+{
+  "id": "...",
+  "channelId": "xxx",
+  "name": "test"
+}
+```
+3. 计算字段（$project 的灵魂）
+
+```js
+// 字段运算
+{
+  $project: {
+    totalPrice: { $multiply: ['$price', '$count'] }
+  }
+}
+// 字符串拼接
+{
+  $project: {
+    fullName: { $concat: ['$firstName', ' ', '$lastName'] }
+  }
+}
+// 条件判断
+{
+  $project: {
+    statusText: {
+      $cond: [
+        { $eq: ['$status', 1] },
+        '启用',
+        '禁用'
+      ]
+    }
+  }
+}
+// 空值处理（极其常见）
+{
+  $project: {
+    avatar: { $ifNull: ['$avatar', 'default.png'] }
+  }
+}
+// 数组长度
+{
+  $project: {
+    storeCount: { $size: '$channelStores' }
+  }
+}
+```
 
 ## 三、Mongoose
 
