@@ -849,3 +849,53 @@ schema.pre('save', async function () {
     - 复合索引顺序
     - lookup 表必须有索引
 
+### 4.1 事务一致性
+
+> 事务 = 一组操作要么全部成功，要么全部失败回滚
+
+`MongoDB 4.0` 以后才支持
+
+解决：
+
+- 跨文档一致性
+- 跨集合一致性
+- 并发安全（两个用户同时下单）
+
+基础写法：
+
+```js
+const session = await mongoose.startSession();
+
+try {
+  session.startTransaction();
+
+  await Order.create([{ ... }], { session });
+
+  await Inventory.updateOne(
+    { skuId },
+    { $inc: { stock: -1 } },
+    { session }
+  );
+
+  await session.commitTransaction();
+
+} catch (err) {
+  await session.abortTransaction();
+} finally {
+  session.endSession();
+}
+```
+
+优雅写法：
+
+```js
+await session.withTransaction(async () => {
+  await Order.create([{ ... }], { session });
+  await Inventory.updateOne(
+    { skuId },
+    { $inc: { stock: -1 } },
+    { session }
+  );
+});
+```
+
