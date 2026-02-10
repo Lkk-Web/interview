@@ -899,3 +899,43 @@ await session.withTransaction(async () => {
 });
 ```
 
+### 4.2 ObjectId vs string
+
+> 主键 / 关联字段：用 ObjectId; 业务编号 / 外部系统 ID：用 string
+
+什么是 ObjectId？
+
+```js
+ObjectId("65f0c2a8e4c1a23c9b3c1234")
+```
+
+它内部包含 3 个信息：
+
+| 部分      | 含义       |
+| ------- | -------- |
+| 时间戳     | 创建时间（秒级） |
+| 机器 / 进程 | 分布式唯一    |
+| 自增计数    | 防冲突      |
+
+ObjectId vs string 的本质差别
+
+| 对比点  | ObjectId | string     |
+| ---- | -------- | ---------- |
+| 存储空间 | 12 bytes | ≥ 24 bytes |
+| 索引大小 | 小        | 大          |
+| 查询性能 | 更快       | 较慢         |
+| 排序   | 创建时间有序   | 无          |
+| 跨系统  | 不友好      | 友好         |
+| 人类可读 | 否        | 是          |
+
+Schema 规范（推荐）
+
+```js
+{
+  _id: ObjectId,              // Mongo 主键
+  userId: ObjectId,           // 关联字段
+  orderNo: string,            // 业务号
+  externalId: string,         // 外部系统
+}
+```
+
