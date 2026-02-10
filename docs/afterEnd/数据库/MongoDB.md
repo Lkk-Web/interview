@@ -939,3 +939,139 @@ Schema 规范（推荐）
 }
 ```
 
+### 4.3 文档无限膨胀
+
+MongoDB 文档不是“越大越好”，一条文档如果不断被 $push、$set 追加字段，
+
+会导致：性能下降、频繁搬迁、甚至写放大雪崩。
+
+**设计上应遵循「主文档存状态，明细拆子集合」**
+
+```js
+{
+  _id: ObjectId("..."),
+  userId: ObjectId("..."),
+  logs: [ ... ],       // 不断 push
+  comments: [ ... ],  // 不断 push
+  history: {           // 不断 set 新 key
+    "2024-01": {},
+    "2024-02": {},
+    "2024-03": {},
+  }
+}
+```
+
+1. MongoDB 文档有硬上限(单条文档最大：16MB)
+
+2. 文档“搬家”
+
+  - 文档初始分配一块空间
+
+  - 后续 update 如果 放不下
+
+  - 整条文档重新找地方写
+
+解决方案：
+
+✅ 方案 1：一对多，拆集合（最推荐）
+
+- 文档大小稳定
+
+- 可分页
+
+- 可归档
+
+- 可加 TTL
+
+✅ 方案 2：有限数组（明确上限）
+
+```js
+logs: {
+  type: [LogSchema],
+  default: [],
+  maxlength: 50
+}
+
+// 只保留最近 N 条
+$push: {
+  logs: {
+    $each: [newLog],
+    $slice: -50
+  }
+}
+```
+
+✅ 方案 3：Bucket 模式（进阶）
+
+Bucket 模式 = 把“很多小记录”按规则装进“一个桶文档”里，一个桶有明确边界（时间 / 数量），满了就换新桶
+
+```js
+// ❌ 每条记录一个文档
+logs
+{
+  userId,
+  action,
+  time
+}
+// ❌ 全塞进一个数组
+{
+  userId,
+  logs: [ ... ] // 无限增长
+}
+```
+
+- 最经典的时间 Bucket
+
+```js
+// user_activity_buckets
+// 每天一个 bucket
+// events 数量有限
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  date: "2024-02-05",        // bucket key
+  events: [
+    {
+      type: "click",
+      targetId: "xxx",
+      time: ISODate()
+    }
+  ],
+  count: 123
+}
+// 写入逻辑
+db.buckets.updateOne(
+  { userId, date },
+  {
+    $push: {
+      events: {
+        $each: [newEvent],
+        $slice: -500   // 只保留最近 500 条
+      }
+    }
+    $inc: { count: 1 }
+  },
+  { upsert: true }
+)
+```
+
+- 生产推荐
+
+```js
+// 超过 500 条 → bucketIndex + 1
+{
+  userId,
+  date,
+  bucketIndex: 0,
+  events: []
+}
+```
+
+查询 Bucket 的方式
+
+```js
+db.buckets.find({
+  userId,
+  date: "2024-02-05"
+})
+```
