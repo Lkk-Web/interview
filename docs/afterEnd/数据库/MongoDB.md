@@ -1075,3 +1075,34 @@ db.buckets.find({
   date: "2024-02-05"
 })
 ```
+
+## 五、聚合管道（Aggregation Pipeline）
+
+```js
+原始文档
+  ↓ $match（筛选）
+  ↓ $lookup（关联）
+  ↓ $unwind（拆数组）
+  ↓ $group（统计）
+  ↓ $project（整理结构）
+  ↓ $sort / $skip / $limit
+  ↓ 结果
+
+Model.aggregate([
+  { $match: {...} },
+  { $lookup: {...} },
+  { $unwind: {...} },
+  { $group: {...} },
+  { $project: {...} },
+  { $sort: {...} },
+  { $skip: 0 },
+  { $limit: 10 }
+]).exec()
+```
+
+- 顺序执行
+
+- 上一步输出 = 下一步输入
+
+- 每一步都是一个「Stage」
+
