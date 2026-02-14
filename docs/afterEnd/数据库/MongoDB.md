@@ -33,6 +33,7 @@ order: 3
 目标：搞清 MongoDB 是什么、为什么用、怎么在项目里“正确地用”
 
 - [CRUD：Create / Read / Update / Delete](/after-end/数据库/mongo-db#一crud)
+  - [Mongodb 安装与配置（本地或Docker）](/after-end/数据库/redis#11-redis-安装与配置本地或-docker)
   - [基本数据类型](/after-end/数据库/mongo-db#二基本数据类型)
   - [类型约束](/after-end/数据库/mongo-db#21-bson)
 - [Nodejs - Mongoose](/after-end/数据库/mongo-db#三mongoose)
@@ -94,6 +95,40 @@ MongoDB + Redis（冷热分层）
 
 MongoDB Atlas（云）
 
+###  Mongodb 安装与配置（本地或 Docker）
+
+[安装 Docker（macOS）](/after-end/运维/docker)
+
+1. `拉取 Mongodb 镜像`
+
+在终端中输入以下命令：
+
+```bash
+docker pull mongo # 默认会拉取 latest（当前稳定版）。
+# docker pull mongo:6.0 #（当前主流）
+```
+
+2. `运行 Mongodb 容器`
+
+执行以下命令启动 Mongodb
+
+```bash
+docker run -d \
+  --name mongo \
+  -p 27017:27017 \
+  mongo:6.0
+```
+
+3. `连接 Mongodb`
+
+使用 GUI 工具（如 Navicat / Studio 3T）
+
+默认连：
+
+```sh
+mongodb://localhost:27017  # 端口（Port）: 27017
+# 有账号密码 mongodb://user:pwd@host:27017/copilot?authSource=copilot&replicaSet=replica -> copilot 数据库
+```
 
 ## 一、CRUD
 
@@ -306,7 +341,7 @@ MongoDB 用的是 BSON（Binary JSON）
 | `ObjectId`   | `ObjectId("...")`    | 默认主键   |
 | `Null`       | `null`               | 空值     |
 
-### 3.1 语法糖
+### 2.2 语法糖
 
 ```text
 $set   → 改字段
@@ -317,7 +352,7 @@ $inc   → 数字加减
 $gte   → 大于等于
 $lte   → 小于等于
 ```
-#### 4.1 $inc —— 数字自增 / 自减
+#### 2.2.1 $inc —— 数字自增 / 自减
 
 示例
 ```js
@@ -338,7 +373,7 @@ $inc: { score: -1 }
 1. 线程安全
 2. 适合计数 / 库存 / 点击量
 
-#### 4.2 $lookup -- JOIN（左外连接）
+#### 2.2.2 $lookup -- JOIN（左外连接）
 
 > $lookup = MongoDB 在聚合管道里的 JOIN（左外连接）
 
@@ -451,7 +486,7 @@ ChannelSchema.aggregate([
 
 ```
 
-#### 4.3 $expr
+#### 2.2.3 $expr
 
 > $expr 的作用：让你在 `$match` 里，使用“表达式”，而不是只能写死值。
 
@@ -500,7 +535,7 @@ $expr: {
 | 字段 vs 字段 | `$expr`     |
 | join 条件  | `$expr`     |
 
-#### 4.4 $facet
+#### 2.2.4 $facet
 
 > `$facet` = 在同一份数据上，同时跑多条“子管道”，一次返回多种结果
 
@@ -529,7 +564,7 @@ db.users.aggregate([
 
 这是 MongoDB 的核心竞争力。
 
-#### 4.5 $match
+#### 2.2.5 $match
 
 1. $and
 
@@ -577,7 +612,7 @@ db.users.aggregate([
 }
 ```
 
-#### 4.6 $project
+#### 2.2.6 $project
 
 `$project` = 聚合管道里的“字段选择 + 字段改造器”
 
@@ -670,7 +705,8 @@ db.users.aggregate([
   }
 }
 ```
-#### 4.7 $unwind
+
+#### 2.2.7 $unwind
 
 > $unwind = 把数组字段“拆成多行文档”
 
