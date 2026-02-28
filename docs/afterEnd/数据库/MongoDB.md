@@ -129,6 +129,39 @@ docker run -d \
 mongodb://localhost:27017  # 端口（Port）: 27017
 # 有账号密码 mongodb://user:pwd@host:27017/copilot?authSource=copilot&replicaSet=replica -> copilot 数据库
 ```
+###  Mongodb 权限
+
+- 标准 MongoDB 连接格式: `mongodb://用户名:密码@主机:端口/业务数据库名?authSource=认证数据库`
+
+用户 = 角色集合
+角色 = 对某个数据库的权限
+
+- 创建一个只能访问某个/多个数据库的用户
+
+```mongodb
+use admin // 切换到 admin 库，也可以是其他数据库
+
+// 在哪个库创建的用户，用户认证数据库就必须是 ?authSource=admin 
+db.createUser({   
+  user: "copilot",
+  pwd: "123456",
+  roles: [
+    { role: "readWrite", db: "knowledge" },
+    { role: "read", db: "logs" }
+  ]
+})
+
+// 删除用户
+db.dropUser("copilot")
+```
+
+🏆 推荐生产环境做法
+
+1. 不要用 admin 用户给应用连接
+2. 为每个系统创建独立用户
+3. 只给 readWrite 对应数据库
+4. 不给 root 权限
+
 
 ## 一、CRUD
 
