@@ -11,8 +11,6 @@ order: 1
 
 ## 简介
 
-消息队列？
-
 GraphQL
 
 esql
