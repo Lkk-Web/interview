@@ -477,6 +477,54 @@ Redux 明确遵循 Flux 架构，它的核心就是 单向数据流：
 
 - 双向绑定（Vue 的 v-model 那种）是：输入框值变 → 数据自动变，数据变 → 输入框自动变。
 
+#### 6.1.1 MobX
+
+MobX是 响应式状态管理库，核心理念是 `最小化状态、自动追踪依赖`.
+
+1. observable「state」（可观察状态）
+
+数据被 observable 包裹后变成响应式对象,一旦修改，依赖它的组件会自动重新渲染
+
+2. action（动作）修改 observable 的函数
+
+用来规范数据修改的入口
+
+3. computed（计算属性）
+
+派生状态 根据 observable 自动计算，且有缓存，不会重复计算
+
+4. reaction / autorun（副作用）
+
+当 observable 改变时执行副作用 autorun 会自动追踪其中用到的 observable
+
+5. observer（装饰组件）
+
+React 组件包裹 observer 后，会自动响应依赖的 observable 改变重新渲染
+
+- 好处
+
+「自动追踪依赖」 ：只要组件使用了 state，它就会自动响应，无需手动订阅
+
+「最小渲染」 ：只渲染依赖改变的部分，不会像 Redux 需要整个 state 树更新
+
+「代码更简洁」：不用写大量 reducer、action type、dispatch
+
+「支持类和函数式」：可用 class + makeAutoObservable，也可函数式 makeObservable + hooks
+
+「性能优秀」：对大型应用，computed 缓存 + 最小渲染，性能比 Redux+React-Redux 高
+
+数据流是 单向响应式，不是 `Redux` 的严格单向流，但也有固定规则：
+
+```
+Observable (state)
+      ↓
+  Computed / Autorun (派生)
+      ↓
+Observer Components (UI)
+
+```
+
+
 ## 七、React 特性
 
 ### 7.1 Fiber
