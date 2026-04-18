@@ -1,7 +1,7 @@
 ---
 nav:
   title: '面试'
-  order: 2
+  order: 4
 group:
   title: '前言'
   order: 1

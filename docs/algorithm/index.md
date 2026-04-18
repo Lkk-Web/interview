@@ -1,7 +1,7 @@
 ---
 nav:
   title: '算法'
-  order: 3
+  order: 4
 group:
   title: '前言'
   order: 1

@@ -1,7 +1,7 @@
 ---
 nav:
   title: '总结思考'
-  order: 4
+  order: 7
 group:
   title: '前言'
   order: 1

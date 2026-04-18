@@ -1,7 +1,7 @@
 ---
 nav:
   title: '拓展'
-  order: 4
+  order: 6
 group:
   title: '前言'
   order: 1
