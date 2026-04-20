@@ -147,3 +147,107 @@ Redis 是内存数据库，但可以把数据保存到磁盘
 
 - 启动快 + 数据安全
 ✔️ Redis 4+ 常见配置
+
+### 1.4 数据结构
+
+Redis 不是 Key Value，而是 Key → 数据结构
+
+以下默认为 `Redis CLI` 命令
+
+1. String
+
+- 用途：
+
+    - token
+    - 缓存对象（JSON / 序列化）
+    - 计数器（INCR）
+
+```sh
+key -> value
+
+SET keyName "value"
+SET token "685e4455a99aed4cc90ec99b"
+SET session_token "abc123" EX 3600   # 1小时过期
+SET user:1 '{"id":1,"name":"Max","email":"max@example.com"}' EX 3600 # JSON / 序列化对象
+# 初始化计数器
+SET page:view:1 0
+INCR page:view:1 # 每次 +1
+DECR page:view:1 # 每次 -1
+## 查看value
+GET page:view:1
+```
+
+- 特点：
+
+不只是字符串，二进制安全
+
+最大 512MB
+
+2. Hash（对象结构）
+
+```
+user:1 -> { name, age, email }
+```
+
+- 用途：
+
+用户信息
+
+商品属性
+
+- 优点：
+
+比 JSON 更省内存
+
+支持字段级更新
+
+3. List（有序列表）
+
+```
+LPUSH / RPUSH
+```
+
+- 用途：
+
+消息队列（简单场景）
+
+时间线
+
+- 特点：
+
+双端队列
+
+支持阻塞（BLPOP）
+
+4. Set（无序去重集合）
+
+- 用途：
+
+去重
+
+共同好友
+
+标签系统
+
+- 特点：
+
+自动去重
+
+支持交并差集
+
+5. ZSet（有序集合）
+
+- 用途：
+
+排行榜
+
+权重排序
+
+延时队列
+
+- 工程神器：
+
+又排序又去重
+
+时间戳 + score = 延时任务
+
