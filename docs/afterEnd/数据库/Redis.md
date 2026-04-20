@@ -38,3 +38,39 @@ order: 2
 - 架构
   - 哨兵模式 Sentinel（主从 + 故障转移）
   - Redis Cluster（集群模式、分片方案）
+
+
+## 一、Redis 概念
+
+> Redis = 高性能的内存数据结构存储 + 可选持久化 + 多用途（缓存 / 消息 / 排行 / 会话）
+
+### 1.1 Redis 安装与配置（本地或 Docker）
+
+[安装 Docker（macOS）](/after-end/运维/docker)
+
+1. `拉取 Redis 镜像`
+
+在终端中输入以下命令：
+
+```bash
+docker pull redis # 默认会拉取 latest（当前稳定版）。
+# docker pull redis:7.2 #（当前主流）
+```
+
+2. `运行 Redis 容器`
+
+执行以下命令启动 Redis
+
+```bash
+docker run -d \
+  --name redis-beta \
+  -p 6379:6379 \
+  redis:7.2
+```
+
+3. `连接 Redis`
+
+使用 GUI 工具（如 Navicat / RedisInsight / Medis）
+- 主机地址（Host）：127.0.0.1
+- 端口（Port）：6379
+
