@@ -1,10 +1,5 @@
 ---
-nav:
-  title: '总结思考'
-  order: 7
-group:
-  title: '前言'
-  order: 1
+order: 1
 ---
 
 # 前言
