@@ -1,0 +1,122 @@
+.stock-dashboard {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 统计卡片网格 */
+.stock-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stock-stat-card {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.stock-stat-label {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.stock-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 4px;
+
+  .stock-stat-target {
+    font-size: 14px;
+    font-weight: 400;
+    color: #8c8c8c;
+  }
+}
+
+.stock-stat-change {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stock-stat-sub {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.positive {
+  color: #c23531;
+}
+
+.negative {
+  color: #2f4554;
+}
+
+/* 进度条 */
+.stock-stat-progress {
+  margin-top: 8px;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.stock-stat-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 图表区域 */
+.stock-chart-section {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.stock-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+  .stock-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stock-stat-card {
+    padding: 12px;
+  }
+
+  .stock-stat-value {
+    font-size: 18px;
+  }
+
+  .stock-chart-section {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .stock-section-title {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .stock-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

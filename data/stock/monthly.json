@@ -1,0 +1,32 @@
+[
+  {
+    "month": "2026-01",
+    "tTarget": 1000,
+    "revenue": 72,
+    "tRevenue": 288.35
+  },
+  {
+    "month": "2026-02",
+    "tTarget": 1000,
+    "revenue": -246,
+    "tRevenue": 87.51
+  },
+  {
+    "month": "2026-03",
+    "tTarget": 1000,
+    "revenue": 4536,
+    "tRevenue": 1005
+  },
+  {
+    "month": "2026-04",
+    "tTarget": 1000,
+    "revenue": -8893,
+    "tRevenue": 1103.83
+  },
+  {
+    "month": "2026-05",
+    "tTarget": 1500,
+    "revenue": null,
+    "tRevenue": 351.67
+  }
+]
