@@ -1,0 +1,155 @@
+.mermaid-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 16px 0;
+  text-align: center;
+
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.mermaid-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  padding: 12px 16px;
+  text-align: left;
+
+  p {
+    color: #ff4d4f;
+    margin: 0 0 8px;
+    font-size: 14px;
+  }
+
+  pre {
+    background: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 0;
+  }
+}
+
+/* ========== 可缩放模式 ========== */
+
+.mermaid-zoomable-wrapper {
+  position: relative;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+  margin: 16px 0;
+}
+
+.mermaid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  user-select: none;
+
+  button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+
+    &:active {
+      background: #e6f7ff;
+    }
+  }
+
+  .mermaid-scale-label {
+    font-size: 12px;
+    color: #666;
+    min-width: 40px;
+    text-align: center;
+  }
+}
+
+.mermaid-viewport {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  touch-action: none;
+  position: relative;
+}
+
+.mermaid-canvas {
+  transform-origin: center center;
+  transition: transform 0.05s ease-out;
+  display: inline-block;
+  padding: 20px;
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    max-width: none;
+    height: auto;
+  }
+}
+
+/* ========== 全屏模式 ========== */
+
+.mermaid-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  border-radius: 0;
+  margin: 0;
+  background: #fff;
+
+  .mermaid-viewport {
+    height: calc(100vh - 41px);
+  }
+}
+
+/* ========== 移动端适配 ========== */
+
+@media screen and (max-width: 768px) {
+  .mermaid-container {
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+
+    svg {
+      min-width: 300px;
+    }
+  }
+
+  .mermaid-viewport {
+    height: 300px;
+  }
+
+  .mermaid-toolbar {
+    padding: 4px 8px;
+
+    button {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+  }
+}
