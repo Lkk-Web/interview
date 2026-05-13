@@ -1,23 +1,29 @@
 import React, { useMemo } from 'react';
 import type { StockDashboardProps } from './types';
+import { useStockPrice } from './useStockPrice';
 import AssetChart from './AssetChart';
 import PositionPie from './PositionPie';
 import './index.less';
 
 const StockDashboard: React.FC<StockDashboardProps> = ({
   assetHistory,
-  positions,
+  positions: rawPositions,
   monthly,
   otherIncome,
 }) => {
+  // 获取实时股价
+  const { positions, loading, error, refresh, updatedAt } = useStockPrice(rawPositions);
+
   // 统计数据
   const stats = useMemo(() => {
     // 累计做T收益：从 monthly 的 tRevenue 累加
     const totalTProfit = monthly.reduce((sum, m) => sum + (m.tRevenue || 0), 0);
 
-    // 资产变化
-    const assetStart = assetHistory[0]?.totalAsset || 0;
-    const assetEnd = assetHistory[assetHistory.length - 1]?.totalAsset || 0;
+    // 资产变化（自动计算 totalAsset）
+    const calcTotal = (d: any) =>
+      (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0) + (d.other || 0);
+    const assetStart = assetHistory.length > 0 ? calcTotal(assetHistory[0]) : 0;
+    const assetEnd = assetHistory.length > 0 ? calcTotal(assetHistory[assetHistory.length - 1]) : 0;
     const assetChange = assetEnd - assetStart;
     const assetChangePercent = assetStart > 0 ? ((assetChange / assetStart) * 100).toFixed(2) : '0';
 
@@ -88,8 +94,26 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 
       {/* 持仓分布 */}
       <div className="stock-chart-section">
-        <h3 className="stock-section-title">当前持仓分布</h3>
-        <PositionPie positions={positions} />
+        <div className="stock-section-header">
+          <h3 className="stock-section-title">当前持仓分布</h3>
+          <div className="stock-price-status">
+            {loading && <span className="stock-loading">加载行情中...</span>}
+            {error && <span className="stock-error">{error}</span>}
+            {updatedAt && !loading && (
+              <span className="stock-updated">
+                实时行情 · {updatedAt}
+                <button className="stock-refresh-btn" onClick={refresh} title="刷新行情">
+                  ↻
+                </button>
+              </span>
+            )}
+          </div>
+        </div>
+        {!loading && positions.some((p) => p.price > 0) ? (
+          <PositionPie positions={positions} />
+        ) : !loading && error ? (
+          <div className="stock-error-tip">行情获取失败，请刷新重试</div>
+        ) : null}
       </div>
     </div>
   );

@@ -90,6 +90,58 @@
   border-bottom: 1px solid #f5f5f5;
 }
 
+/* 持仓区域头部 */
+.stock-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+
+  .stock-section-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+.stock-price-status {
+  font-size: 12px;
+}
+
+.stock-loading {
+  color: #8c8c8c;
+}
+
+.stock-error {
+  color: #ff4d4f;
+}
+
+.stock-updated {
+  color: #52c41a;
+}
+
+.stock-refresh-btn {
+  border: none;
+  background: none;
+  color: #1890ff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+
+  &:hover {
+    background: #e6f7ff;
+  }
+}
+
+.stock-error-tip {
+  text-align: center;
+  color: #8c8c8c;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
 /* 移动端适配 */
 @media screen and (max-width: 768px) {
   .stock-stats-grid {

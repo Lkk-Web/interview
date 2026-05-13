@@ -4,12 +4,12 @@ import * as echarts from 'echarts/core';
 import { PieChart } from 'echarts/charts';
 import { TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { Position } from './types';
+import type { PositionWithPrice } from './types';
 
 echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 interface PositionPieProps {
-  positions: Position[];
+  positions: PositionWithPrice[];
 }
 
 const COLORS = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];

@@ -1,9 +1,18 @@
 export interface Position {
+  /** 股票名称 */
   stock: string;
+  /** 股票代码（含市场前缀，如 sz000516、sh600860） */
   code: string;
+  /** 持仓成本 */
   cost: number;
-  price: number;
+  /** 持仓数量 */
   shares: number;
+}
+
+/** 带实时价格的持仓（组件内部使用） */
+export interface PositionWithPrice extends Position {
+  /** 实时价格 */
+  price: number;
 }
 
 export interface AssetPoint {
@@ -16,8 +25,6 @@ export interface AssetPoint {
   loan: number;
   /** 其他资产 */
   other: number;
-  /** 总资产 = cash + stockValue + loan + other */
-  totalAsset: number;
   /** 备注：记录除股票涨跌以外的金钱变更（如还贷、转入资金、提现等） */
   remark?: string;
 }

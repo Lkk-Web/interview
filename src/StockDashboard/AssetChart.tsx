@@ -33,8 +33,10 @@ const formatMoney = (val: number) => {
 
 const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
   const option = useMemo(() => {
+    const calcTotal = (d: AssetPoint) => d.cash + d.stockValue + d.loan + d.other;
+
     const dates = data.map((d) => d.date);
-    const totalAssets = data.map((d) => d.totalAsset);
+    const totalAssets = data.map((d) => calcTotal(d));
     const cashData = data.map((d) => d.cash);
     const stockData = data.map((d) => d.stockValue);
     const loanData = data.map((d) => d.loan);
@@ -53,7 +55,8 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
           const idx = params[0]?.dataIndex;
           if (idx === undefined) return '';
           const point = data[idx];
-          const change = point.totalAsset - startValue;
+          const total = calcTotal(point);
+          const change = total - startValue;
           const changePercent = startValue ? ((change / startValue) * 100).toFixed(2) : '0';
           const changeColor = change >= 0 ? '#c23531' : '#2f4554';
 
@@ -61,7 +64,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
             <div style="padding:4px 0">
               <div style="font-weight:600;margin-bottom:8px;font-size:14px">${point.date}</div>
               <div style="margin-bottom:6px;font-size:15px;font-weight:600">
-                总资产：${formatMoney(point.totalAsset)}
+                总资产：${formatMoney(total)}
               </div>
               <div style="color:#666;font-size:12px;line-height:1.8;padding-left:4px;border-left:2px solid #e8e8e8;margin-left:2px">
                 现金：${formatMoney(point.cash)}<br/>
