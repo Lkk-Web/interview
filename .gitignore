@@ -32,3 +32,11 @@
 /test.ts
 /test.html
 /NOW.md
+
+# iOS / Capacitor
+ios/App/App/public
+ios/App/Pods
+ios/App/DerivedData
+*.xcworkspace/xcuserdata
+*.xcodeproj/xcuserdata
+*.xcodeproj/project.xcworkspace/xcuserdata

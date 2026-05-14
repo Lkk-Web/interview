@@ -29,7 +29,7 @@ export default {
     basePath: '/blog/', //SPA路径
   },
   history: { type: 'hash' },
-  publicPath: '/blog/', //导出路径
+  publicPath: process.env.MOBILE ? './' : '/blog/', //导出路径（mobile build 用 ./，web 用 /blog/）
   // logo: 'https://oss.kyingsoft.cn/import/logo.jpg',
   ...defineConfig({
     mode: 'site', //doc | site
