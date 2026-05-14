@@ -1,5 +1,5 @@
 import { defineConfig } from 'dumi';
-import { styles } from './app.style';
+import { styles, scripts } from './app.style';
 import dotenv from 'dotenv';
 
 // 加载 .env 文件
@@ -14,6 +14,7 @@ export default {
   //TODO docSearch
   hash: true,
   styles, //全局样式
+  scripts, //全局脚本
   metas: [
     {
       name: 'keywords',
