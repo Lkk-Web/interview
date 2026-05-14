@@ -1,5 +1,16 @@
 const mobileStyles = process.env.MOBILE
   ? [
+      `body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        background: #fff;
+        z-index: 102;
+        pointer-events: none;
+      }`,
       `.__dumi-default-navbar {
         position: fixed !important;
         top: 44px !important;
@@ -7,8 +18,10 @@ const mobileStyles = process.env.MOBILE
         right: 0 !important;
         z-index: 101 !important;
       }`,
-      `.__dumi-default-layout {
-        padding-top: 110px !important;
+      `body .__dumi-default-layout,
+      body .__dumi-default-layout[data-site-mode='true'],
+      body .__dumi-default-layout[data-gapless='true'] {
+        padding-top: 112px !important;
       }`,
       `.__dumi-default-menu {
         top: 94px !important;
