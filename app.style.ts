@@ -1,5 +1,9 @@
 const mobileStyles = process.env.MOBILE
   ? [
+      `html, body {
+        -webkit-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
+      }`,
       `body::before {
         content: '';
         position: fixed;
