@@ -20,3 +20,13 @@ ORM：TypeORM、Sequelize
 ## Java
 
 ## Go
+
+
+## 数据库
+
+```ini
+Kafka  = 发生过什么（事实）
+MySQL  = 现在是什么（状态）
+Redis  = 快速用一下（缓存）
+ES     = 查一查（搜索/分析）
+```

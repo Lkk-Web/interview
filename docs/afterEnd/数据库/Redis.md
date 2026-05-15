@@ -14,11 +14,11 @@ order: 2
 
 学习内容：
 
-- [Redis 概念（内存存储、持久化、数据结构丰富等）](/after-end/数据库/mysql#数据库与关系型数据库概念)
-  - [Redis 安装与配置（本地或 Docker）](/after-end/数据库/mysql#mysql-安装与配置本地或-docker)
-  - 使用工具：RedisInsight / Medis
-  - [基本数据类型和操作命令](/after-end/数据库/mysql#12-基本数据类型)：String、Hash、List、Set、ZSet 等
-- 基本键操作：keys / exists / expire / ttl / del
+- [Redis 概念（内存存储、持久化、数据结构丰富等）](/after-end/数据库/redis#一redis-概念)
+  - [Redis 安装与配置（本地或Docker）](/after-end/数据库/redis#11-redis-安装与配置本地或-docker)
+- [Redis 工程](/after-end/数据库/redis#11-redis-安装与配置本地或-docker)
+- [基本数据类型和操作命令](/after-end/数据库/mysql#12-基本数据类型)：String、Hash、List、Set、ZSet 等
+  - 基本键操作：keys / exists / expire / ttl / del
 
 ✅ 第二阶段：进阶应用
 
@@ -251,3 +251,59 @@ LPUSH / RPUSH
 
 时间戳 + score = 延时任务
 
+## 二、Redis 工程
+
+> Redis 是把“时间”换成“内存”的基础设施
+
+- 数据库扛不住 → Redis
+
+- 并发控制难 → Redis
+
+- 排序统计慢 → Redis
+
+
+1. 缓存（最常见）
+
+DB 前挡一层
+
+减少数据库压力
+
+- 常见问题：
+
+缓存穿透
+
+缓存击穿
+
+缓存雪崩
+
+2. 分布式锁
+
+```
+SET key value NX EX
+```
+
+控制并发
+
+防止重复提交
+
+3. 会话 / 登录态
+
+token
+
+用户在线状态
+
+4. 消息队列 / 延迟队列
+
+List / Stream / ZSet
+
+5. 排行榜 / 计数系统
+
+ZSet / INCR
+
+### 2.1 浏览量
+
+Redis 是浏览量统计的首选方案
+
+- `高并发 + 原子操作 + 内存快速访问` 是其核心优势
+
+- MySQL / ClickHouse 作为落盘和报表分析工具辅助使用

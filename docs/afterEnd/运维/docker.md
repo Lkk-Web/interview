@@ -6,6 +6,13 @@
 2. 安装后启动 Docker Desktop，首次运行可能需要输入管理员密码授权。
 3. 成功启动后，系统顶部菜单栏会显示 🐳 图标，提示 Docker is running。
 
+- docker 安装检查命令
+
+```sh
+docker -v
+docker compose version
+```
+
 ## 一、Docker 连接 MySQL
 
 1. `拉取 MySQL 镜像`
