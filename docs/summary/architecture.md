@@ -21,6 +21,10 @@ toc: menu
 
 <code src="../components/architecture/FrontendArch.tsx"></code>
 
+## 消息通知时序图
+
+<code src="../components/architecture/MessageNotify.tsx"></code>
+
 ---
 
 ## OpenClaw 架构
