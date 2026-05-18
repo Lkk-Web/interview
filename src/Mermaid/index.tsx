@@ -1,29 +1,28 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
+import CodeEditor from '../CodeEditor';
 import './index.less';
 
 interface MermaidProps {
-  /**
-   * Mermaid 图表语法字符串
-   */
+  /** Mermaid 图表语法字符串 */
   chart: string;
-  /**
-   * 主题：default | dark | forest | neutral
-   * @default 'default'
-   */
+  /** 主题：default | dark | forest | neutral @default 'default' */
   theme?: 'default' | 'dark' | 'forest' | 'neutral';
-  /**
-   * 是否启用缩放/拖拽交互（大图建议开启）
-   * @default false
-   */
+  /** 是否启用缩放/拖拽交互（大图建议开启）@default false */
   zoomable?: boolean;
+  /** 是否启用实时编辑模式 @default false */
+  editable?: boolean;
+  /** 本地缓存 key（editable 模式下使用） */
+  cacheKey?: string;
 }
 
 let mermaidInitialized = false;
 
-const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = false }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewportRef = useRef<HTMLDivElement>(null);
+// 纯渲染组件（不含 editable 逻辑）
+const MermaidChart: React.FC<{ chart: string; zoomable?: boolean }> = ({
+  chart,
+  zoomable = false,
+}) => {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [scale, setScale] = useState(1);
@@ -31,38 +30,30 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    if (!mermaidInitialized) {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme,
-        securityLevel: 'loose',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      });
-      mermaidInitialized = true;
-    }
-  }, []);
+  const lastTouchDist = useRef<number>(0);
 
   useEffect(() => {
     const renderChart = async () => {
-      if (!chart || !containerRef.current) return;
-
+      if (!chart) return;
       try {
         const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const { svg: renderedSvg } = await mermaid.render(id, chart.trim());
         setSvg(renderedSvg);
         setError('');
-      } catch (err: any) {
-        setError(err?.message || '图表渲染失败');
+      } catch {
+        // 清理 mermaid 注入到 body 的错误节点（炸弹图标）
+        setTimeout(() => {
+          document.querySelectorAll('[id^="mermaid-"]').forEach((el) => {
+            if (el.parentElement === document.body) el.remove();
+          });
+        }, 50);
+        setError('图表语法错误，请检查 Mermaid 语法');
         setSvg('');
       }
     };
-
     renderChart();
   }, [chart]);
 
-  // 缩放
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       if (!zoomable) return;
@@ -73,7 +64,6 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
     [zoomable],
   );
 
-  // 拖拽开始
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!zoomable) return;
@@ -84,7 +74,6 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
     [zoomable, position],
   );
 
-  // 拖拽移动
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging) return;
@@ -93,37 +82,27 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
     [dragging, dragStart],
   );
 
-  // 拖拽结束
-  const handlePointerUp = useCallback(() => {
-    setDragging(false);
-  }, []);
+  const handlePointerUp = useCallback(() => setDragging(false), []);
 
-  // 重置视图
   const handleReset = useCallback(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
   }, []);
 
-  // 全屏切换
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen((v) => !v);
-    // 进入全屏时重置位置
     if (!isFullscreen) {
       setScale(1);
       setPosition({ x: 0, y: 0 });
     }
   }, [isFullscreen]);
 
-  // 触摸缩放（双指 pinch）
-  const lastTouchDist = useRef<number>(0);
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
       if (!zoomable || e.touches.length < 2) return;
       e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
-
+      const [t1, t2] = [e.touches[0], e.touches[1]];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       if (lastTouchDist.current > 0) {
         const delta = (dist - lastTouchDist.current) * 0.005;
         setScale((s) => Math.min(Math.max(0.3, s + delta), 3));
@@ -140,27 +119,17 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
   if (error) {
     return (
       <div className="mermaid-container mermaid-error">
-        <p>图表渲染错误：{error}</p>
-        <pre>{chart}</pre>
+        <p>图表语法错误，请检查 Mermaid 语法</p>
       </div>
     );
   }
 
-  // 普通模式（不可缩放）
   if (!zoomable) {
-    return (
-      <div
-        className="mermaid-container"
-        ref={containerRef}
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
-    );
+    return <div className="mermaid-container" dangerouslySetInnerHTML={{ __html: svg }} />;
   }
 
-  // 可缩放模式
   return (
     <div className={`mermaid-zoomable-wrapper ${isFullscreen ? 'mermaid-fullscreen' : ''}`}>
-      {/* 工具栏 */}
       <div className="mermaid-toolbar">
         <button onClick={() => setScale((s) => Math.min(s + 0.2, 3))} title="放大">
           +
@@ -176,11 +145,8 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
           {isFullscreen ? '✕' : '⛶'}
         </button>
       </div>
-
-      {/* 可视区域 */}
       <div
         className="mermaid-viewport"
-        ref={viewportRef}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -191,7 +157,6 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
       >
         <div
           className="mermaid-canvas"
-          ref={containerRef}
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             cursor: dragging ? 'grabbing' : 'grab',
@@ -201,6 +166,39 @@ const Mermaid: React.FC<MermaidProps> = ({ chart, theme = 'default', zoomable = 
       </div>
     </div>
   );
+};
+
+const Mermaid: React.FC<MermaidProps> = ({
+  chart,
+  theme = 'default',
+  zoomable = false,
+  editable = false,
+  cacheKey,
+}) => {
+  useEffect(() => {
+    if (!mermaidInitialized) {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme,
+        securityLevel: 'loose',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      });
+      mermaidInitialized = true;
+    }
+  }, []);
+
+  if (editable) {
+    return (
+      <CodeEditor
+        lang="mermaid"
+        code={chart}
+        cacheKey={cacheKey}
+        renderer={(code) => <MermaidChart chart={code} zoomable={zoomable} />}
+      />
+    );
+  }
+
+  return <MermaidChart chart={chart} zoomable={zoomable} />;
 };
 
 export default Mermaid;
