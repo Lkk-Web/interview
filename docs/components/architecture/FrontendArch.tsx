@@ -5,37 +5,22 @@
 import React from 'react';
 import { Mermaid } from 'interview';
 
-export default () => (
-  <Mermaid
-    chart={`
-graph TD
-    DEV[开发者] --> |git push| GIT[Git 仓库]
-    GIT --> |webhook| CI[CI/CD Pipeline]
+const chart = `
+sequenceDiagram
+    participant U as 用户
+    participant Sale as Sale 本工程
+    participant Infra as Infra 基建平台
+    participant Assistant as Assistant App后端
+    participant Workbench as Workbench PC后端
 
-    subgraph 构建流程
-        CI --> LINT[ESLint + Prettier]
-        LINT --> TEST[单元测试 Jest]
-        TEST --> BUILD[构建 Webpack/Vite]
-        BUILD --> ARTIFACT[产物 dist/]
-    end
+    U->>Sale: 触发工单创建
+    Sale->>Sale: createTicket() 写库
+    Sale->>Infra: POST /message-service/messages
+    Infra->>Infra: splitMessage() 按 platform 拆分
+    Infra->>Assistant: APP IM_SYSTEM 融云系统消息+极光推送
+    Infra->>Workbench: DESKTOP/WEB WS socket.io Redis广播
+    Assistant-->>U: App 收到通知
+    Workbench-->>U: PC 收到通知
+`;
 
-    subgraph 部署
-        ARTIFACT --> CDN[CDN 分发]
-        ARTIFACT --> DOCKER[Docker 镜像]
-        DOCKER --> K8S[K8s 集群]
-    end
-
-    subgraph 监控
-        CDN --> MONITOR[性能监控]
-        K8S --> MONITOR
-        MONITOR --> ALERT[告警通知]
-        MONITOR --> LOG[日志平台]
-    end
-
-    style DEV fill:#e1f5fe
-    style CI fill:#fff3e0
-    style CDN fill:#e8f5e9
-    style MONITOR fill:#fce4ec
-`}
-  />
-);
+export default () => <Mermaid chart={chart} />;

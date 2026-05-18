@@ -5,25 +5,35 @@
 import React from 'react';
 import { Mermaid } from 'interview';
 
-export default () => (
-  <Mermaid
-    chart={`
+const chart = `
 graph LR
-    Client[客户端] --> GW[API Gateway]
+    Client --> GW
 
-    subgraph 业务服务
-        GW --> US[用户服务]
-        GW --> OS[订单服务]
-        GW --> PS[商品服务]
-        GW --> NS[通知服务]
+    subgraph BIZ
+        US
+        OS
+        PS
+        NS
     end
 
-    subgraph 基础设施
-        MQ[消息队列 Kafka]
-        REG[服务注册 Nacos]
-        CFG[配置中心]
-        LOG[日志收集 ELK]
+    subgraph INFRA
+        MQ
+        REG
+        CFG
+        LOG
     end
+
+    subgraph DATA
+        DB1
+        DB2
+        DB3
+        CACHE
+    end
+
+    GW --> US
+    GW --> OS
+    GW --> PS
+    GW --> NS
 
     US --> MQ
     OS --> MQ
@@ -31,13 +41,6 @@ graph LR
     US --> REG
     OS --> REG
     PS --> REG
-
-    subgraph 数据层
-        DB1[(用户DB)]
-        DB2[(订单DB)]
-        DB3[(商品DB)]
-        CACHE[(Redis 缓存)]
-    end
 
     US --> DB1
     OS --> DB2
@@ -48,6 +51,6 @@ graph LR
     style GW fill:#fff3e0
     style MQ fill:#e8f5e9
     style CACHE fill:#fce4ec
-`}
-  />
-);
+`;
+
+export default () => <Mermaid chart={chart} />;
