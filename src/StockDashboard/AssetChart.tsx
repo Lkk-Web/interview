@@ -44,6 +44,15 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
 
     const startValue = totalAssets[0] || 0;
 
+    // 按月分组，找到每月第一天的值
+    const monthFirstMap: Record<string, number> = {};
+    data.forEach((d, i) => {
+      const month = d.date.slice(0, 7); // "2026-05"
+      if (!(month in monthFirstMap)) {
+        monthFirstMap[month] = totalAssets[i];
+      }
+    });
+
     return {
       tooltip: {
         trigger: 'axis',
@@ -60,6 +69,19 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
           const changePercent = startValue ? ((change / startValue) * 100).toFixed(2) : '0';
           const changeColor = change >= 0 ? '#c23531' : '#2f4554';
 
+          // 本月盈亏
+          const currentMonth = point.date.slice(0, 7);
+          const monthStart = monthFirstMap[currentMonth] || total;
+          const monthChange = total - monthStart;
+          const monthPercent = monthStart ? ((monthChange / monthStart) * 100).toFixed(2) : '0';
+          const monthColor = monthChange >= 0 ? '#c23531' : '#2f4554';
+
+          // 今日盈亏（和前一天对比）
+          const prevTotal = idx > 0 ? totalAssets[idx - 1] : total;
+          const dayChange = total - prevTotal;
+          const dayPercent = prevTotal ? ((dayChange / prevTotal) * 100).toFixed(2) : '0';
+          const dayColor = dayChange >= 0 ? '#c23531' : '#2f4554';
+
           return `
             <div style="padding:4px 0">
               <div style="font-weight:600;margin-bottom:8px;font-size:14px">${point.date}</div>
@@ -72,7 +94,15 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
                 贷款：${formatMoney(point.loan)}<br/>
                 其他：${formatMoney(point.other)}
               </div>
-              <div style="margin-top:8px;color:${changeColor};font-size:12px;font-weight:500">
+              <div style="margin-top:8px;color:${dayColor};font-size:12px;font-weight:500">
+                今日盈亏：${dayChange >= 0 ? '+' : ''}${formatMoney(dayChange)}
+                (${dayChange >= 0 ? '+' : ''}${dayPercent}%)
+              </div>
+              <div style="color:${monthColor};font-size:12px;font-weight:500">
+                本月盈亏：${monthChange >= 0 ? '+' : ''}${formatMoney(monthChange)}
+                (${monthChange >= 0 ? '+' : ''}${monthPercent}%)
+              </div>
+              <div style="color:${changeColor};font-size:12px;font-weight:500">
                 累计盈亏：${change >= 0 ? '+' : ''}${formatMoney(change)}
                 (${change >= 0 ? '+' : ''}${changePercent}%)
               </div>

@@ -32,7 +32,6 @@ export interface AssetPoint {
 export interface MonthlyRecord {
   month: string;
   tTarget: number;
-  revenue: number | null;
   tRevenue: number;
 }
 
