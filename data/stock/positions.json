@@ -4,17 +4,27 @@
     "code": "sz000516",
     "cost": 4.833,
     "shares": 30200,
-    "currentPrice": 4.39,
-    "profitLoss": -13378.6,
-    "profitLossPct": -9.17
+    "target": [
+      {
+        "cost": 4.5,
+        "price": 7,
+        "shares": 22200,
+        "date": "2026-12"
+      }
+    ]
   },
   {
     "stock": "京城股份",
     "code": "sh600860",
     "cost": 12.39,
     "shares": 100,
-    "currentPrice": 10.29,
-    "profitLoss": -210.0,
-    "profitLossPct": -16.95
+    "target": [
+      {
+        "cost": 10,
+        "price": 16,
+        "shares": 5000,
+        "date": "2026-12"
+      }
+    ]
   }
 ]
