@@ -90,6 +90,48 @@ git commmit --amend --message=[message] --author=[author]
 git rebase --continue
 ```
 
+#### commit 的本质与分支指针
+
+git 的 commit 对象一旦写入就**不可变**，"修改 commit message"本质是创建一个内容相同但 message 不同的新 commit，再把分支指针指向新链。
+
+分支指针就是 `.git/refs/heads/<分支名>` 里存的一个 commit hash，可以直接查看：
+
+```bash
+cat .git/refs/heads/main   # 输出当前 main 指向的 commit hash
+```
+
+**移动分支指针的几种方式：**
+
+```bash
+git branch -f main <commit-hash>   # 强制把 main 指向指定 commit
+git reset --hard <commit-hash>     # 把当前分支指针往回移（同时重置工作区）
+git commit                         # 每次提交自动把当前分支指针前移
+```
+
+**"旧 commit 消失"的原理：**
+
+旧 commit 仍存在于 `.git/objects/` 中，只是没有任何分支/标签引用它，所以 `git log` 看不到。这类"孤儿 commit"会在 `git gc`（垃圾回收）时才真正被清除。
+
+#### 非交互环境下修改历史 commit（cherry-pick 方式）
+
+当无法使用交互式编辑器时，可以用 cherry-pick 手动重建提交链：
+
+```bash
+# 场景：修改链中间某几个 commit 的 message
+# 原始链：A → B(旧) → C(旧) → D
+
+git checkout B                        # 切到第一个要改的 commit
+git commit --amend -m "新 message"    # 改掉，产生新 hash B'
+git cherry-pick C                     # 把 C 摘过来接在 B' 后面
+git commit --amend -m "新 message"    # 改掉，产生新 hash C'
+git cherry-pick D                     # 把后续 commit 依次接上
+git branch -f main HEAD               # 把 main 指针移到新链顶端
+git checkout main
+git push --force                      # 覆盖远程历史（已推送时需要）
+```
+
+> 注意：`git push --force` 会覆盖远程历史，多人协作时需谨慎。
+
 **查看状态**：
 
     git status  # 查看当前分支状态
