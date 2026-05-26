@@ -33,7 +33,7 @@ const formatMoney = (val: number) => {
 
 const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
   const option = useMemo(() => {
-    const calcTotal = (d: AssetPoint) => d.cash + d.stockValue + d.loan + d.other;
+    const calcTotal = (d: AssetPoint) => d.cash + d.stockValue + d.loan;
 
     const dates = data.map((d) => d.date);
     const totalAssets = data.map((d) => calcTotal(d));
@@ -56,10 +56,11 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
     return {
       tooltip: {
         trigger: 'axis',
+        confine: true,
         backgroundColor: 'rgba(255,255,255,0.96)',
         borderColor: '#e8e8e8',
         borderWidth: 1,
-        textStyle: { color: '#333', fontSize: 13 },
+        textStyle: { color: '#333', fontSize: 12 },
         formatter: (params: any) => {
           const idx = params[0]?.dataIndex;
           if (idx === undefined) return '';
@@ -69,44 +70,33 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
           const changePercent = startValue ? ((change / startValue) * 100).toFixed(2) : '0';
           const changeColor = change >= 0 ? '#c23531' : '#2f4554';
 
-          // 本月盈亏
           const currentMonth = point.date.slice(0, 7);
           const monthStart = monthFirstMap[currentMonth] || total;
           const monthChange = total - monthStart;
           const monthPercent = monthStart ? ((monthChange / monthStart) * 100).toFixed(2) : '0';
           const monthColor = monthChange >= 0 ? '#c23531' : '#2f4554';
 
-          // 今日盈亏（和前一天对比）
           const prevTotal = idx > 0 ? totalAssets[idx - 1] : total;
           const dayChange = total - prevTotal;
           const dayPercent = prevTotal ? ((dayChange / prevTotal) * 100).toFixed(2) : '0';
           const dayColor = dayChange >= 0 ? '#c23531' : '#2f4554';
 
           return `
-            <div style="padding:4px 0">
-              <div style="font-weight:600;margin-bottom:8px;font-size:14px">${point.date}</div>
-              <div style="margin-bottom:6px;font-size:15px;font-weight:600">
-                总资产：${formatMoney(total)}
-              </div>
-              <div style="color:#666;font-size:12px;line-height:1.8;padding-left:4px;border-left:2px solid #e8e8e8;margin-left:2px">
+            <div style="padding:2px 0;max-width:200px;word-break:break-all">
+              <div style="font-weight:600;font-size:12px">${point.date}</div>
+              <div style="font-size:12px;font-weight:600;margin:2px 0">总资产：${formatMoney(total)}</div>
+              <div style="color:#666;font-size:11px;line-height:1.5">
                 现金：${formatMoney(point.cash)}<br/>
                 股票：${formatMoney(point.stockValue)}<br/>
                 贷款：${formatMoney(point.loan)}<br/>
                 其他：${formatMoney(point.other)}
               </div>
-              <div style="margin-top:8px;color:${dayColor};font-size:12px;font-weight:500">
-                今日盈亏：${dayChange >= 0 ? '+' : ''}${formatMoney(dayChange)}
-                (${dayChange >= 0 ? '+' : ''}${dayPercent}%)
+              <div style="font-size:11px;margin-top:3px;line-height:1.5">
+                <div style="color:${dayColor}">日：${dayChange >= 0 ? '+' : ''}${dayPercent}%</div>
+                <div style="color:${monthColor}">月：${monthChange >= 0 ? '+' : ''}${monthPercent}%</div>
+                <div style="color:${changeColor}">累：${change >= 0 ? '+' : ''}${changePercent}%</div>
               </div>
-              <div style="color:${monthColor};font-size:12px;font-weight:500">
-                本月盈亏：${monthChange >= 0 ? '+' : ''}${formatMoney(monthChange)}
-                (${monthChange >= 0 ? '+' : ''}${monthPercent}%)
-              </div>
-              <div style="color:${changeColor};font-size:12px;font-weight:500">
-                累计盈亏：${change >= 0 ? '+' : ''}${formatMoney(change)}
-                (${change >= 0 ? '+' : ''}${changePercent}%)
-              </div>
-              ${point.remark ? `<div style="margin-top:6px;padding:4px 8px;background:#fffbe6;border-radius:3px;font-size:11px;color:#8c6e00">📝 ${point.remark}</div>` : ''}
+              ${point.remark ? `<div style="margin-top:3px;font-size:10px;color:#8c6e00;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${point.remark}</div>` : ''}
             </div>
           `;
         },

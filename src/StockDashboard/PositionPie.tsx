@@ -37,18 +37,17 @@ const PositionPie: React.FC<PositionPieProps> = ({ positions }) => {
     return {
       tooltip: {
         trigger: 'item',
+        confine: true,
         formatter: (params: any) => {
           const d = params.data;
           const plColor = d.profitLoss >= 0 ? '#c23531' : '#2f4554';
           return `
-            <div style="font-size:13px">
+            <div style="font-size:12px;max-width:220px">
               <div style="margin-bottom:4px"><b>${d.name}</b></div>
-              <div>市值：¥${d.value.toLocaleString()}</div>
-              <div>持仓：${d.shares.toLocaleString()}股</div>
-              <div>成本：¥${d.cost} → 现价：¥${d.price}</div>
+              <div>市值：¥${d.value.toLocaleString()} · ${d.shares}股</div>
+              <div>成本¥${d.cost} → 现价¥${d.price}</div>
               <div style="color:${plColor}">
-                盈亏：${d.profitLoss >= 0 ? '+' : ''}¥${d.profitLoss.toLocaleString()}
-                (${d.profitLoss >= 0 ? '+' : ''}${d.profitPercent}%)
+                盈亏：${d.profitLoss >= 0 ? '+' : ''}¥${d.profitLoss.toLocaleString()}(${d.profitLoss >= 0 ? '+' : ''}${d.profitPercent}%)
               </div>
               <div>占比：${params.percent}%</div>
             </div>

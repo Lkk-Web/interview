@@ -21,7 +21,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 
     // 资产变化（自动计算 totalAsset）
     const calcTotal = (d: any) =>
-      (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0) + (d.other || 0);
+      (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0);
     const assetStart = assetHistory.length > 0 ? calcTotal(assetHistory[0]) : 0;
     const assetEnd = assetHistory.length > 0 ? calcTotal(assetHistory[assetHistory.length - 1]) : 0;
     const assetChange = assetEnd - assetStart;
