@@ -17,7 +17,7 @@ toc: menu
 
 <code src="../components/architecture/MicroService.tsx"></code>
 
-## 前端工程化架构
+## 前端跨页面 websocket 方案
 
 <code src="../components/architecture/FrontendArch.tsx"></code>
 
