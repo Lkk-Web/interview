@@ -23,5 +23,10 @@
     "month": "2026-05",
     "tTarget": 1500,
     "tRevenue": 1519.1
+  },
+  {
+    "month": "2026-06",
+    "tTarget": 2500,
+    "tRevenue": 0
   }
 ]
