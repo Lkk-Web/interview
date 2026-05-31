@@ -84,7 +84,9 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
           return `
             <div style="padding:2px 0;max-width:200px;word-break:break-all">
               <div style="font-weight:600;font-size:12px">${point.date}</div>
-              <div style="font-size:12px;font-weight:600;margin:2px 0">总资产：${formatMoney(total)}</div>
+              <div style="font-size:12px;font-weight:600;margin:2px 0">总资产：${formatMoney(
+                total,
+              )}</div>
               <div style="color:#666;font-size:11px;line-height:1.5">
                 现金：${formatMoney(point.cash)}<br/>
                 股票：${formatMoney(point.stockValue)}<br/>
@@ -93,10 +95,18 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
               </div>
               <div style="font-size:11px;margin-top:3px;line-height:1.5">
                 <div style="color:${dayColor}">日：${dayChange >= 0 ? '+' : ''}${dayPercent}%</div>
-                <div style="color:${monthColor}">月：${monthChange >= 0 ? '+' : ''}${monthPercent}%</div>
-                <div style="color:${changeColor}">累：${change >= 0 ? '+' : ''}${changePercent}%</div>
+                <div style="color:${monthColor}">月：${
+            monthChange >= 0 ? '+' : ''
+          }${monthPercent}%</div>
+                <div style="color:${changeColor}">累：${
+            change >= 0 ? '+' : ''
+          }${changePercent}%</div>
               </div>
-              ${point.remark ? `<div style="margin-top:3px;font-size:10px;color:#8c6e00;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${point.remark}</div>` : ''}
+              ${
+                point.remark
+                  ? `<div style="margin-top:3px;font-size:10px;color:#8c6e00;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${point.remark}</div>`
+                  : ''
+              }
             </div>
           `;
         },

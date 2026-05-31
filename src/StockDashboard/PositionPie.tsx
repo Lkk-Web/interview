@@ -47,7 +47,9 @@ const PositionPie: React.FC<PositionPieProps> = ({ positions }) => {
               <div>市值：¥${d.value.toLocaleString()} · ${d.shares}股</div>
               <div>成本¥${d.cost} → 现价¥${d.price}</div>
               <div style="color:${plColor}">
-                盈亏：${d.profitLoss >= 0 ? '+' : ''}¥${d.profitLoss.toLocaleString()}(${d.profitLoss >= 0 ? '+' : ''}${d.profitPercent}%)
+                盈亏：${d.profitLoss >= 0 ? '+' : ''}¥${d.profitLoss.toLocaleString()}(${
+            d.profitLoss >= 0 ? '+' : ''
+          }${d.profitPercent}%)
               </div>
               <div>占比：${params.percent}%</div>
             </div>

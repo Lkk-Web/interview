@@ -1,7 +1,7 @@
 .mermaid-container {
   width: 100%;
-  overflow-x: auto;
   padding: 16px 0;
+  overflow-x: auto;
   text-align: center;
 
   svg {
@@ -11,25 +11,25 @@
 }
 
 .mermaid-error {
+  padding: 12px 16px;
+  text-align: left;
   background: #fff2f0;
   border: 1px solid #ffccc7;
   border-radius: 4px;
-  padding: 12px 16px;
-  text-align: left;
 
   p {
-    color: #ff4d4f;
     margin: 0 0 8px;
+    color: #ff4d4f;
     font-size: 14px;
   }
 
   pre {
-    background: #f5f5f5;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    overflow-x: auto;
     margin: 0;
+    padding: 8px 12px;
+    overflow-x: auto;
+    font-size: 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
   }
 }
 
@@ -37,38 +37,38 @@
 
 .mermaid-zoomable-wrapper {
   position: relative;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  margin: 16px 0;
   overflow: hidden;
   background: #fafafa;
-  margin: 16px 0;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
 }
 
 .mermaid-toolbar {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   padding: 6px 12px;
   background: #fff;
   border-bottom: 1px solid #e8e8e8;
   user-select: none;
 
   button {
-    width: 28px;
-    height: 28px;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
-      border-color: #1890ff;
       color: #1890ff;
+      border-color: #1890ff;
     }
 
     &:active {
@@ -77,31 +77,31 @@
   }
 
   .mermaid-scale-label {
-    font-size: 12px;
-    color: #666;
     min-width: 40px;
+    color: #666;
+    font-size: 12px;
     text-align: center;
   }
 }
 
 .mermaid-viewport {
+  position: relative;
   width: 100%;
   height: 400px;
   overflow: hidden;
   touch-action: none;
-  position: relative;
 }
 
 .mermaid-canvas {
-  transform-origin: center center;
-  transition: transform 0.05s ease-out;
   display: inline-block;
-  padding: 20px;
-  min-width: 100%;
-  min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 20px;
+  transform-origin: center center;
+  transition: transform 0.05s ease-out;
 
   svg {
     max-width: none;
@@ -114,13 +114,13 @@
 .mermaid-fullscreen {
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: 0;
   z-index: 9999;
-  border-radius: 0;
   margin: 0;
   background: #fff;
+  border-radius: 0;
 
   .mermaid-viewport {
     height: calc(100vh - 41px);

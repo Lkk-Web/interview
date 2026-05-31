@@ -20,8 +20,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
     const totalTProfit = monthly.reduce((sum, m) => sum + (m.tRevenue || 0), 0);
 
     // 资产变化（自动计算 totalAsset）
-    const calcTotal = (d: any) =>
-      (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0);
+    const calcTotal = (d: any) => (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0);
     const assetStart = assetHistory.length > 0 ? calcTotal(assetHistory[0]) : 0;
     const assetEnd = assetHistory.length > 0 ? calcTotal(assetHistory[assetHistory.length - 1]) : 0;
     const assetChange = assetEnd - assetStart;
