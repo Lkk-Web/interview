@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm ci
+          cache: yarn
+      - run: yarn install --frozen-lockfile
       - run: npm run lint:js
       - run: npm run lint:prettier
