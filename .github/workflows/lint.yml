@@ -13,6 +13,6 @@ jobs:
         with:
           node-version: 20
           cache: yarn
-      - run: yarn install --frozen-lockfile
+      - run: yarn install
       - run: npm run lint:js
       - run: npm run lint:prettier

@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
-      - run: yarn install --frozen-lockfile
+      - run: yarn install
       - run: npm run docs:build
       - run: npm run upload
         env:
