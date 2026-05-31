@@ -54,7 +54,8 @@
     "marked": "^4.3.0",
     "mermaid": "^10.9.6",
     "react": "^18.0.0",
-    "react-photo-view": "^1.2.3"
+    "react-photo-view": "^1.2.3",
+    "uuid": "14.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.15.1",
