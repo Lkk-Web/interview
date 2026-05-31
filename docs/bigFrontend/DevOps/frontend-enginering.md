@@ -361,6 +361,129 @@ CICD 是 持续集成（Continuous Integration）和持续部署（Continuous De
 
 ### 5.1 CI
 
+#### GitHub Actions 实战
+
+GitHub Actions 通过 `.github/workflows/` 目录下的 YAML 文件配置，每个文件是一个 workflow。
+
+**lint.yml** — 所有 push 和 PR 触发，跑代码检查：
+
+```yaml
+name: Lint
+on:
+  push:
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm install
+      - run: npm run lint:js
+      - run: npm run lint:prettier
+```
+
+**deploy.yml** — 仅 push main 触发，build + 上传 R2：
+
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm install
+      - run: npm run docs:build
+      - run: npm run upload
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+```
+
+**Dependabot** — 每周一自动检测 npm 依赖漏洞，开 PR 升级：
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+```
+
+#### 踩坑记录
+
+**1. lock 文件问题**
+
+`npm ci` 要求 `package-lock.json` 存在且被 git 追踪。如果项目用 yarn 且 lock 文件在 `.gitignore` 里，CI 会报 `Dependencies lock file is not found`。
+
+解决：改用 `npm install`，并把 `package-lock.json` 从 `.gitignore` 移除后提交。
+
+**2. 私有 registry 问题**
+
+本地配了全局 yarn registry（如公司镜像），CI 机器上没有这个配置，会导致安装超时或走到意外的私有地址。
+
+解决：CI 统一用 npm，走官方 registry，不依赖本地全局配置。
+
+**3. node 版本**
+
+`EBADENGINE` warn 不是 error，不影响安装。但部分包（如 `@aws-sdk`）需要 node 18+，用 node 16 会安装失败。建议 CI 用 node 18，本地开发版本不影响 CI。
+
+**4. GitHub Secrets 配置路径**
+
+仓库页面（不是账号 Settings）→ Settings → Security → Secrets and variables → Actions → New repository secret。
+
+**5. Actions 默认禁用**
+
+新仓库或 fork 的仓库 Actions 可能默认禁用，需要去 Settings → Actions → General 手动开启。
+
+**6. OpenSSL 报错（webpack 4 + Node 18+）**
+
+webpack 4 使用了 Node 已废弃的 OpenSSL 算法，在 Node 17+ 上构建会报：
+
+```
+Error: error:0308010C:digital envelope routines::unsupported
+```
+
+解决：在构建步骤加 `NODE_OPTIONS: --openssl-legacy-provider`。
+
+```yaml
+- run: npm run docs:build
+  env:
+    NODE_OPTIONS: --openssl-legacy-provider
+```
+
+**7. mermaid 依赖 uuid，但 webpack 4 无法解析 ESM-only 包**
+
+mermaid 的 dist 文件依赖 `uuid`，如果项目里没有显式安装，CI 会报：
+
+```
+Module not found: Error: Can't resolve 'uuid'
+```
+
+直接安装 `uuid@14`（纯 ESM，无 `main` 字段）无效，webpack 4 不支持 `package.json` 的 `exports` 字段解析。
+
+解决：显式安装 `uuid@^9`，它同时提供 CJS `main` 字段，webpack 4 可以正常解析。
+
+```json
+"uuid": "^9.0.1"
+```
+
 ### 5.2 CD
 
 #### 5.2.1 cloudflare R2
