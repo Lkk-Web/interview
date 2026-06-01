@@ -1,0 +1,46 @@
+name: iOS Build & Install
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build web (Node 16)
+        run: |
+          source ~/.nvm/nvm.sh
+          nvm use 16.19.1
+          MOBILE=1 npm install --registry https://registry.npmjs.org
+          MOBILE=1 npm run docs:build
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+
+      - name: Cap sync (Node 22)
+        run: |
+          source ~/.nvm/nvm.sh
+          nvm use 22.22.2
+          npx cap sync ios
+
+      - name: Check iPhone is reachable
+        run: |
+          if ! xcrun xctrace list devices 2>/dev/null | grep -q "00008140-001129082139801C"; then
+            echo "iPhone not found. Make sure it's connected via USB or on the same WiFi."
+            exit 1
+          fi
+
+      - name: Xcode build & install to iPhone
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'id=00008140-001129082139801C' \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=4R2DKQU2AP \
+            build
