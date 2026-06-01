@@ -42,6 +42,8 @@ jobs:
 
       - name: Xcode build & install to iPhone
         run: |
+          BUILD_DIR="$PWD/build/Debug-iphoneos"
+
           xcodebuild \
             -workspace ios/App/App.xcworkspace \
             -scheme App \
@@ -50,4 +52,9 @@ jobs:
             -allowProvisioningUpdates \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=4R2DKQU2AP \
+            CONFIGURATION_BUILD_DIR="$BUILD_DIR" \
             build
+
+          xcrun devicectl device install app \
+            --device 00008140-001129082139801C \
+            "$BUILD_DIR/App.app"
