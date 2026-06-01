@@ -17,8 +17,6 @@ jobs:
           nvm use 16.19.1
           MOBILE=1 npm install --registry https://registry.npmjs.org
           MOBILE=1 npm run docs:build
-        env:
-          NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Cap sync (Node 22)
         run: |
