@@ -44,12 +44,12 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
 
     const startValue = totalAssets[0] || 0;
 
-    // 按月分组，找到每月第一天的值
+    // 按月分组，记录每月第一天前一天（上月末）的值作为月收益基准
     const monthFirstMap: Record<string, number> = {};
     data.forEach((d, i) => {
       const month = d.date.slice(0, 7); // "2026-05"
       if (!(month in monthFirstMap)) {
-        monthFirstMap[month] = totalAssets[i];
+        monthFirstMap[month] = i > 0 ? totalAssets[i - 1] : totalAssets[i];
       }
     });
 
@@ -60,7 +60,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
         backgroundColor: 'rgba(255,255,255,0.96)',
         borderColor: '#e8e8e8',
         borderWidth: 1,
-        textStyle: { color: '#333', fontSize: 12 },
+        textStyle: { color: '#333', fontSize: 13 },
         formatter: (params: any) => {
           const idx = params[0]?.dataIndex;
           if (idx === undefined) return '';
@@ -82,31 +82,30 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
           const dayColor = dayChange >= 0 ? '#c23531' : '#2f4554';
 
           return `
-            <div style="padding:2px 0;max-width:200px;word-break:break-all">
-              <div style="font-weight:600;font-size:12px">${point.date}</div>
-              <div style="font-size:12px;font-weight:600;margin:2px 0">总资产：${formatMoney(
-                total,
-              )}</div>
-              <div style="color:#666;font-size:11px;line-height:1.5">
+            <div style="padding:4px 0">
+              <div style="font-weight:600;margin-bottom:8px;font-size:14px">${point.date}</div>
+              <div style="margin-bottom:6px;font-size:15px;font-weight:600">
+                总资产：${formatMoney(total)}
+              </div>
+              <div style="color:#666;font-size:12px;line-height:1.8;padding-left:4px;border-left:2px solid #e8e8e8;margin-left:2px">
                 现金：${formatMoney(point.cash)}<br/>
                 股票：${formatMoney(point.stockValue)}<br/>
                 贷款：${formatMoney(point.loan)}<br/>
                 其他：${formatMoney(point.other)}
               </div>
-              <div style="font-size:11px;margin-top:3px;line-height:1.5">
-                <div style="color:${dayColor}">日：${dayChange >= 0 ? '+' : ''}${dayPercent}%</div>
-                <div style="color:${monthColor}">月：${
-            monthChange >= 0 ? '+' : ''
-          }${monthPercent}%</div>
-                <div style="color:${changeColor}">累：${
-            change >= 0 ? '+' : ''
-          }${changePercent}%</div>
+              <div style="margin-top:8px;color:${dayColor};font-size:12px;font-weight:500">
+                今日盈亏：${dayChange >= 0 ? '+' : ''}${formatMoney(dayChange)}
+                (${dayChange >= 0 ? '+' : ''}${dayPercent}%)
               </div>
-              ${
-                point.remark
-                  ? `<div style="margin-top:3px;font-size:10px;color:#8c6e00;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${point.remark}</div>`
-                  : ''
-              }
+              <div style="color:${monthColor};font-size:12px;font-weight:500">
+                本月盈亏：${monthChange >= 0 ? '+' : ''}${formatMoney(monthChange)}
+                (${monthChange >= 0 ? '+' : ''}${monthPercent}%)
+              </div>
+              <div style="color:${changeColor};font-size:12px;font-weight:500">
+                累计盈亏：${change >= 0 ? '+' : ''}${formatMoney(change)}
+                (${change >= 0 ? '+' : ''}${changePercent}%)
+              </div>
+              ${point.remark ? `<div style="margin-top:6px;padding:4px 8px;background:#fffbe6;border-radius:3px;font-size:11px;color:#8c6e00">📝 ${point.remark}</div>` : ''}
             </div>
           `;
         },
