@@ -31,6 +31,15 @@ jobs:
             exit 1
           fi
 
+      - name: Wait for iPhone unlock
+        run: |
+          osascript -e 'display dialog "请解锁 iPhone，然后点击确定开始安装 App。" buttons {"确定"} default button "确定"'
+
+      - name: Unlock keychain
+        run: |
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" ~/Library/Keychains/login.keychain-db
+          security set-keychain-settings -t 3600 -u ~/Library/Keychains/login.keychain-db
+
       - name: Xcode build & install to iPhone
         run: |
           xcodebuild \

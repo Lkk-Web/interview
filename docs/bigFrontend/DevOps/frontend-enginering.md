@@ -484,6 +484,117 @@ Module not found: Error: Can't resolve 'uuid'
 "uuid": "^9.0.1"
 ```
 
+#### GitHub Actions iOS Build（self-hosted runner）
+
+**背景**：dumi（webpack 4）需要 Node 16 构建 web 产物，Capacitor sync 需要 Node 22，xcodebuild 只能在本机 Mac 上运行，因此需要 self-hosted runner。
+
+**整体流程**：push main → Mac 上的 runner 接任务 → Node 16 build web → Node 22 cap sync → xcodebuild 安装到 iPhone。
+
+**前提条件**：手机解锁，且通过 USB 连接或与 Mac 在同一 WiFi（首次需 USB 配对）。
+
+##### 配置步骤
+
+1. 仓库页面 → Settings → Actions → Runners → **New self-hosted runner**
+2. 选 macOS + **ARM64**（Apple Silicon），按页面命令下载解压
+3. runner 目录必须放在 `~` 下，**不能放在 Desktop / Documents**（macOS 沙箱限制）
+
+```bash
+mkdir ~/actions-runner && cd ~/actions-runner
+# 粘贴 GitHub 页面给的 curl 下载命令
+tar xzf ./actions-runner-osx-arm64-*.tar.gz
+./config.sh --url https://github.com/<用户名>/<仓库名> --token <TOKEN>
+```
+
+4. 设置开机自启（不需要 sudo）：
+
+```bash
+./svc.sh install
+./svc.sh start
+```
+
+5. 验证：`./svc.sh status` 显示 Started 且 PID 正常，GitHub 页面 runner 状态变为 **Idle**。
+
+##### workflow 配置（.github/workflows/ios.yml）
+
+```yaml
+name: iOS Build & Install
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:       # 支持手动触发
+jobs:
+  ios:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build web (Node 16)
+        run: |
+          source ~/.nvm/nvm.sh && nvm use 16.19.1
+          yarn install --registry https://registry.npmjs.org --ignore-engines
+          MOBILE=1 npm run docs:build
+      - name: Cap sync (Node 22)
+        run: |
+          source ~/.nvm/nvm.sh && nvm use 22.22.2
+          npx cap sync ios
+      - name: Check iPhone is reachable
+        run: |
+          if ! xcrun xctrace list devices 2>/dev/null | grep -q "<UDID>"; then
+            echo "iPhone not found. Connect via USB or WiFi first."
+            exit 1
+          fi
+      - name: Xcode build & install
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'id=<UDID>' \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=<TEAM_ID> \
+            build
+```
+
+##### 踩坑记录
+
+**8. NODE_OPTIONS --openssl-legacy-provider 在 Node 16 下报错**
+
+`--openssl-legacy-provider` 是 Node 17+ 才需要的 flag，在 Node 16 下会报：
+
+```
+node: --openssl-legacy-provider is not allowed in NODE_OPTIONS
+```
+
+解决：只在 Node 17+ 的构建步骤加这个 flag，Node 16 的步骤不需要。
+
+**9. yarn install 在 Node 16 下因 engines 字段报错**
+
+部分包（如 `@aws-sdk/client-s3`）在 `package.json` 里声明 `engines: { node: ">=20" }`，yarn 在 Node 16 下安装会报 `EBADENGINE` 并退出。
+
+解决：加 `--ignore-engines` 跳过引擎检查（build 阶段不实际用这些包，不影响产物）。
+
+```bash
+yarn install --registry https://registry.npmjs.org --ignore-engines
+```
+
+**10. self-hosted runner 在 Desktop 目录下权限报错**
+
+macOS LaunchAgent 是系统级进程，无法访问 `~/Desktop` 等受沙箱保护的目录，报：
+
+```
+Operation not permitted: /Users/xxx/Desktop/github/actions-runner/runsvc.sh
+```
+
+解决：把 runner 目录放到 `~` 下（如 `~/actions-runner`），不要放在 Desktop 或 Documents。
+
+**11. xcodebuild 安装 app 需要手机解锁**
+
+`xcodebuild` 向真机安装 app 时，手机必须处于**解锁**状态，锁屏会报 `DeviceNotAvailableError`。
+
+self-hosted runner 触发 iOS 构建前，需确保：
+1. 手机解锁
+2. 手机通过 USB 连接或与 Mac 在同一 WiFi（首次需 USB 配对）
+
 ### 5.2 CD
 
 #### 5.2.1 cloudflare R2
