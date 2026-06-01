@@ -15,7 +15,7 @@ jobs:
         run: |
           source ~/.nvm/nvm.sh
           nvm use 16.19.1
-          MOBILE=1 npm install --registry https://registry.npmjs.org
+          yarn install --registry https://registry.npmjs.org
           MOBILE=1 npm run docs:build
 
       - name: Cap sync (Node 22)
