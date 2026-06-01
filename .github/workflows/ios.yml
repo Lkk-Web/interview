@@ -3,6 +3,12 @@ name: iOS Build & Install
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'ios/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/ios.yml'
   workflow_dispatch:
 
 jobs:
@@ -10,6 +16,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Build web (Node 16)
         run: |
@@ -33,7 +47,7 @@ jobs:
 
       - name: Wait for iPhone unlock
         run: |
-          osascript -e 'display dialog "请解锁 iPhone，然后点击确定开始安装 App。" buttons {"确定"} default button "确定"'
+          osascript -e 'display dialog "请解锁 iPhone，30秒后自动继续安装。" buttons {"现在开始"} default button "现在开始" giving up after 30'
 
       - name: Unlock keychain
         run: |
@@ -43,6 +57,7 @@ jobs:
       - name: Xcode build & install to iPhone
         run: |
           BUILD_DIR="$PWD/build/Debug-iphoneos"
+          rm -rf "$BUILD_DIR"
 
           xcodebuild \
             -workspace ios/App/App.xcworkspace \
