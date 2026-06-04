@@ -1,6 +1,7 @@
 ---
 order: 2
 toc: menu
+hide: ture
 ---
 
 # 2022 年 总结
