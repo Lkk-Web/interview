@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "paths": {
+      "interview": ["./src"]
+    },
     "jsx": "react",
     "esModuleInterop": true,
     "types": ["node"],
