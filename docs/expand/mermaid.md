@@ -52,7 +52,12 @@ end
 
 结合子图、多种节点形状、标签与样式，描述 CI/CD 流程：
 
-<code src="../components/mermaid/FlowChart.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="flow-chart" />;
+```
 
 ## 二、时序图（Sequence Diagram）
 
@@ -72,7 +77,12 @@ loop 循环名 / end
 
 结合 actor、Note、alt/else、loop，描述完整登录与 Token 刷新流程：
 
-<code src="../components/mermaid/SequenceDiagram.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="sequence-diagram" />;
+```
 
 ## 三、类图（Class Diagram）
 
@@ -102,7 +112,12 @@ A --o B     聚合
 
 结合接口实现、继承、组合、关联，描述支付系统类结构：
 
-<code src="../components/mermaid/ClassDiagram.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="class-diagram" />;
+```
 
 ## 四、状态图（State Diagram）
 
@@ -120,7 +135,12 @@ state A {        嵌套状态
 
 结合嵌套状态，描述订单完整生命周期：
 
-<code src="../components/mermaid/StateDiagram.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="state-diagram" />;
+```
 
 ## 五、甘特图（Gantt）
 
@@ -135,7 +155,12 @@ section 阶段名
 
 状态：`done`（完成）、`active`（进行中）、`crit`（关键路径）
 
-<code src="../components/mermaid/GanttChart.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="gantt-chart" />;
+```
 
 ## 六、饼图（Pie Chart）
 
@@ -144,7 +169,12 @@ pie title 标题
     "标签" : 数值
 ```
 
-<code src="../components/mermaid/PieChart.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="pie-chart" />;
+```
 
 ## 七、思维导图（Mindmap）
 
@@ -155,7 +185,12 @@ mindmap
       二级节点
 ```
 
-<code src="../components/mermaid/Mindmap.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="mindmap" />;
+```
 
 ## 八、常用技巧
 
@@ -175,4 +210,9 @@ class 节点id 类名
 
 结合 `classDef` 批量样式与子图：
 
-<code src="../components/mermaid/StyleDemo.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="expand-mermaid" codeKey="style-demo" />;
+```

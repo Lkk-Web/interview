@@ -23,6 +23,7 @@ const CodeGateway: React.FC<CodeGatewayProps> = (props) => {
       <Mermaid
         chart={data.code}
         cacheKey={cacheKey}
+        theme={props.theme ?? data.theme}
         editable={props.editable ?? data.editable}
         zoomable={props.zoomable ?? data.zoomable}
       />

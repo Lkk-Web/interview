@@ -11,7 +11,12 @@ group:
 
 AI Agent、Ai 前沿等...
 
-<code src="../components/mermaid/AIOverview.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="ai-index" codeKey="ai-overview" />;
+```
 
 ```
 AI开发

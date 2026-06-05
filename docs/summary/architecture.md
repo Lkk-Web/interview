@@ -11,19 +11,39 @@ toc: menu
 
 ## 前后端分层架构
 
-<code src="../components/architecture/LayeredArch.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="layered-arch" />;
+```
 
 ## 微服务架构示例
 
-<code src="../components/architecture/MicroService.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="micro-service" />;
+```
 
 ## 前端跨页面 websocket 方案
 
-<code src="../components/architecture/FrontendArch.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="frontend-arch" />;
+```
 
 ## 消息通知时序图
 
-<code src="../components/architecture/MessageNotify.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="message-notify" />;
+```
 
 ---
 
@@ -33,11 +53,21 @@ toc: menu
 
 ### 系统全景图
 
-<code src="../components/architecture/OpenClaw.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="open-claw" />;
+```
 
 ### 消息处理流程
 
-<code src="../components/architecture/OpenClawFlow.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="open-claw-flow" />;
+```
 
 ### 核心概念
 

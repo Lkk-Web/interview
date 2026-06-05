@@ -1,5 +1,7 @@
 import type { SupportedLang } from '../CodeEditor/types';
 
+export type MermaidTheme = 'default' | 'dark' | 'forest' | 'neutral';
+
 export interface CodeSource {
   /** 页面或业务域 key，用于隔离不同页面的代码数据 */
   pageKey: string;
@@ -15,6 +17,8 @@ export interface CodeSource {
   defaultOpen?: boolean;
   /** CodeEditor 编辑区高度 */
   editorHeight?: number;
+  /** Mermaid 主题 */
+  theme?: MermaidTheme;
   /** Mermaid 是否开启编辑模式 */
   editable?: boolean;
   /** Mermaid 是否开启缩放和拖拽 */
@@ -44,6 +48,8 @@ export interface CodeGatewayProps extends UseCodeSourceOptions {
   defaultOpen?: boolean;
   /** 覆盖数据源中的编辑区高度 */
   editorHeight?: number;
+  /** 覆盖数据源中的 Mermaid 主题 */
+  theme?: MermaidTheme;
   /** 覆盖数据源中的 Mermaid 编辑模式 */
   editable?: boolean;
   /** 覆盖数据源中的 Mermaid 缩放和拖拽配置 */
