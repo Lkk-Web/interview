@@ -13,25 +13,45 @@ toc: menu
 
 点击右上角 **✎ 编辑** 展开编辑器，修改 Mermaid 语法后图表实时更新。
 
-<code src="../components/editor/MermaidDemo.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway codeKey="demo-mermaid" />;
+```
 
 ---
 
 ## Markdown
 
-<code src="../components/editor/MarkdownDemo.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway codeKey="demo-markdown" />;
+```
 
 ---
 
 ## HTML
 
-<code src="../components/editor/HtmlDemo.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway codeKey="demo-html" />;
+```
 
 ---
 
 ## JSON
 
-<code src="../components/editor/JsonDemo.tsx"></code>
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway codeKey="demo-json" />;
+```
 
 ---
 
@@ -41,19 +61,20 @@ toc: menu
 
 ```text
 // Mermaid 开启编辑模式
-<Mermaid editable chart={`graph TD; A-->B`} />
+<CodeGateway codeKey="demo-mermaid" />
 
 // 通用编辑器
-<CodeEditor lang="markdown" code="# Hello" />
-<CodeEditor lang="html" code="<h1>Hello</h1>" />
-<CodeEditor lang="json" code='{"key":"value"}' />
+<CodeGateway codeKey="demo-markdown" />
+<CodeGateway codeKey="demo-html" />
+<CodeGateway codeKey="demo-json" />
 ```
 
-| prop           | 说明           | 默认值     |
-| -------------- | -------------- | ---------- |
-| `lang`         | 语言类型       | 必填       |
-| `code`         | 初始代码       | 必填       |
-| `cacheKey`     | 本地缓存 key   | 自动生成   |
-| `defaultOpen`  | 默认展开编辑器 | `false`    |
-| `editorHeight` | 编辑区高度     | `300`      |
-| `renderer`     | 自定义渲染函数 | 内置渲染器 |
+| prop           | 说明                         | 默认值           |
+| -------------- | ---------------------------- | ---------------- |
+| `codeKey`      | 代码内容 key                 | 必填             |
+| `pageKey`      | 页面/业务域 key              | `summary-editor` |
+| `cacheKey`     | 本地缓存 key                 | mock 中的 key    |
+| `defaultOpen`  | 默认展开编辑器               | mock 中的配置    |
+| `editorHeight` | 编辑区高度                   | `300`            |
+| `editable`     | Mermaid 是否开启编辑模式     | mock 中的配置    |
+| `zoomable`     | Mermaid 是否开启缩放/拖拽    | mock 中的配置    |
