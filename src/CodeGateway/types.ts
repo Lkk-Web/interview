@@ -19,8 +19,6 @@ export interface CodeSource {
   editorHeight?: number;
   /** Mermaid 主题 */
   theme?: MermaidTheme;
-  /** Mermaid 是否开启编辑模式 */
-  editable?: boolean;
   /** Mermaid 是否开启缩放和拖拽 */
   zoomable?: boolean;
 }
@@ -50,8 +48,6 @@ export interface CodeGatewayProps extends UseCodeSourceOptions {
   editorHeight?: number;
   /** 覆盖数据源中的 Mermaid 主题 */
   theme?: MermaidTheme;
-  /** 覆盖数据源中的 Mermaid 编辑模式 */
-  editable?: boolean;
   /** 覆盖数据源中的 Mermaid 缩放和拖拽配置 */
   zoomable?: boolean;
 }

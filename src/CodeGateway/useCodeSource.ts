@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { mockCodeSourceMap } from './mock';
+import { useCodeEditorStore } from './store';
 import type { CodeSource, UseCodeSourceOptions, UseCodeSourceResult } from './types';
 
 const DEFAULT_PAGE_KEY = 'summary-editor';
@@ -16,12 +17,22 @@ export function resolveCodeSource({
 }
 
 export function useCodeSource(options: UseCodeSourceOptions): UseCodeSourceResult {
+  const editedMap = useCodeEditorStore((s) => s.editedMap);
+
   return useMemo(() => {
-    const data = resolveCodeSource(options);
+    const base = resolveCodeSource(options);
+    if (!base) {
+      return {
+        data: undefined,
+        loading: false,
+        error: new Error(`未找到 codeKey: ${options.codeKey}`),
+      };
+    }
+    const cacheKey = base.cacheKey ?? base.codeKey;
+    const edited = editedMap[cacheKey];
     return {
-      data,
+      data: edited !== undefined ? { ...base, code: edited } : base,
       loading: false,
-      error: data ? undefined : new Error(`未找到 codeKey: ${options.codeKey}`),
     };
-  }, [options.pageKey, options.codeKey]);
+  }, [options.pageKey, options.codeKey, editedMap]);
 }

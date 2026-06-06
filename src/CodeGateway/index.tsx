@@ -24,7 +24,7 @@ const CodeGateway: React.FC<CodeGatewayProps> = (props) => {
         chart={data.code}
         cacheKey={cacheKey}
         theme={props.theme ?? data.theme}
-        editable={props.editable ?? data.editable}
+        editable
         zoomable={props.zoomable ?? data.zoomable}
       />
     );

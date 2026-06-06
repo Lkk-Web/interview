@@ -6,7 +6,6 @@ export const mockCodeSourceMap: Record<string, CodeSource> = {
     codeKey: 'demo-mermaid',
     lang: 'mermaid',
     cacheKey: 'demo-mermaid',
-    editable: true,
     code: `graph TD
     A[用户] --> B[API Gateway]
     B --> C[用户服务]

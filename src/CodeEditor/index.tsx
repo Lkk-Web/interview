@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CodeEditorProps, SupportedLang } from './types';
 import { MarkdownRenderer, HtmlRenderer, JsonRenderer, TextRenderer } from './renderers';
+import { useCodeEditorStore } from '../CodeGateway/store';
 import CodeMirror from 'codemirror';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/css/css';
@@ -32,26 +33,6 @@ const CM_MODE: Record<SupportedLang, string> = {
   css: 'text/css',
   text: 'text/plain',
 };
-
-function getCacheKey(key: string) {
-  return `code-editor-cache:${key}`;
-}
-
-function loadCache(key: string): string | null {
-  try {
-    return localStorage.getItem(getCacheKey(key));
-  } catch {
-    return null;
-  }
-}
-
-function saveCache(key: string, value: string) {
-  try {
-    if (value != null) {
-      localStorage.setItem(getCacheKey(key), value);
-    }
-  } catch {}
-}
 
 function renderByLang(
   lang: SupportedLang,
@@ -131,11 +112,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   defaultOpen = false,
 }) => {
   const effectiveCacheKey = cacheKey || `${lang}:${(initialCode || '').slice(0, 40)}`;
+  const { editedMap, setEdited, resetEdited } = useCodeEditorStore();
 
-  const [code, setCode] = useState<string>(() => {
-    const cached = loadCache(effectiveCacheKey);
-    return cached !== null ? cached : initialCode || '';
-  });
+  const [code, setCode] = useState<string>(
+    () => editedMap[effectiveCacheKey] ?? initialCode ?? '',
+  );
 
   const [editorOpen, setEditorOpen] = useState(defaultOpen);
   const [previewCode, setPreviewCode] = useState(code);
@@ -145,21 +126,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     (val: string) => {
       const safeVal = val ?? '';
       setCode(safeVal);
-      saveCache(effectiveCacheKey, safeVal);
+      setEdited(effectiveCacheKey, safeVal);
       clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(() => {
         setPreviewCode(safeVal);
       }, 300);
     },
-    [effectiveCacheKey],
+    [effectiveCacheKey, setEdited],
   );
 
   const handleReset = useCallback(() => {
     const safe = initialCode || '';
     setCode(safe);
     setPreviewCode(safe);
-    saveCache(effectiveCacheKey, safe);
-  }, [initialCode, effectiveCacheKey]);
+    resetEdited(effectiveCacheKey);
+  }, [initialCode, effectiveCacheKey, resetEdited]);
 
   useEffect(() => {
     setPreviewCode(code);
