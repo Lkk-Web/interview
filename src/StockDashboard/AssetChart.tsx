@@ -105,7 +105,11 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
                 累计盈亏：${change >= 0 ? '+' : ''}${formatMoney(change)}
                 (${change >= 0 ? '+' : ''}${changePercent}%)
               </div>
-              ${point.remark ? `<div style="margin-top:6px;padding:4px 8px;background:#fffbe6;border-radius:3px;font-size:11px;color:#8c6e00">📝 ${point.remark}</div>` : ''}
+              ${
+                point.remark
+                  ? `<div style="margin-top:6px;padding:4px 8px;background:#fffbe6;border-radius:3px;font-size:11px;color:#8c6e00">📝 ${point.remark}</div>`
+                  : ''
+              }
             </div>
           `;
         },

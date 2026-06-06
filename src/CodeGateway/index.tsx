@@ -8,14 +8,21 @@ import './index.less';
 
 const CodeGateway: React.FC<CodeGatewayProps> = (props) => {
   const namespace = props.pageKey ?? DEFAULT_NAMESPACE;
-  const { data, loading, error } = useCodeSource({ pageKey: props.pageKey, codeKey: props.codeKey });
+  const { data, loading, error } = useCodeSource({
+    pageKey: props.pageKey,
+    codeKey: props.codeKey,
+  });
 
   if (loading) {
     return <div className="code-gateway-state">代码加载中...</div>;
   }
 
   if (error || !data) {
-    return <div className="code-gateway-state code-gateway-state--error">未找到 codeKey: {props.codeKey}</div>;
+    return (
+      <div className="code-gateway-state code-gateway-state--error">
+        未找到 codeKey: {props.codeKey}
+      </div>
+    );
   }
 
   const cacheKey = props.cacheKey ?? data.cacheKey ?? data.codeKey;
