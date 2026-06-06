@@ -1,26 +1,27 @@
 import { useMemo } from 'react';
 import { mockCodeSourceMap } from './mock';
-import { useCodeEditorStore } from './store';
+import { useEditorStore } from './store';
+import { DEFAULT_NAMESPACE, PAGE_KEY } from './constants';
 import type { CodeSource, UseCodeSourceOptions, UseCodeSourceResult } from './types';
-
-const DEFAULT_PAGE_KEY = 'summary-editor';
 
 function getSourceKey(pageKey: string, codeKey: string) {
   return `${pageKey}:${codeKey}`;
 }
 
 export function resolveCodeSource({
-  pageKey = DEFAULT_PAGE_KEY,
+  pageKey = PAGE_KEY.SUMMARY_EDITOR,
   codeKey,
 }: UseCodeSourceOptions): CodeSource | undefined {
   return mockCodeSourceMap[getSourceKey(pageKey, codeKey)];
 }
 
 export function useCodeSource(options: UseCodeSourceOptions): UseCodeSourceResult {
-  const editedMap = useCodeEditorStore((s) => s.editedMap);
+  const base = resolveCodeSource(options);
+  const namespace = options.pageKey ?? DEFAULT_NAMESPACE;
+  const cacheKey = base?.cacheKey ?? base?.codeKey ?? '';
+  const edited = useEditorStore((s) => s.namespaces[namespace]?.editedMap[cacheKey]);
 
   return useMemo(() => {
-    const base = resolveCodeSource(options);
     if (!base) {
       return {
         data: undefined,
@@ -28,11 +29,9 @@ export function useCodeSource(options: UseCodeSourceOptions): UseCodeSourceResul
         error: new Error(`未找到 codeKey: ${options.codeKey}`),
       };
     }
-    const cacheKey = base.cacheKey ?? base.codeKey;
-    const edited = editedMap[cacheKey];
     return {
       data: edited !== undefined ? { ...base, code: edited } : base,
       loading: false,
     };
-  }, [options.pageKey, options.codeKey, editedMap]);
+  }, [base, edited]);
 }

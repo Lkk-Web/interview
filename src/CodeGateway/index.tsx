@@ -3,9 +3,11 @@ import CodeEditor from '../CodeEditor';
 import Mermaid from '../Mermaid';
 import { useCodeSource } from './useCodeSource';
 import type { CodeGatewayProps } from './types';
+import { DEFAULT_NAMESPACE } from './constants';
 import './index.less';
 
 const CodeGateway: React.FC<CodeGatewayProps> = (props) => {
+  const namespace = props.pageKey ?? DEFAULT_NAMESPACE;
   const { data, loading, error } = useCodeSource({ pageKey: props.pageKey, codeKey: props.codeKey });
 
   if (loading) {
@@ -35,6 +37,7 @@ const CodeGateway: React.FC<CodeGatewayProps> = (props) => {
       lang={data.lang}
       code={data.code}
       cacheKey={cacheKey}
+      namespace={namespace}
       defaultOpen={props.defaultOpen ?? data.defaultOpen}
       editorHeight={props.editorHeight ?? data.editorHeight}
     />

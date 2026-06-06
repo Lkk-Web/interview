@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CodeEditorProps, SupportedLang } from './types';
 import { MarkdownRenderer, HtmlRenderer, JsonRenderer, TextRenderer } from './renderers';
-import { useCodeEditorStore } from '../CodeGateway/store';
+import { editorActions } from '../CodeGateway/store';
+import { DEFAULT_NAMESPACE } from '../CodeGateway/constants';
 import CodeMirror from 'codemirror';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/css/css';
@@ -108,14 +109,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   code: initialCode,
   renderer,
   cacheKey,
+  namespace = DEFAULT_NAMESPACE,
   editorHeight = 300,
   defaultOpen = false,
 }) => {
   const effectiveCacheKey = cacheKey || `${lang}:${(initialCode || '').slice(0, 40)}`;
-  const { editedMap, setEdited, resetEdited } = useCodeEditorStore();
 
   const [code, setCode] = useState<string>(
-    () => editedMap[effectiveCacheKey] ?? initialCode ?? '',
+    () => editorActions.getEdited(namespace, effectiveCacheKey) ?? initialCode ?? '',
   );
 
   const [editorOpen, setEditorOpen] = useState(defaultOpen);
@@ -126,21 +127,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     (val: string) => {
       const safeVal = val ?? '';
       setCode(safeVal);
-      setEdited(effectiveCacheKey, safeVal);
+      editorActions.setEdited(namespace, effectiveCacheKey, safeVal);
       clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(() => {
         setPreviewCode(safeVal);
       }, 300);
     },
-    [effectiveCacheKey, setEdited],
+    [namespace, effectiveCacheKey],
   );
 
   const handleReset = useCallback(() => {
     const safe = initialCode || '';
     setCode(safe);
     setPreviewCode(safe);
-    resetEdited(effectiveCacheKey);
-  }, [initialCode, effectiveCacheKey, resetEdited]);
+    editorActions.resetEdited(namespace, effectiveCacheKey);
+  }, [namespace, initialCode, effectiveCacheKey]);
 
   useEffect(() => {
     setPreviewCode(code);

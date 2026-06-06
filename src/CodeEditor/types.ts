@@ -19,6 +19,8 @@ export interface CodeEditorProps {
   renderer?: (code: string) => ReactNode;
   /** 本地缓存 key，相同 key 共享缓存 */
   cacheKey?: string;
+  /** namespace 隔离 key，不同 namespace 编辑内容互不影响 */
+  namespace?: string;
   /** 编辑区高度，默认 300px */
   editorHeight?: number;
   /** 预览区高度，默认 auto */
