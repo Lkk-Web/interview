@@ -1,0 +1,491 @@
+{
+  "schemes": ["http", "https"],
+  "swagger": "2.0",
+  "info": {
+    "description": "个人知识库后端服务，提供股票仪表盘和代码内容管理接口。",
+    "title": "Interview Server API",
+    "contact": {},
+    "version": "1.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/api",
+  "paths": {
+    "/code-sources/pages/{pageKey}": {
+      "get": {
+        "description": "返回指定 pageKey 下的所有公开记录，前端可用来一次性预加载整页数据。",
+        "produces": ["application/json"],
+        "tags": ["code-sources"],
+        "summary": "批量获取页面代码内容",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "页面/业务域 key，如 expand-mermaid",
+            "name": "pageKey",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.CodeSourceListResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/code-sources/pages/{pageKey}/{codeKey}": {
+      "get": {
+        "description": "按 pageKey + codeKey 精确查询，找不到返回 404。前端 useCodeSource hook 对接此接口。",
+        "produces": ["application/json"],
+        "tags": ["code-sources"],
+        "summary": "获取代码内容",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "页面/业务域 key，如 summary-editor",
+            "name": "pageKey",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "内容 key，如 demo-mermaid",
+            "name": "codeKey",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.CodeSourceDTO"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/code-sources/pages/{pageKey}/{codeKey}/versions": {
+      "get": {
+        "description": "返回指定 pageKey + codeKey 记录的历史版本列表，按版本号倒序排列。",
+        "produces": ["application/json"],
+        "tags": ["code-sources"],
+        "summary": "获取代码内容编辑历史",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "页面/业务域 key",
+            "name": "pageKey",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "内容 key",
+            "name": "codeKey",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/http.CodeSourceVersionDTO"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stock/asset-history": {
+      "get": {
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "获取资产历史曲线",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/http.AssetHistoryDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stock/dashboard": {
+      "get": {
+        "description": "一次返回资产历史、持仓、月度收益、其他收入，前端 StockDashboard 直接消费。",
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "获取股票仪表盘聚合数据",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.DashboardResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stock/monthly": {
+      "get": {
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "获取月度 T 收益",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/http.MonthlyDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stock/other-income": {
+      "get": {
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "获取其他收入/支出",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/http.OtherIncomeDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stock/positions": {
+      "get": {
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "获取当前持仓",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/http.PositionDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "http.AssetHistoryDTO": {
+      "type": "object",
+      "properties": {
+        "cash": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string"
+        },
+        "loan": {
+          "type": "number"
+        },
+        "other": {
+          "type": "number"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "stockValue": {
+          "type": "number"
+        }
+      }
+    },
+    "http.CodeSourceDTO": {
+      "type": "object",
+      "properties": {
+        "cacheKey": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "codeKey": {
+          "type": "string"
+        },
+        "defaultOpen": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "editorHeight": {
+          "type": "integer"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "pageKey": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "zoomable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "http.CodeSourceListResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.CodeSourceDTO"
+          }
+        }
+      }
+    },
+    "http.CodeSourceVersionDTO": {
+      "type": "object",
+      "properties": {
+        "changeNote": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      }
+    },
+    "http.DashboardResponse": {
+      "type": "object",
+      "properties": {
+        "assetHistory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.AssetHistoryDTO"
+          }
+        },
+        "monthly": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.MonthlyDTO"
+          }
+        },
+        "otherIncome": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.OtherIncomeDTO"
+          }
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.PositionDTO"
+          }
+        }
+      }
+    },
+    "http.MonthlyDTO": {
+      "type": "object",
+      "properties": {
+        "month": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "tRevenue": {
+          "type": "number"
+        },
+        "tTarget": {
+          "type": "number"
+        }
+      }
+    },
+    "http.OtherIncomeDTO": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        }
+      }
+    },
+    "http.PositionBaseDTO": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "number"
+        }
+      }
+    },
+    "http.PositionDTO": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "$ref": "#/definitions/http.PositionBaseDTO"
+        },
+        "code": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "number"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "number"
+        },
+        "stock": {
+          "type": "string"
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.PositionTargetDTO"
+          }
+        }
+      }
+    },
+    "http.PositionTargetDTO": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "httpx.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
