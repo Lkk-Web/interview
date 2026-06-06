@@ -35,18 +35,15 @@ const MermaidChart: React.FC<{ chart: string; zoomable?: boolean }> = ({
   useEffect(() => {
     const renderChart = async () => {
       if (!chart) return;
+      const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       try {
-        const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const { svg: renderedSvg } = await mermaid.render(id, chart.trim());
         setSvg(renderedSvg);
         setError('');
       } catch {
-        // 清理 mermaid 注入到 body 的错误节点（炸弹图标）
-        setTimeout(() => {
-          document.querySelectorAll('[id^="mermaid-"]').forEach((el) => {
-            if (el.parentElement === document.body) el.remove();
-          });
-        }, 50);
+        // mermaid 渲染失败时会把错误节点注入 body，需要手动清理
+        document.getElementById(id)?.remove();
+        document.getElementById(`d${id}`)?.remove();
         setError('图表语法错误，请检查 Mermaid 语法');
         setSvg('');
       }
