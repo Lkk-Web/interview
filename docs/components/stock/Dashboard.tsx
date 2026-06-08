@@ -3,17 +3,22 @@
  * description: 个人资产曲线与持仓分布可视化
  */
 import React from 'react';
-import { StockDashboard } from 'interview';
-import assetHistory from '../../../data/stock/asset-history.json';
-import positions from '../../../data/stock/positions.json';
-import monthly from '../../../data/stock/monthly.json';
-import otherIncome from '../../../data/stock/other-income.json';
+import { StockDashboard, useStockData } from 'interview';
+import type { AssetPoint, MonthlyRecord, OtherIncome, Position } from 'interview';
+import assetHistoryFallback from '../../../data/stock/asset-history.json';
+import positionsFallback from '../../../data/stock/positions.json';
+import monthlyFallback from '../../../data/stock/monthly.json';
+import otherIncomeFallback from '../../../data/stock/other-income.json';
 
-export default () => (
-  <StockDashboard
-    assetHistory={assetHistory as any}
-    positions={positions}
-    monthly={monthly as any}
-    otherIncome={otherIncome}
-  />
-);
+export default () => {
+  const data = useStockData({
+    fallback: {
+      assetHistory: assetHistoryFallback as AssetPoint[],
+      positions: positionsFallback as Position[],
+      monthly: monthlyFallback as MonthlyRecord[],
+      otherIncome: otherIncomeFallback as OtherIncome[],
+    },
+  });
+
+  return <StockDashboard {...data} />;
+};
