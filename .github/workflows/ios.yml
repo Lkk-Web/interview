@@ -6,8 +6,11 @@ on:
     paths:
       - 'src/**'
       - 'ios/**'
+      - 'docs/**'
       - 'package.json'
       - 'yarn.lock'
+      - 'app.style.ts'
+      - '.umirc.ts'
       - '.github/workflows/ios.yml'
   workflow_dispatch:
 
