@@ -73,9 +73,17 @@ func registerRoutes(router *gin.Engine, db *gorm.DB, cfg config.Config) {
 	// stock 领域的依赖链：PostgreSQL 实现 -> application service -> HTTP handler。
 	// 这样 handler 不接触数据库，repository 不接触 HTTP，职责更清晰。
 	stockRepository := stockinfra.NewGormRepository(db)
+	// 注入 JSON 导出器：写接口成功后自动同步 data/stock/*.json 文件。
+	stockRepository.SetExporter(stockinfra.NewJSONExporter(cfg.DataDir, stockRepository))
 	stockService := stockapp.NewDashboardService(stockRepository)
 	stockHandler := stockhttp.NewHandler(stockService)
 	stockhttp.RegisterRoutes(api.Group("/stock"), stockHandler)
+
+	// 写接口挂在 /api/admin/stock，统一经过 admin token middleware。
+	stockhttp.RegisterAdminRoutes(
+		api.Group("/admin/stock", middleware.RequireAdminToken(cfg.AdminToken)),
+		stockHandler,
+	)
 
 	// codesource 领域替代原来的 mermaid 域，支持所有语言类型。
 	csRepository := csinfra.NewGormRepository(db)
@@ -83,7 +91,6 @@ func registerRoutes(router *gin.Engine, db *gorm.DB, cfg config.Config) {
 	csHandler := cshttp.NewHandler(csService)
 	cshttp.RegisterRoutes(api.Group("/code-sources"), csHandler)
 
-	// 管理接口单独挂在 /api/admin，统一经过 token middleware。
 	admin := api.Group("/admin", middleware.RequireAdminToken(cfg.AdminToken))
 	admin.GET("/health", func(c *gin.Context) {
 		// 管理端健康检查能顺便验证 ADMIN_TOKEN 是否配置正确。

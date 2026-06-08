@@ -10,6 +10,45 @@
   "host": "localhost:8080",
   "basePath": "/api",
   "paths": {
+    "/admin/stock/asset-history": {
+      "post": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "新增资产快照",
+        "parameters": [
+          {
+            "description": "资产快照数据",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.CreateAssetHistoryRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/http.AssetHistoryDTO"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/code-sources/pages/{pageKey}": {
       "get": {
         "description": "返回指定 pageKey 下的所有公开记录，前端可用来一次性预加载整页数据。",
@@ -341,6 +380,30 @@
         },
         "version": {
           "type": "integer"
+        }
+      }
+    },
+    "http.CreateAssetHistoryRequest": {
+      "type": "object",
+      "required": ["date"],
+      "properties": {
+        "cash": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string"
+        },
+        "loan": {
+          "type": "number"
+        },
+        "other": {
+          "type": "number"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "stockValue": {
+          "type": "number"
         }
       }
     },

@@ -3,13 +3,15 @@ package domain
 import "context"
 
 // Repository 是 stock 领域需要的持久化能力清单。
-// 它放在 domain 层，是为了让业务代码依赖“能力”，而不是依赖 GORM/PostgreSQL 这些具体工具。
+// 它放在 domain 层，是为了让业务代码依赖”能力”，而不是依赖 GORM/PostgreSQL 这些具体工具。
 type Repository interface {
 	ListAssetHistories(ctx context.Context) ([]AssetHistory, error)
 	ListMonthlyRecords(ctx context.Context) ([]MonthlyRecord, error)
 	ListOtherIncomes(ctx context.Context) ([]OtherIncome, error)
 	ListActivePositions(ctx context.Context) ([]Position, error)
 	ImportSnapshot(ctx context.Context, snapshot ImportSnapshot) error
+	// AddAssetHistory 新增一条资产快照并同步 JSON 文件。
+	AddAssetHistory(ctx context.Context, item AssetHistory) (AssetHistory, error)
 }
 
 // ImportSnapshot 是一次导入所需的完整股票数据快照。

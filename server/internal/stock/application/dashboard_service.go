@@ -73,3 +73,8 @@ func (service *DashboardService) GetOtherIncome(ctx context.Context) ([]domain.O
 func (service *DashboardService) GetPositions(ctx context.Context) ([]domain.Position, error) {
 	return service.repository.ListActivePositions(ctx)
 }
+
+// AddAssetHistory 新增一条资产快照，写库后自动同步 JSON 文件。
+func (service *DashboardService) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
+	return service.repository.AddAssetHistory(ctx, item)
+}

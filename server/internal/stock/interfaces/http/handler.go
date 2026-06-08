@@ -5,6 +5,7 @@ import (
 
 	"github.com/Lkk-Web/interview/server/internal/shared/httpx"
 	"github.com/Lkk-Web/interview/server/internal/stock/application"
+	"github.com/Lkk-Web/interview/server/internal/stock/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -103,4 +104,44 @@ func (handler *Handler) ListPositions(c *gin.Context) {
 		return
 	}
 	httpx.OK(c, newPositionDTOs(items))
+}
+
+// CreateAssetHistory 新增一条资产快照，写库成功后自动同步 JSON 文件。
+// @Summary     新增资产快照
+// @Tags        stock
+// @Accept      json
+// @Produce     json
+// @Param       body  body      CreateAssetHistoryRequest  true  "资产快照数据"
+// @Success     201   {object}  AssetHistoryDTO
+// @Failure     400   {object}  httpx.ErrorResponse
+// @Failure     500   {object}  httpx.ErrorResponse
+// @Router      /admin/stock/asset-history [post]
+func (handler *Handler) CreateAssetHistory(c *gin.Context) {
+	var req CreateAssetHistoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.Error(c, nethttp.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	item, err := handler.dashboardService.AddAssetHistory(c.Request.Context(), domain.AssetHistory{
+		Date:       req.Date,
+		Cash:       req.Cash,
+		StockValue: req.StockValue,
+		Loan:       req.Loan,
+		Other:      req.Other,
+		Remark:     req.Remark,
+	})
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "create_error", err.Error())
+		return
+	}
+
+	httpx.Created(c, AssetHistoryDTO{
+		Date:       item.Date,
+		Cash:       item.Cash,
+		StockValue: item.StockValue,
+		Loan:       item.Loan,
+		Other:      item.Other,
+		Remark:     item.Remark,
+	})
 }

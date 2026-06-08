@@ -10,11 +10,17 @@ import (
 )
 
 type GormRepository struct {
-	db *gorm.DB
+	db       *gorm.DB
+	exporter *JSONExporter
 }
 
 func NewGormRepository(db *gorm.DB) *GormRepository {
 	return &GormRepository{db: db}
+}
+
+// SetExporter 注入 JSON 导出器；用 setter 而不是构造参数，避免循环依赖（exporter 也依赖 repository）。
+func (repository *GormRepository) SetExporter(exporter *JSONExporter) {
+	repository.exporter = exporter
 }
 
 func (repository *GormRepository) ListAssetHistories(ctx context.Context) ([]domain.AssetHistory, error) {
@@ -340,5 +346,34 @@ func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionT
 		Remark:       target.Remark,
 		Status:       target.Status,
 		DisplayOrder: target.DisplayOrder,
+	}
+}
+
+// AddAssetHistory 插入一条资产快照，成功后同步 JSON 文件。
+func (repository *GormRepository) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
+	model := fromAssetHistory(item)
+	if err := repository.db.WithContext(ctx).Create(&model).Error; err != nil {
+		return domain.AssetHistory{}, fmt.Errorf("add asset history: %w", err)
+	}
+	saved := toAssetHistory(model)
+
+	// 写入成功后同步 JSON，exporter 可选（测试或未配置 dataDir 时为 nil）。
+	if repository.exporter != nil {
+		if err := repository.exporter.ExportAssetHistory(ctx); err != nil {
+			return saved, fmt.Errorf("sync json after add: %w", err)
+		}
+	}
+	return saved, nil
+}
+
+func toAssetHistory(model AssetHistoryModel) domain.AssetHistory {
+	return domain.AssetHistory{
+		ID:         model.ID,
+		Date:       model.Date,
+		Cash:       model.Cash,
+		StockValue: model.StockValue,
+		Loan:       model.Loan,
+		Other:      model.Other,
+		Remark:     model.Remark,
 	}
 }

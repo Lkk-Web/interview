@@ -22,6 +22,16 @@ type AssetHistoryDTO struct {
 	Remark     *string `json:"remark,omitempty"`
 }
 
+// CreateAssetHistoryRequest 是新增资产快照的请求体。
+type CreateAssetHistoryRequest struct {
+	Date       string  `json:"date" binding:"required"`
+	Cash       float64 `json:"cash"`
+	StockValue float64 `json:"stockValue"`
+	Loan       float64 `json:"loan"`
+	Other      float64 `json:"other"`
+	Remark     *string `json:"remark"`
+}
+
 // MonthlyDTO 保持当前 monthly.json 的字段命名。
 type MonthlyDTO struct {
 	Month    string  `json:"month"`

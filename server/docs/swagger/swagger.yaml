@@ -60,6 +60,23 @@ definitions:
       version:
         type: integer
     type: object
+  http.CreateAssetHistoryRequest:
+    properties:
+      cash:
+        type: number
+      date:
+        type: string
+      loan:
+        type: number
+      other:
+        type: number
+      remark:
+        type: string
+      stockValue:
+        type: number
+    required:
+    - date
+    type: object
   http.DashboardResponse:
     properties:
       assetHistory:
@@ -160,6 +177,35 @@ info:
   title: Interview Server API
   version: "1.0"
 paths:
+  /admin/stock/asset-history:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 资产快照数据
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateAssetHistoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.AssetHistoryDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: 新增资产快照
+      tags:
+      - stock
   /code-sources/pages/{pageKey}:
     get:
       description: 返回指定 pageKey 下的所有公开记录，前端可用来一次性预加载整页数据。

@@ -23,6 +23,8 @@ type Config struct {
 	AllowedOrigins []string
 	// MigrationsDir 是 SQL migration 文件目录。
 	MigrationsDir string
+	// DataDir 是本地 stock JSON 文件目录，写接口成功后会同步更新这里的文件。
+	DataDir string
 }
 
 // Load 读取配置并做最基本的必填校验。
@@ -37,6 +39,7 @@ func Load() (Config, error) {
 		AdminToken:     os.Getenv("ADMIN_TOKEN"),
 		AllowedOrigins: splitCSV(valueOrDefault("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8080")),
 		MigrationsDir:  valueOrDefault("MIGRATIONS_DIR", "./migrations"),
+		DataDir:        valueOrDefault("DATA_DIR", "../data/stock"),
 	}
 
 	if cfg.DatabaseDSN == "" {
