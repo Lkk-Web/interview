@@ -24,16 +24,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-npm-
 
       - name: Build web (Node 16)
         run: |
           source ~/.nvm/nvm.sh
           nvm use 16.19.1
           yarn install --registry https://registry.npmjs.org --ignore-engines
-          MOBILE=1 npm run docs:build
+          MOBILE=1 npx dumi build
 
       - name: Cap sync (Node 22)
         run: |
