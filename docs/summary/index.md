@@ -1,6 +1,5 @@
 ---
 order: 1
-hide: true
 ---
 
 # 前言

@@ -5,6 +5,18 @@ import dotenv from 'dotenv';
 // 加载 .env 文件
 dotenv.config();
 
+const isProd = process.env.NODE_ENV === 'production';
+
+const prodNavs = [
+  { title: '前端', path: '/bigFrontend' },
+  { title: '算法', path: '/algorithm' },
+  { title: '后端', path: '/afterEnd' },
+  { title: 'AI', path: '/AI' },
+  { title: '面试', path: '/interview' },
+  { title: '扩展', path: '/expand' },
+  { title: 'GitHub', path: 'https://github.com/Lkk-Web' },
+];
+
 export default {
   // ssr: {
   //   devServerRender: true,
@@ -45,13 +57,15 @@ export default {
     ], // 不需要多语言
     // menus: {}, // 约定式 侧边导航
     favicon: 'https://oss.kyingsoft.cn/import/logo.ico',
-    navs: [
-      null, // null 值代表保留约定式生成的导航，只做增量配置
-      {
-        title: 'GitHub',
-        path: 'https://github.com/Lkk-Web',
-      },
-    ],
+    navs: isProd
+      ? prodNavs
+      : [
+          null,
+          {
+            title: 'GitHub',
+            path: 'https://github.com/Lkk-Web',
+          },
+        ],
     // more config: https://d.umijs.org/config
   }),
   define: {
