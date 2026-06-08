@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "dumi dev",
-    "docs:build": "dumi build",
+    "docs:build": "NODE_OPTIONS=--openssl-legacy-provider dumi build",
     "docs:deploy": "gh-pages -d docs-dist",
     "build": "father build",
     "prettier": "prettier --write \"**/*.{js,jsx,tsx,ts,less,md,json}\"",
@@ -17,8 +17,8 @@
     "lint:prettier": "prettier --check \"src/**/*\" --end-of-line auto",
     "prepare": "husky install",
     "upload": "node upload-to-r2.js",
-    "deploy": "npm run docs:build && npm run upload",
-    "mobile:build": "MOBILE=1 npm run docs:build && npx cap sync ios"
+    "deploy": "NODE_OPTIONS=--openssl-legacy-provider npm run docs:build && npm run upload",
+    "mobile:build": "MOBILE=1 NODE_OPTIONS=--openssl-legacy-provider npm run docs:build && npx cap sync ios"
   },
   "files": [
     "dist"
@@ -54,6 +54,7 @@
     "marked": "^4.3.0",
     "mermaid": "^10.9.6",
     "react": "^18.0.0",
+    "react-hot-toast": "^2.6.0",
     "react-photo-view": "^1.2.3",
     "uuid": "^9.0.1"
   },

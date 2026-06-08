@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import type { StockDashboardProps } from './types';
 import { useStockPrice } from './useStockPrice';
 import AssetChart from './AssetChart';
 import PositionPie from './PositionPie';
+import AddAssetHistoryModal from './AddAssetHistoryModal';
 import './index.less';
 
 const StockDashboard: React.FC<StockDashboardProps> = ({
@@ -11,6 +13,8 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
   monthly,
   otherIncome,
 }) => {
+  const [showAddModal, setShowAddModal] = useState(false);
+
   // 获取实时股价
   const { positions, loading, error, refresh, updatedAt } = useStockPrice(rawPositions);
 
@@ -44,6 +48,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 
   return (
     <div className="stock-dashboard">
+      <Toaster position="top-center" />
       {/* 统计卡片 */}
       <div className="stock-stats-grid">
         <div className="stock-stat-card">
@@ -87,7 +92,12 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 
       {/* 资产曲线 */}
       <div className="stock-chart-section">
-        <h3 className="stock-section-title">资产曲线</h3>
+        <div className="stock-section-header">
+          <h3 className="stock-section-title">资产曲线</h3>
+          <button className="stock-record-btn" onClick={() => setShowAddModal(true)}>
+            + 记录
+          </button>
+        </div>
         <AssetChart data={assetHistory} />
       </div>
 
@@ -114,6 +124,13 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
           <div className="stock-error-tip">行情获取失败，请刷新重试</div>
         ) : null}
       </div>
+
+      {showAddModal && (
+        <AddAssetHistoryModal
+          last={assetHistory[assetHistory.length - 1]}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 };
