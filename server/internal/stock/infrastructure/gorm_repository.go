@@ -352,7 +352,11 @@ func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionT
 // AddAssetHistory 插入一条资产快照，成功后同步 JSON 文件。
 func (repository *GormRepository) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	model := fromAssetHistory(item)
-	if err := repository.db.WithContext(ctx).Create(&model).Error; err != nil {
+	// 按 date 唯一键 upsert：已存在则更新，否则插入。
+	if err := repository.db.WithContext(ctx).
+		Where(AssetHistoryModel{Date: model.Date}).
+		Assign(AssetHistoryModel{Cash: model.Cash, StockValue: model.StockValue, Loan: model.Loan, Other: model.Other, Remark: model.Remark}).
+		FirstOrCreate(&model).Error; err != nil {
 		return domain.AssetHistory{}, fmt.Errorf("add asset history: %w", err)
 	}
 	saved := toAssetHistory(model)
