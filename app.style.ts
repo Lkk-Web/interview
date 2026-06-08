@@ -114,4 +114,14 @@ export const scripts = [
     });
     observer.observe(document.body, { childList: true, subtree: true });
   })();`,
+  `(function() {
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+    function hide() {
+      document.querySelectorAll('nav a, header a').forEach(function(a) {
+        if (a.textContent.trim() === 'Summary') a.parentElement.style.display = 'none';
+      });
+    }
+    new MutationObserver(hide).observe(document.body, { childList: true, subtree: true });
+    hide();
+  })();`,
 ];
