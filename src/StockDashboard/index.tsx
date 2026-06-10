@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import type { StockDashboardProps } from './types';
-import { useStockPrice } from './useStockPrice';
-import AssetChart from './AssetChart';
-import PositionPie from './PositionPie';
-import AddAssetHistoryModal from './AddAssetHistoryModal';
+import { useStockPrice } from './hooks/useStockPrice';
+import AssetChart from './components/AssetChart';
+import PositionPie from './components/PositionPie';
+import AddAssetHistoryModal from './components/AddAssetHistoryModal';
+import DailyLogModal from './components/DailyLogModal';
+import { useDraftStore, setDraft } from '../store';
 import './index.less';
 
 const StockDashboard: React.FC<StockDashboardProps> = ({
@@ -14,6 +16,8 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
   otherIncome,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDailyLogModal, setShowDailyLogModal] = useState(false);
+  const dailyLogDraft = useDraftStore();
 
   // 获取实时股价
   const { positions, loading, error, refresh, updatedAt } = useStockPrice(rawPositions);
@@ -94,9 +98,14 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
       <div className="stock-chart-section">
         <div className="stock-section-header">
           <h3 className="stock-section-title">资产曲线</h3>
-          <button className="stock-record-btn" onClick={() => setShowAddModal(true)}>
-            + 记录
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="stock-record-btn" onClick={() => setShowDailyLogModal(true)}>
+              每日记录
+            </button>
+            <button className="stock-record-btn" onClick={() => setShowAddModal(true)}>
+              + 记录
+            </button>
+          </div>
         </div>
         <AssetChart data={assetHistory} />
       </div>
@@ -129,6 +138,15 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
         <AddAssetHistoryModal
           last={assetHistory[assetHistory.length - 1]}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+      {showDailyLogModal && (
+        <DailyLogModal
+          positions={rawPositions}
+          currentMonth={monthly[monthly.length - 1]}
+          draft={dailyLogDraft}
+          onDraftChange={setDraft}
+          onClose={() => setShowDailyLogModal(false)}
         />
       )}
     </div>

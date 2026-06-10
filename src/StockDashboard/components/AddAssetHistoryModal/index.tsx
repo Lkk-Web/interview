@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { API_BASE, ADMIN_TOKEN } from '../constants';
-import type { AssetPoint } from './types';
-import './AddAssetHistoryModal.less';
+import { API_BASE, ADMIN_TOKEN } from '../../../constants';
+import type { AssetPoint } from '../../types';
+import './index.less';
 
 interface Props {
   last?: AssetPoint;

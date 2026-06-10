@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { API_BASE } from '../constants';
-import type { AssetPoint, MonthlyRecord, OtherIncome, Position } from './types';
+import { API_BASE } from '../../constants';
+import type { AssetPoint, MonthlyRecord, OtherIncome, Position } from '../types';
 
 export interface StockDataOptions {
   /** 后端 API base URL，默认读取全局 API_BASE */

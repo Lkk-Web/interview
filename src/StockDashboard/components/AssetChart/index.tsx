@@ -10,7 +10,7 @@ import {
   LegendComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { AssetPoint } from './types';
+import type { AssetPoint } from '../../types';
 
 echarts.use([
   LineChart,

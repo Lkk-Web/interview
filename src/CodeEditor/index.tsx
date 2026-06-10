@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CodeEditorProps, SupportedLang } from './types';
 import { MarkdownRenderer, HtmlRenderer, JsonRenderer, TextRenderer } from './renderers';
-import { editorActions } from '../CodeGateway/store';
+import { editorActions } from '../store';
 import { DEFAULT_NAMESPACE } from '../CodeGateway/constants';
 import CodeMirror from 'codemirror';
 import 'codemirror/mode/javascript/javascript';

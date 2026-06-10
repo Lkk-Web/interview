@@ -4,7 +4,7 @@ import * as echarts from 'echarts/core';
 import { PieChart } from 'echarts/charts';
 import { TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { PositionWithPrice } from './types';
+import type { PositionWithPrice } from '../../types';
 
 echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 

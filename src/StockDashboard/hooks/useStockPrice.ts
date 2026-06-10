@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Position, PositionWithPrice } from './types';
+import type { Position, PositionWithPrice } from '../types';
 
 /**
  * 通过腾讯行情接口获取实时股价
