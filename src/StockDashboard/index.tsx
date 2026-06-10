@@ -99,7 +99,24 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
         <div className="stock-section-header">
           <h3 className="stock-section-title">资产曲线</h3>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="stock-record-btn" onClick={() => setShowDailyLogModal(true)}>
+            <button
+              className="stock-record-btn"
+              onClick={() => {
+                // positionForms 为空时（首次打开或提交后重置），用当前持仓初始化
+                if (dailyLogDraft.positionForms.length === 0 && rawPositions.length > 0) {
+                  setDraft({
+                    ...dailyLogDraft,
+                    positionForms: rawPositions.map((p) => ({
+                      code: p.code,
+                      stock: p.stock,
+                      cost: String(p.cost),
+                      shares: String(p.shares),
+                    })),
+                  });
+                }
+                setShowDailyLogModal(true);
+              }}
+            >
               每日记录
             </button>
             <button className="stock-record-btn" onClick={() => setShowAddModal(true)}>
