@@ -63,3 +63,73 @@ func toAssetHistoryJSONSlice(items []domain.AssetHistory) []assetHistoryExportJS
 	}
 	return result
 }
+
+// ExportPositions 把 positions.json 更新为当前数据库内容。
+func (e *JSONExporter) ExportPositions(ctx context.Context) error {
+	items, err := e.repository.ListActivePositions(ctx)
+	if err != nil {
+		return fmt.Errorf("export positions: %w", err)
+	}
+	return writeJSON(filepath.Join(e.dataDir, "positions.json"), toPositionsJSONSlice(items))
+}
+
+type positionExportJSON struct {
+	Stock  string                    `json:"stock"`
+	Code   string                    `json:"code"`
+	Cost   float64                   `json:"cost"`
+	Shares float64                   `json:"shares"`
+	Remark *string                   `json:"remark,omitempty"`
+	Base   *positionBaseExportJSON   `json:"base,omitempty"`
+	Target []positionTargetExportJSON `json:"target,omitempty"`
+}
+
+type positionBaseExportJSON struct {
+	Cost   float64 `json:"cost"`
+	Shares float64 `json:"shares"`
+	Date   *string `json:"date,omitempty"`
+	Remark *string `json:"remark,omitempty"`
+}
+
+type positionTargetExportJSON struct {
+	Cost   float64 `json:"cost"`
+	Price  float64 `json:"price"`
+	Shares float64 `json:"shares"`
+	Date   *string `json:"date,omitempty"`
+	Remark *string `json:"remark,omitempty"`
+	Status string  `json:"status,omitempty"`
+}
+
+func toPositionsJSONSlice(items []domain.Position) []positionExportJSON {
+	result := make([]positionExportJSON, 0, len(items))
+	for _, item := range items {
+		p := positionExportJSON{
+			Stock:  item.Stock,
+			Code:   item.Code,
+			Cost:   item.Cost,
+			Shares: item.Shares,
+			Remark: item.Remark,
+		}
+		if item.Base != nil {
+			p.Base = &positionBaseExportJSON{
+				Cost:   item.Base.Cost,
+				Shares: item.Base.Shares,
+				Date:   item.Base.Date,
+				Remark: item.Base.Remark,
+			}
+		}
+		targets := make([]positionTargetExportJSON, 0, len(item.Targets))
+		for _, t := range item.Targets {
+			targets = append(targets, positionTargetExportJSON{
+				Cost:   t.Cost,
+				Price:  t.Price,
+				Shares: t.Shares,
+				Date:   t.Date,
+				Remark: t.Remark,
+				Status: t.Status,
+			})
+		}
+		p.Target = targets
+		result = append(result, p)
+	}
+	return result
+}

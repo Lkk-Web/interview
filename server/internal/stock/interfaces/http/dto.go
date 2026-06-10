@@ -32,6 +32,48 @@ type CreateAssetHistoryRequest struct {
 	Remark     *string `json:"remark"`
 }
 
+// CreateDailyLogRequest 是每日收盘记录的请求体，一次提交四类数据。
+type CreateDailyLogRequest struct {
+	Date    string `json:"date" binding:"required"`
+	Marker  string `json:"marker"` // "！" / "？" / ""
+	// Positions 是当日收盘后的最新持仓成本和数量。
+	Positions []PositionUpdateRequest `json:"positions"`
+	Trades    []TradeRequest          `json:"trades"`
+	TRecords  []TRecordRequest        `json:"tRecords"`
+	// MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
+	MonthlyTRevenue float64    `json:"monthlyTRevenue"`
+	Review          ReviewRequest `json:"review"`
+}
+
+type PositionUpdateRequest struct {
+	Code   string  `json:"code" binding:"required"`
+	Cost   float64 `json:"cost"`
+	Shares float64 `json:"shares"`
+}
+
+type TradeRequest struct {
+	Action string  `json:"action"`
+	Stock  string  `json:"stock"`
+	Code   string  `json:"code"`
+	Price  float64 `json:"price"`
+	Shares float64 `json:"shares"`
+}
+
+type TRecordRequest struct {
+	Stock       string  `json:"stock"`
+	Desc        string  `json:"desc"`
+	GrossProfit float64 `json:"grossProfit"`
+	Fee         float64 `json:"fee"`
+	Tax         float64 `json:"tax"`
+	NetRevenue  float64 `json:"netRevenue"`
+}
+
+type ReviewRequest struct {
+	Market   string `json:"market"`
+	Feeling  string `json:"feeling"`
+	NextPlan string `json:"nextPlan"`
+}
+
 // MonthlyDTO 保持当前 monthly.json 的字段命名。
 type MonthlyDTO struct {
 	Month    string  `json:"month"`

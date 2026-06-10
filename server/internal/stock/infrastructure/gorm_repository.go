@@ -10,8 +10,9 @@ import (
 )
 
 type GormRepository struct {
-	db       *gorm.DB
-	exporter *JSONExporter
+	db             *gorm.DB
+	exporter       *JSONExporter
+	markdownWriter *MarkdownWriter
 }
 
 func NewGormRepository(db *gorm.DB) *GormRepository {
@@ -21,6 +22,11 @@ func NewGormRepository(db *gorm.DB) *GormRepository {
 // SetExporter 注入 JSON 导出器；用 setter 而不是构造参数，避免循环依赖（exporter 也依赖 repository）。
 func (repository *GormRepository) SetExporter(exporter *JSONExporter) {
 	repository.exporter = exporter
+}
+
+// SetMarkdownWriter 注入 stock.md 写入器。
+func (repository *GormRepository) SetMarkdownWriter(writer *MarkdownWriter) {
+	repository.markdownWriter = writer
 }
 
 func (repository *GormRepository) ListAssetHistories(ctx context.Context) ([]domain.AssetHistory, error) {
@@ -380,4 +386,116 @@ func toAssetHistory(model AssetHistoryModel) domain.AssetHistory {
 		Other:      model.Other,
 		Remark:     model.Remark,
 	}
+}
+
+// AddDailyLog 在一个事务里完成：写 daily_log + trades + t_records，
+// 更新持仓成本/数量，更新月度T收益，提交后同步文件和 stock.md。
+func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.DailyLog) error {
+	var savedLogID uint
+
+	err := repository.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// upsert daily_log 头记录
+		logModel := DailyLogModel{
+			Date:            log.Date,
+			Marker:          log.Marker,
+			ReviewMarket:    log.Review.Market,
+			ReviewFeeling:   log.Review.Feeling,
+			ReviewNextPlan:  log.Review.NextPlan,
+			MonthlyTRevenue: log.MonthlyTRevenue,
+		}
+		if err := tx.Where(DailyLogModel{Date: log.Date}).
+			Assign(DailyLogModel{
+				Marker:          log.Marker,
+				ReviewMarket:    log.Review.Market,
+				ReviewFeeling:   log.Review.Feeling,
+				ReviewNextPlan:  log.Review.NextPlan,
+				MonthlyTRevenue: log.MonthlyTRevenue,
+			}).
+			FirstOrCreate(&logModel).Error; err != nil {
+			return fmt.Errorf("upsert daily log: %w", err)
+		}
+		savedLogID = logModel.ID
+
+		// 先删旧的 trades / t_records，再全量重插（幂等）
+		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&TradeModel{}).Error; err != nil {
+			return fmt.Errorf("clear trades: %w", err)
+		}
+		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&TRecordModel{}).Error; err != nil {
+			return fmt.Errorf("clear t_records: %w", err)
+		}
+
+		tradeModels := make([]TradeModel, 0, len(log.Trades))
+		for i, t := range log.Trades {
+			tradeModels = append(tradeModels, TradeModel{
+				DailyLogID:   savedLogID,
+				Action:       t.Action,
+				Stock:        t.Stock,
+				Code:         t.Code,
+				Price:        t.Price,
+				Shares:       t.Shares,
+				DisplayOrder: i,
+			})
+		}
+		if len(tradeModels) > 0 {
+			if err := tx.Create(&tradeModels).Error; err != nil {
+				return fmt.Errorf("insert trades: %w", err)
+			}
+		}
+
+		tRecordModels := make([]TRecordModel, 0, len(log.TRecords))
+		for i, r := range log.TRecords {
+			tRecordModels = append(tRecordModels, TRecordModel{
+				DailyLogID:   savedLogID,
+				Stock:        r.Stock,
+				Desc:         r.Desc,
+				GrossProfit:  r.GrossProfit,
+				Fee:          r.Fee,
+				Tax:          r.Tax,
+				NetRevenue:   r.NetRevenue,
+				DisplayOrder: i,
+			})
+		}
+		if len(tRecordModels) > 0 {
+			if err := tx.Create(&tRecordModels).Error; err != nil {
+				return fmt.Errorf("insert t_records: %w", err)
+			}
+		}
+
+		// 更新持仓成本和数量
+		for _, p := range log.PositionUpdates {
+			if err := tx.Model(&PositionModel{}).
+				Where("code = ?", p.Code).
+				Updates(map[string]any{"cost": p.Cost, "shares": p.Shares}).Error; err != nil {
+				return fmt.Errorf("update position %s: %w", p.Code, err)
+			}
+		}
+
+		// 更新月度T收益
+		if log.MonthlyTRevenue != 0 {
+			month := log.Date[:7] // "2026-06"
+			if err := tx.Model(&MonthlyRecordModel{}).
+				Where("month = ?", month).
+				Update("t_revenue", log.MonthlyTRevenue).Error; err != nil {
+				return fmt.Errorf("update monthly t_revenue: %w", err)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// 事务提交后同步文件（非事务，尽力而为）
+	if repository.exporter != nil {
+		if err := repository.exporter.ExportPositions(ctx); err != nil {
+			return fmt.Errorf("sync positions.json: %w", err)
+		}
+		if repository.markdownWriter != nil {
+			if err := repository.markdownWriter.AppendDailyLog(log); err != nil {
+				return fmt.Errorf("append stock.md: %w", err)
+			}
+		}
+	}
+	return nil
 }

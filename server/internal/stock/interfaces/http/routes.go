@@ -14,4 +14,5 @@ func RegisterRoutes(group *gin.RouterGroup, handler *Handler) {
 // RegisterAdminRoutes 挂载需要 admin token 的写接口。
 func RegisterAdminRoutes(group *gin.RouterGroup, handler *Handler) {
 	group.POST("/asset-history", handler.CreateAssetHistory)
+	group.POST("/daily-log", handler.CreateDailyLog)
 }

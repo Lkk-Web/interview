@@ -13,10 +13,11 @@ import (
 // 它只负责读取请求、调用 application service、返回响应，不直接写 SQL。
 type Handler struct {
 	dashboardService *application.DashboardService
+	dailyLogService  *application.DailyLogService
 }
 
-func NewHandler(dashboardService *application.DashboardService) *Handler {
-	return &Handler{dashboardService: dashboardService}
+func NewHandler(dashboardService *application.DashboardService, dailyLogService *application.DailyLogService) *Handler {
+	return &Handler{dashboardService: dashboardService, dailyLogService: dailyLogService}
 }
 
 // GetDashboard 返回仪表盘聚合数据。
@@ -144,4 +145,75 @@ func (handler *Handler) CreateAssetHistory(c *gin.Context) {
 		Other:      item.Other,
 		Remark:     item.Remark,
 	})
+}
+
+// CreateDailyLog 提交每日收盘记录，一次写入持仓、操作、做T收益和复盘，并追加 stock.md。
+// @Summary     提交每日收盘记录
+// @Tags        stock
+// @Accept      json
+// @Produce     json
+// @Param       body  body  CreateDailyLogRequest  true  "每日收盘数据"
+// @Success     201   {object}  map[string]string
+// @Failure     400   {object}  httpx.ErrorResponse
+// @Failure     500   {object}  httpx.ErrorResponse
+// @Router      /admin/stock/daily-log [post]
+func (handler *Handler) CreateDailyLog(c *gin.Context) {
+	var req CreateDailyLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.Error(c, nethttp.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	positions := make([]domain.PositionUpdate, 0, len(req.Positions))
+	for _, p := range req.Positions {
+		positions = append(positions, domain.PositionUpdate{
+			Code:   p.Code,
+			Cost:   p.Cost,
+			Shares: p.Shares,
+		})
+	}
+
+	trades := make([]domain.Trade, 0, len(req.Trades))
+	for _, t := range req.Trades {
+		trades = append(trades, domain.Trade{
+			Action: t.Action,
+			Stock:  t.Stock,
+			Code:   t.Code,
+			Price:  t.Price,
+			Shares: t.Shares,
+		})
+	}
+
+	tRecords := make([]domain.TRecord, 0, len(req.TRecords))
+	for _, r := range req.TRecords {
+		tRecords = append(tRecords, domain.TRecord{
+			Stock:       r.Stock,
+			Desc:        r.Desc,
+			GrossProfit: r.GrossProfit,
+			Fee:         r.Fee,
+			Tax:         r.Tax,
+			NetRevenue:  r.NetRevenue,
+		})
+	}
+
+	log := domain.DailyLog{
+		Date:            req.Date,
+		Marker:          req.Marker,
+		PositionUpdates: positions,
+		Trades:          trades,
+		TRecords:        tRecords,
+		MonthlyTRevenue: req.MonthlyTRevenue,
+		Review: domain.DailyReview{
+			Market:   req.Review.Market,
+			Feeling:  req.Review.Feeling,
+			NextPlan: req.Review.NextPlan,
+		},
+	}
+
+	if err := handler.dailyLogService.Submit(c.Request.Context(), log); err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "daily_log_error", err.Error())
+		return
+	}
+
+	httpx.Created(c, gin.H{"date": req.Date})
 }

@@ -75,8 +75,11 @@ func registerRoutes(router *gin.Engine, db *gorm.DB, cfg config.Config) {
 	stockRepository := stockinfra.NewGormRepository(db)
 	// 注入 JSON 导出器：写接口成功后自动同步 data/stock/*.json 文件。
 	stockRepository.SetExporter(stockinfra.NewJSONExporter(cfg.DataDir, stockRepository))
+	// 注入 markdown 写入器：AddDailyLog 后追加 stock.md。
+	stockRepository.SetMarkdownWriter(stockinfra.NewMarkdownWriter(cfg.StockMDPath))
 	stockService := stockapp.NewDashboardService(stockRepository)
-	stockHandler := stockhttp.NewHandler(stockService)
+	dailyLogService := stockapp.NewDailyLogService(stockRepository)
+	stockHandler := stockhttp.NewHandler(stockService, dailyLogService)
 	stockhttp.RegisterRoutes(api.Group("/stock"), stockHandler)
 
 	// 写接口挂在 /api/admin/stock，统一经过 admin token middleware。

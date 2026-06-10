@@ -90,3 +90,53 @@ type PositionTargetModel struct {
 }
 
 func (PositionTargetModel) TableName() string { return "stock_position_targets" }
+
+// DailyLogModel 对应 stock_daily_logs 表，存储每日收盘记录的头信息和复盘。
+type DailyLogModel struct {
+	ID               uint             `gorm:"primaryKey"`
+	Date             string           `gorm:"column:date;uniqueIndex"`
+	Marker           string           `gorm:"column:marker"`
+	ReviewMarket     string           `gorm:"column:review_market"`
+	ReviewFeeling    string           `gorm:"column:review_feeling"`
+	ReviewNextPlan   string           `gorm:"column:review_next_plan"`
+	MonthlyTRevenue  float64          `gorm:"column:monthly_t_revenue"`
+	Trades           []TradeModel     `gorm:"foreignKey:DailyLogID"`
+	TRecords         []TRecordModel   `gorm:"foreignKey:DailyLogID"`
+	CreatedAt        time.Time        `gorm:"column:created_at"`
+	UpdatedAt        time.Time        `gorm:"column:updated_at"`
+}
+
+func (DailyLogModel) TableName() string { return "stock_daily_logs" }
+
+// TradeModel 对应 stock_trades 表，每行是一笔买入或卖出操作。
+type TradeModel struct {
+	ID           uint      `gorm:"primaryKey"`
+	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
+	Action       string    `gorm:"column:action"`
+	Stock        string    `gorm:"column:stock"`
+	Code         string    `gorm:"column:code"`
+	Price        float64   `gorm:"column:price"`
+	Shares       float64   `gorm:"column:shares"`
+	DisplayOrder int       `gorm:"column:display_order"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
+}
+
+func (TradeModel) TableName() string { return "stock_trades" }
+
+// TRecordModel 对应 stock_t_records 表，每行是一笔做T的收益明细。
+type TRecordModel struct {
+	ID           uint      `gorm:"primaryKey"`
+	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
+	Stock        string    `gorm:"column:stock"`
+	Desc         string    `gorm:"column:desc"`
+	GrossProfit  float64   `gorm:"column:gross_profit"`
+	Fee          float64   `gorm:"column:fee"`
+	Tax          float64   `gorm:"column:tax"`
+	NetRevenue   float64   `gorm:"column:net_revenue"`
+	DisplayOrder int       `gorm:"column:display_order"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
+}
+
+func (TRecordModel) TableName() string { return "stock_t_records" }
