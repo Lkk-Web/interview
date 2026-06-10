@@ -178,27 +178,33 @@ const DailyLogModal: React.FC<Props> = ({
     for (const sell of sells) {
       const matchingBuys = buys.filter((b) => b.stock === sell.stock);
       if (matchingBuys.length === 0) continue;
+
       const totalBuyShares = matchingBuys.reduce((s, b) => s + Number(b.shares), 0);
       const totalBuyCost = matchingBuys.reduce((s, b) => s + Number(b.price) * Number(b.shares), 0);
       const avgBuyPrice = round2(totalBuyCost / totalBuyShares);
-      const row: TRecordRow = {
+      const sellAmount = Number(sell.price) * Number(sell.shares);
+      const matched = Math.min(totalBuyShares, Number(sell.shares));
+      const grossProfit = round2((Number(sell.price) - avgBuyPrice) * matched);
+
+      // 每笔买入各自计一次佣金，合并后只算一笔会少收
+      const buyFees = matchingBuys.reduce(
+        (sum, b) =>
+          sum + Math.max(Number(b.price) * Number(b.shares) * COMMISSION_RATE, COMMISSION_MIN),
+        0,
+      );
+      const fee = round2(buyFees + Math.max(sellAmount * COMMISSION_RATE, COMMISSION_MIN));
+      const tax = round2(sellAmount * STAMP_TAX_RATE);
+
+      generated.push({
         stock: sell.stock,
         buyPrice: String(avgBuyPrice),
         buyShares: String(totalBuyShares),
         sellPrice: sell.price,
         sellShares: sell.shares,
-        grossProfit: '',
-        fee: '',
-        tax: '',
-        netRevenue: '',
-      };
-      const calc = calcTRecord(row);
-      generated.push({
-        ...row,
-        grossProfit: String(calc.grossProfit),
-        fee: String(calc.fee),
-        tax: String(calc.tax),
-        netRevenue: String(calc.netRevenue),
+        grossProfit: String(grossProfit),
+        fee: String(fee),
+        tax: String(tax),
+        netRevenue: String(round2(grossProfit - fee - tax)),
       });
     }
     if (generated.length > 0) set({ tRecords: generated });
