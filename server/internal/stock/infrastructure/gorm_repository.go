@@ -56,7 +56,6 @@ func (repository *GormRepository) ListOtherIncomes(ctx context.Context) ([]domai
 func (repository *GormRepository) ListActivePositions(ctx context.Context) ([]domain.Position, error) {
 	var models []PositionModel
 	if err := repository.db.WithContext(ctx).
-		Preload("Base").
 		Preload("Targets", func(db *gorm.DB) *gorm.DB {
 			return db.Order("display_order ASC, id ASC")
 		}).
@@ -147,7 +146,8 @@ func upsertPositions(tx *gorm.DB, items []domain.Position) error {
 		if err := tx.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "code"}},
 			DoUpdates: clause.AssignmentColumns([]string{
-				"stock", "cost", "shares", "remark", "display_order", "active", "updated_at",
+				"stock", "cost", "shares", "remark", "display_order", "active",
+				"base_cost", "base_shares", "base_date", "base_remark", "updated_at",
 			}),
 		}).Create(&model).Error; err != nil {
 			return fmt.Errorf("upsert position %s: %w", item.Code, err)
@@ -158,28 +158,11 @@ func upsertPositions(tx *gorm.DB, items []domain.Position) error {
 			return fmt.Errorf("reload position %s: %w", item.Code, err)
 		}
 
-		if err := replacePositionBase(tx, saved.ID, item.Base); err != nil {
-			return err
-		}
 		if err := replacePositionTargets(tx, saved.ID, item.Targets); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func replacePositionBase(tx *gorm.DB, positionID uint, base *domain.PositionBase) error {
-	if base == nil {
-		return tx.Where("position_id = ?", positionID).Delete(&PositionBaseModel{}).Error
-	}
-
-	model := fromPositionBase(positionID, *base)
-	return tx.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "position_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"cost", "shares", "date", "remark", "updated_at",
-		}),
-	}).Create(&model).Error
 }
 
 func replacePositionTargets(tx *gorm.DB, positionID uint, targets []domain.PositionTarget) error {
@@ -260,13 +243,16 @@ func toPositions(models []PositionModel) []domain.Position {
 			Active:       model.Active,
 			Targets:      toPositionTargets(model.Targets),
 		}
-		if model.Base != nil {
+		if model.BaseCost != nil {
 			position.Base = &domain.PositionBase{
-				ID:     model.Base.ID,
-				Cost:   model.Base.Cost,
-				Shares: model.Base.Shares,
-				Date:   model.Base.Date,
-				Remark: model.Base.Remark,
+				Cost:   *model.BaseCost,
+				Shares: func() float64 {
+					if model.BaseShares != nil {
+						return *model.BaseShares
+					}
+					return 0
+				}(),				Date:   model.BaseDate,
+				Remark: model.BaseRemark,
 			}
 		}
 		result = append(result, position)
@@ -321,7 +307,7 @@ func fromOtherIncome(item domain.OtherIncome) OtherIncomeModel {
 }
 
 func fromPosition(item domain.Position) PositionModel {
-	return PositionModel{
+	model := PositionModel{
 		Stock:        item.Stock,
 		Code:         item.Code,
 		Cost:         item.Cost,
@@ -330,16 +316,13 @@ func fromPosition(item domain.Position) PositionModel {
 		DisplayOrder: item.DisplayOrder,
 		Active:       item.Active,
 	}
-}
-
-func fromPositionBase(positionID uint, base domain.PositionBase) PositionBaseModel {
-	return PositionBaseModel{
-		PositionID: positionID,
-		Cost:       base.Cost,
-		Shares:     base.Shares,
-		Date:       base.Date,
-		Remark:     base.Remark,
+	if item.Base != nil {
+		model.BaseCost = &item.Base.Cost
+		model.BaseShares = &item.Base.Shares
+		model.BaseDate = item.Base.Date
+		model.BaseRemark = item.Base.Remark
 	}
+	return model
 }
 
 func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionTargetModel {
@@ -447,7 +430,7 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			tRecordModels = append(tRecordModels, TRecordModel{
 				DailyLogID:   savedLogID,
 				Stock:        r.Stock,
-				Desc:         r.Desc,
+				Description:  r.Desc,
 				GrossProfit:  r.GrossProfit,
 				Fee:          r.Fee,
 				Tax:          r.Tax,

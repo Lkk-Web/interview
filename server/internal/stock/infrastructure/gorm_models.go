@@ -54,26 +54,16 @@ type PositionModel struct {
 	Remark       *string               `gorm:"column:remark"`
 	DisplayOrder int                   `gorm:"column:display_order"`
 	Active       bool                  `gorm:"column:active"`
-	Base         *PositionBaseModel    `gorm:"foreignKey:PositionID"`
+	BaseCost     *float64              `gorm:"column:base_cost"`
+	BaseShares   *float64              `gorm:"column:base_shares"`
+	BaseDate     *string               `gorm:"column:base_date"`
+	BaseRemark   *string               `gorm:"column:base_remark"`
 	Targets      []PositionTargetModel `gorm:"foreignKey:PositionID"`
 	CreatedAt    time.Time             `gorm:"column:created_at"`
 	UpdatedAt    time.Time             `gorm:"column:updated_at"`
 }
 
 func (PositionModel) TableName() string { return "stock_positions" }
-
-type PositionBaseModel struct {
-	ID         uint      `gorm:"primaryKey"`
-	PositionID uint      `gorm:"column:position_id;uniqueIndex"`
-	Cost       float64   `gorm:"column:cost"`
-	Shares     float64   `gorm:"column:shares"`
-	Date       *string   `gorm:"column:date"`
-	Remark     *string   `gorm:"column:remark"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
-	UpdatedAt  time.Time `gorm:"column:updated_at"`
-}
-
-func (PositionBaseModel) TableName() string { return "stock_position_bases" }
 
 type PositionTargetModel struct {
 	ID           uint      `gorm:"primaryKey"`
@@ -129,7 +119,7 @@ type TRecordModel struct {
 	ID           uint      `gorm:"primaryKey"`
 	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
 	Stock        string    `gorm:"column:stock"`
-	Desc         string    `gorm:"column:desc"`
+	Description  string    `gorm:"column:description"`
 	GrossProfit  float64   `gorm:"column:gross_profit"`
 	Fee          float64   `gorm:"column:fee"`
 	Tax          float64   `gorm:"column:tax"`

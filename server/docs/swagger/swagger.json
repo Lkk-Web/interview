@@ -49,6 +49,48 @@
         }
       }
     },
+    "/admin/stock/daily-log": {
+      "post": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["stock"],
+        "summary": "提交每日收盘记录",
+        "parameters": [
+          {
+            "description": "每日收盘数据",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.CreateDailyLogRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/httpx.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/code-sources/pages/{pageKey}": {
       "get": {
         "description": "返回指定 pageKey 下的所有公开记录，前端可用来一次性预加载整页数据。",
@@ -407,6 +449,45 @@
         }
       }
     },
+    "http.CreateDailyLogRequest": {
+      "type": "object",
+      "required": ["date"],
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "marker": {
+          "description": "\"！\" / \"？\" / \"\"",
+          "type": "string"
+        },
+        "monthlyTRevenue": {
+          "description": "MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。",
+          "type": "number"
+        },
+        "positions": {
+          "description": "Positions 是当日收盘后的最新持仓成本和数量。",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.PositionUpdateRequest"
+          }
+        },
+        "review": {
+          "$ref": "#/definitions/http.ReviewRequest"
+        },
+        "tRecords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.TRecordRequest"
+          }
+        },
+        "trades": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/http.TradeRequest"
+          }
+        }
+      }
+    },
     "http.DashboardResponse": {
       "type": "object",
       "properties": {
@@ -535,6 +616,78 @@
           "type": "number"
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "http.PositionUpdateRequest": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "number"
+        },
+        "shares": {
+          "type": "number"
+        }
+      }
+    },
+    "http.ReviewRequest": {
+      "type": "object",
+      "properties": {
+        "feeling": {
+          "type": "string"
+        },
+        "market": {
+          "type": "string"
+        },
+        "nextPlan": {
+          "type": "string"
+        }
+      }
+    },
+    "http.TRecordRequest": {
+      "type": "object",
+      "properties": {
+        "desc": {
+          "type": "string"
+        },
+        "fee": {
+          "type": "number"
+        },
+        "grossProfit": {
+          "type": "number"
+        },
+        "netRevenue": {
+          "type": "number"
+        },
+        "stock": {
+          "type": "string"
+        },
+        "tax": {
+          "type": "number"
+        }
+      }
+    },
+    "http.TradeRequest": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "shares": {
+          "type": "number"
+        },
+        "stock": {
           "type": "string"
         }
       }

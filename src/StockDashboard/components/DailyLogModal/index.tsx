@@ -148,6 +148,11 @@ const DailyLogModal: React.FC<Props> = ({
 
   const marker = trades.length === 0 ? '' : trades.some((t) => t.hasIssue) ? '？' : '！';
 
+  const addPositionForm = () =>
+    set({ positionForms: [...positionForms, { code: '', stock: '', cost: '', shares: '' }] });
+  const removePositionForm = (i: number) =>
+    set({ positionForms: positionForms.filter((_, idx) => idx !== i) });
+
   const updatePosition = (i: number, key: keyof PositionForm, value: string) => {
     set({ positionForms: positionForms.map((p, idx) => (idx === i ? { ...p, [key]: value } : p)) });
   };
@@ -328,10 +333,52 @@ const DailyLogModal: React.FC<Props> = ({
 
           {/* 持仓情况 */}
           <div className="dlm-section">
-            <div className="dlm-section-title">持仓情况</div>
+            <div className="dlm-section-header">
+              <span className="dlm-section-title">持仓情况</span>
+              <button type="button" className="dlm-add-btn" onClick={addPositionForm}>
+                + 新建仓
+              </button>
+            </div>
             {positionForms.map((p, i) => (
-              <div key={p.code} className="dlm-position-row">
-                <span className="dlm-position-name">{p.stock || p.code}</span>
+              <div key={i} className="dlm-position-row">
+                {p.code && p.stock ? (
+                  <span className="dlm-position-name">{p.stock}</span>
+                ) : (
+                  <>
+                    <input
+                      list="dlm-positions-list"
+                      placeholder="股票"
+                      value={p.stock}
+                      onChange={(e) => {
+                        const pos = positions.find((x) => x.stock === e.target.value);
+                        const next = { ...p, stock: e.target.value, code: pos ? pos.code : p.code };
+                        set({
+                          positionForms: positionForms.map((x, idx) => (idx === i ? next : x)),
+                        });
+                      }}
+                      style={{
+                        width: 80,
+                        fontSize: 13,
+                        padding: '5px 6px',
+                        border: '1px solid #d9d9d9',
+                        borderRadius: 6,
+                      }}
+                    />
+                    <input
+                      placeholder="代码"
+                      value={p.code}
+                      onChange={(e) => updatePosition(i, 'code', e.target.value)}
+                      style={{
+                        width: 72,
+                        fontSize: 12,
+                        color: '#8c8c8c',
+                        padding: '5px 6px',
+                        border: '1px solid #d9d9d9',
+                        borderRadius: 6,
+                      }}
+                    />
+                  </>
+                )}
                 <label className="dlm-inline-label">
                   成本
                   <input
@@ -349,6 +396,13 @@ const DailyLogModal: React.FC<Props> = ({
                     onChange={(e) => updatePosition(i, 'shares', e.target.value)}
                   />
                 </label>
+                <button
+                  type="button"
+                  className="dlm-remove-btn"
+                  onClick={() => removePositionForm(i)}
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>

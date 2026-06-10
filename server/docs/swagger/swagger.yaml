@@ -77,6 +77,34 @@ definitions:
     required:
     - date
     type: object
+  http.CreateDailyLogRequest:
+    properties:
+      date:
+        type: string
+      marker:
+        description: '"！" / "？" / ""'
+        type: string
+      monthlyTRevenue:
+        description: MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
+        type: number
+      positions:
+        description: Positions 是当日收盘后的最新持仓成本和数量。
+        items:
+          $ref: '#/definitions/http.PositionUpdateRequest'
+        type: array
+      review:
+        $ref: '#/definitions/http.ReviewRequest'
+      tRecords:
+        items:
+          $ref: '#/definitions/http.TRecordRequest'
+        type: array
+      trades:
+        items:
+          $ref: '#/definitions/http.TradeRequest'
+        type: array
+    required:
+    - date
+    type: object
   http.DashboardResponse:
     properties:
       assetHistory:
@@ -163,6 +191,54 @@ definitions:
       status:
         type: string
     type: object
+  http.PositionUpdateRequest:
+    properties:
+      code:
+        type: string
+      cost:
+        type: number
+      shares:
+        type: number
+    required:
+    - code
+    type: object
+  http.ReviewRequest:
+    properties:
+      feeling:
+        type: string
+      market:
+        type: string
+      nextPlan:
+        type: string
+    type: object
+  http.TRecordRequest:
+    properties:
+      desc:
+        type: string
+      fee:
+        type: number
+      grossProfit:
+        type: number
+      netRevenue:
+        type: number
+      stock:
+        type: string
+      tax:
+        type: number
+    type: object
+  http.TradeRequest:
+    properties:
+      action:
+        type: string
+      code:
+        type: string
+      price:
+        type: number
+      shares:
+        type: number
+      stock:
+        type: string
+    type: object
   httpx.ErrorResponse:
     properties:
       code:
@@ -204,6 +280,37 @@ paths:
           schema:
             $ref: '#/definitions/httpx.ErrorResponse'
       summary: 新增资产快照
+      tags:
+      - stock
+  /admin/stock/daily-log:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 每日收盘数据
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateDailyLogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: 提交每日收盘记录
       tags:
       - stock
   /code-sources/pages/{pageKey}:
