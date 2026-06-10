@@ -2,8 +2,8 @@
   {
     "stock": "国际医学",
     "code": "sz000516",
-    "cost": 5.174,
-    "shares": 20000,
+    "cost": 4.821,
+    "shares": 30300,
     "remark": "2026年目标股市15w",
     "base": {
       "cost": 5,
@@ -17,15 +17,16 @@
         "price": 7,
         "shares": 22500,
         "date": "2026-12",
-        "remark": "第一目标价位，没达到前底仓不动"
+        "remark": "第一目标价位，没达到前底仓不动",
+        "status": "planned"
       }
     ]
   },
   {
     "stock": "京城股份",
     "code": "sh600860",
-    "cost": 9.205,
-    "shares": 4900,
+    "cost": 23.677,
+    "shares": 100,
     "base": {
       "cost": 9,
       "shares": 3000,
@@ -38,7 +39,8 @@
         "price": 16,
         "shares": 6000,
         "date": "2026-12",
-        "remark": "还没止跌的感觉，慢慢捡筹码"
+        "remark": "还没止跌的感觉，慢慢捡筹码",
+        "status": "planned"
       }
     ]
   }
