@@ -90,8 +90,9 @@ type DailyLogModel struct {
 	ReviewFeeling    string           `gorm:"column:review_feeling"`
 	ReviewNextPlan   string           `gorm:"column:review_next_plan"`
 	MonthlyTRevenue  float64          `gorm:"column:monthly_t_revenue"`
-	Trades           []TradeModel     `gorm:"foreignKey:DailyLogID"`
-	TRecords         []TRecordModel   `gorm:"foreignKey:DailyLogID"`
+	Trades           []TradeModel             `gorm:"foreignKey:DailyLogID"`
+	TRecords         []TRecordModel           `gorm:"foreignKey:DailyLogID"`
+	Positions        []DailyLogPositionModel  `gorm:"foreignKey:DailyLogID"`
 	CreatedAt        time.Time        `gorm:"column:created_at"`
 	UpdatedAt        time.Time        `gorm:"column:updated_at"`
 }
@@ -130,3 +131,16 @@ type TRecordModel struct {
 }
 
 func (TRecordModel) TableName() string { return "stock_t_records" }
+
+// DailyLogPositionModel 对应 stock_daily_log_positions 表，存储每日持仓快照。
+type DailyLogPositionModel struct {
+	ID         uint    `gorm:"primaryKey"`
+	DailyLogID uint    `gorm:"column:daily_log_id;index"`
+	Stock      string  `gorm:"column:stock"`
+	Code       string  `gorm:"column:code"`
+	Cost       float64 `gorm:"column:cost"`
+	Shares     float64 `gorm:"column:shares"`
+	Price      float64 `gorm:"column:price"`
+}
+
+func (DailyLogPositionModel) TableName() string { return "stock_daily_log_positions" }

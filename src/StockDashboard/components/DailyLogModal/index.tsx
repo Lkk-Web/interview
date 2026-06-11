@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE, ADMIN_TOKEN } from '../../../constants';
 import type { Position, MonthlyRecord } from '../../types';
@@ -32,6 +32,7 @@ export function emptyDraft(positions: Position[], currentMonth?: MonthlyRecord):
       stock: p.stock,
       cost: String(p.cost),
       shares: String(p.shares),
+      price: '',
     })),
     trades: [],
     tRecords: [],
@@ -47,6 +48,7 @@ interface PositionForm {
   stock: string;
   cost: string;
   shares: string;
+  price: string; // 当日收盘价
 }
 
 interface TradeRow {
@@ -69,6 +71,39 @@ interface TRecordRow {
   fee: string;
   tax: string;
   netRevenue: string;
+}
+
+interface HistoryPosition {
+  stock: string;
+  code: string;
+  cost: number;
+  shares: number;
+  price: number;
+}
+interface HistoryTrade {
+  action: string;
+  stock: string;
+  code: string;
+  price: number;
+  shares: number;
+}
+interface HistoryTRecord {
+  stock: string;
+  desc: string;
+  netRevenue: number;
+}
+interface HistoryReview {
+  market: string;
+  feeling: string;
+  nextPlan: string;
+}
+interface HistoryRecord {
+  date: string;
+  marker: string;
+  positions: HistoryPosition[];
+  trades: HistoryTrade[];
+  tRecords: HistoryTRecord[];
+  review: HistoryReview;
 }
 
 interface TRecordCalc {
@@ -109,7 +144,8 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+// 用本地日期避免时区偏差（toISOString 返回 UTC，跨午夜会差一天）
+const today = () => new Date().toLocaleDateString('sv');
 
 const emptyTrade = (): TradeRow => ({
   action: '买入',
@@ -145,11 +181,35 @@ const DailyLogModal: React.FC<Props> = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // 非今日查看的历史记录（只读）
+  const [historyRecord, setHistoryRecord] = useState<HistoryRecord | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const todayStr = new Date().toLocaleDateString('sv');
+  const isToday = date === todayStr;
+
+  // 日期变化时：非今日则拉取历史记录
+  useEffect(() => {
+    if (isToday) {
+      setHistoryRecord(null);
+      return;
+    }
+    setHistoryLoading(true);
+    fetch(`${API_BASE}/stock/daily-log/${date}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((data) => {
+        setHistoryRecord(data);
+        setHistoryLoading(false);
+      });
+  }, [date, isToday]);
 
   const marker = trades.length === 0 ? '' : trades.some((t) => t.hasIssue) ? '？' : '！';
 
   const addPositionForm = () =>
-    set({ positionForms: [...positionForms, { code: '', stock: '', cost: '', shares: '' }] });
+    set({
+      positionForms: [...positionForms, { code: '', stock: '', cost: '', shares: '', price: '' }],
+    });
   const removePositionForm = (i: number) =>
     set({ positionForms: positionForms.filter((_, idx) => idx !== i) });
 
@@ -245,9 +305,11 @@ const DailyLogModal: React.FC<Props> = ({
       date,
       marker,
       positions: positionForms.map((p) => ({
+        stock: p.stock,
         code: p.code,
         cost: Number(p.cost) || 0,
         shares: Number(p.shares) || 0,
+        price: Number(p.price) || 0,
       })),
       trades: trades.map((t) => ({
         action: t.action,
@@ -305,329 +367,443 @@ const DailyLogModal: React.FC<Props> = ({
           ))}
         </datalist>
 
-        <form className="dlm-body" onSubmit={handleSubmit}>
-          {/* 日期 + 标记 */}
-          <div className="dlm-row">
-            <label className="dlm-label">
-              日期
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => set({ date: e.target.value })}
-                required
-              />
-            </label>
-            <label className="dlm-label">
-              标记
-              <div
-                className={`dlm-marker-badge dlm-marker-${
-                  marker === '' ? 'none' : marker === '！' ? 'op' : 'warn'
-                }`}
-              >
-                {marker === '' && '— 无操作'}
-                {marker === '！' && '！有操作'}
-                {marker === '？' && '⚠ 问题操作'}
-              </div>
-            </label>
-          </div>
-
-          {/* 持仓情况 */}
-          <div className="dlm-section">
-            <div className="dlm-section-header">
-              <span className="dlm-section-title">持仓情况</span>
-              <button type="button" className="dlm-add-btn" onClick={addPositionForm}>
-                + 新建仓
-              </button>
+        {/* 非今日：显示只读历史记录 */}
+        {!isToday && (
+          <div className="dlm-body">
+            <div className="dlm-row">
+              <label className="dlm-label">
+                日期
+                <input type="date" value={date} onChange={(e) => set({ date: e.target.value })} />
+              </label>
+              {historyRecord && (
+                <label className="dlm-label">
+                  标记
+                  <div
+                    className={`dlm-marker-badge dlm-marker-${
+                      historyRecord.marker === ''
+                        ? 'none'
+                        : historyRecord.marker === '！'
+                        ? 'op'
+                        : 'warn'
+                    }`}
+                  >
+                    {historyRecord.marker === '' && '— 无操作'}
+                    {historyRecord.marker === '！' && '！有操作'}
+                    {historyRecord.marker === '？' && '⚠ 问题操作'}
+                  </div>
+                </label>
+              )}
             </div>
-            {positionForms.map((p, i) => (
-              <div key={i} className="dlm-position-row">
-                {p.code && p.stock ? (
-                  <span className="dlm-position-name">{p.stock}</span>
-                ) : (
-                  <>
-                    <input
-                      list="dlm-positions-list"
-                      placeholder="股票"
-                      value={p.stock}
-                      onChange={(e) => {
-                        const pos = positions.find((x) => x.stock === e.target.value);
-                        const next = { ...p, stock: e.target.value, code: pos ? pos.code : p.code };
-                        set({
-                          positionForms: positionForms.map((x, idx) => (idx === i ? next : x)),
-                        });
-                      }}
-                      style={{
-                        width: 80,
-                        fontSize: 13,
-                        padding: '5px 6px',
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 6,
-                      }}
-                    />
-                    <input
-                      placeholder="代码"
-                      value={p.code}
-                      onChange={(e) => updatePosition(i, 'code', e.target.value)}
-                      style={{
-                        width: 72,
-                        fontSize: 12,
-                        color: '#8c8c8c',
-                        padding: '5px 6px',
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 6,
-                      }}
-                    />
-                  </>
+            {historyLoading && <div className="dlm-empty">加载中…</div>}
+            {!historyLoading && !historyRecord && <div className="dlm-empty">该日暂无记录</div>}
+            {historyRecord && (
+              <>
+                {historyRecord.positions?.length > 0 && (
+                  <div className="dlm-section">
+                    <div className="dlm-section-title">持仓情况</div>
+                    {historyRecord.positions.map((p, i) => (
+                      <div key={i} className="dlm-history-row">
+                        <span>{p.stock}</span>
+                        <span className="dlm-muted">成本 {p.cost}</span>
+                        <span className="dlm-muted">× {p.shares} 股</span>
+                        {p.price > 0 && (
+                          <span className={p.price >= p.cost ? 'dlm-positive' : 'dlm-negative'}>
+                            现价 {p.price}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
-                <label className="dlm-inline-label">
-                  成本
-                  <input
-                    type="number"
-                    step="0.001"
-                    value={p.cost}
-                    onChange={(e) => updatePosition(i, 'cost', e.target.value)}
-                  />
-                </label>
-                <label className="dlm-inline-label">
-                  数量
-                  <input
-                    type="number"
-                    value={p.shares}
-                    onChange={(e) => updatePosition(i, 'shares', e.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="dlm-remove-btn"
-                  onClick={() => removePositionForm(i)}
+                {historyRecord.trades?.length > 0 && (
+                  <div className="dlm-section">
+                    <div className="dlm-section-title">操作记录</div>
+                    {historyRecord.trades.map((t, i) => (
+                      <div key={i} className="dlm-history-row">
+                        <span className="dlm-history-tag">{t.action}</span>
+                        <span>{t.stock}</span>
+                        <span className="dlm-muted">
+                          {t.price} × {t.shares}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {historyRecord.tRecords?.length > 0 && (
+                  <div className="dlm-section">
+                    <div className="dlm-section-title">做T收益</div>
+                    {historyRecord.tRecords.map((r, i) => (
+                      <div key={i} className="dlm-history-row">
+                        <span>{r.stock}</span>
+                        <span className="dlm-muted">{r.desc}</span>
+                        <span className={r.netRevenue >= 0 ? 'dlm-positive' : 'dlm-negative'}>
+                          净 {r.netRevenue} 元
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {(historyRecord.review?.market || historyRecord.review?.nextPlan) && (
+                  <div className="dlm-section">
+                    <div className="dlm-section-title">复盘</div>
+                    {historyRecord.review.market && (
+                      <div className="dlm-history-text">市场：{historyRecord.review.market}</div>
+                    )}
+                    {historyRecord.review.feeling && (
+                      <div className="dlm-history-text">感受：{historyRecord.review.feeling}</div>
+                    )}
+                    {historyRecord.review.nextPlan && (
+                      <div className="dlm-history-text">计划：{historyRecord.review.nextPlan}</div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {isToday && (
+          <form className="dlm-body" onSubmit={handleSubmit}>
+            {/* 日期 + 标记 */}
+            <div className="dlm-row">
+              <label className="dlm-label">
+                日期
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => set({ date: e.target.value })}
+                  required
+                />
+              </label>
+              <label className="dlm-label">
+                标记
+                <div
+                  className={`dlm-marker-badge dlm-marker-${
+                    marker === '' ? 'none' : marker === '！' ? 'op' : 'warn'
+                  }`}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* 操作记录 */}
-          <div className="dlm-section">
-            <div className="dlm-section-header">
-              <span className="dlm-section-title">操作记录</span>
-              <button type="button" className="dlm-add-btn" onClick={addTrade}>
-                + 添加
-              </button>
+                  {marker === '' && '— 无操作'}
+                  {marker === '！' && '！有操作'}
+                  {marker === '？' && '⚠ 问题操作'}
+                </div>
+              </label>
             </div>
-            {trades.map((t, i) => (
-              <div key={i} className={`dlm-trade-row ${t.hasIssue ? 'dlm-trade-issue' : ''}`}>
-                <select value={t.action} onChange={(e) => updateTrade(i, 'action', e.target.value)}>
-                  <option value="买入">买入</option>
-                  <option value="卖出">卖出</option>
-                </select>
-                <input
-                  list="dlm-positions-list"
-                  placeholder="股票"
-                  value={t.stock}
-                  onChange={(e) => updateTrade(i, 'stock', e.target.value)}
-                />
-                <input
-                  className="dlm-code-input"
-                  placeholder="代码"
-                  value={t.code.replace(/^(sh|sz)/i, '')}
-                  onChange={(e) => updateTrade(i, 'code', e.target.value)}
-                />
-                <input
-                  placeholder="价格"
-                  type="number"
-                  step="0.01"
-                  value={t.price}
-                  onChange={(e) => updateTrade(i, 'price', e.target.value)}
-                />
-                <input
-                  placeholder="数量"
-                  type="number"
-                  value={t.shares}
-                  onChange={(e) => updateTrade(i, 'shares', e.target.value)}
-                />
-                <label className="dlm-issue-label" title="标记为问题操作">
-                  <input
-                    type="checkbox"
-                    checked={t.hasIssue}
-                    onChange={(e) => updateTrade(i, 'hasIssue', e.target.checked)}
-                  />
-                  ⚠
-                </label>
-                <button type="button" className="dlm-remove-btn" onClick={() => removeTrade(i)}>
-                  ×
+
+            {/* 持仓情况 */}
+            <div className="dlm-section">
+              <div className="dlm-section-header">
+                <span className="dlm-section-title">持仓情况</span>
+                <button type="button" className="dlm-add-btn" onClick={addPositionForm}>
+                  + 新建仓
                 </button>
               </div>
-            ))}
-            {trades.length === 0 && <div className="dlm-empty">无操作</div>}
-          </div>
-
-          {/* 做T收益 */}
-          <div className="dlm-section">
-            <div className="dlm-section-header">
-              <span className="dlm-section-title">做T收益</span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {trades.length > 0 && (
+              {positionForms.map((p, i) => (
+                <div key={i} className="dlm-position-row">
+                  {p.code && p.stock ? (
+                    <span className="dlm-position-name">{p.stock}</span>
+                  ) : (
+                    <>
+                      <input
+                        list="dlm-positions-list"
+                        placeholder="股票"
+                        value={p.stock}
+                        onChange={(e) => {
+                          const pos = positions.find((x) => x.stock === e.target.value);
+                          const next = {
+                            ...p,
+                            stock: e.target.value,
+                            code: pos ? pos.code : p.code,
+                          };
+                          set({
+                            positionForms: positionForms.map((x, idx) => (idx === i ? next : x)),
+                          });
+                        }}
+                        style={{
+                          width: 80,
+                          fontSize: 13,
+                          padding: '5px 6px',
+                          border: '1px solid #d9d9d9',
+                          borderRadius: 6,
+                        }}
+                      />
+                      <input
+                        placeholder="代码"
+                        value={p.code}
+                        onChange={(e) => updatePosition(i, 'code', e.target.value)}
+                        style={{
+                          width: 72,
+                          fontSize: 12,
+                          color: '#8c8c8c',
+                          padding: '5px 6px',
+                          border: '1px solid #d9d9d9',
+                          borderRadius: 6,
+                        }}
+                      />
+                    </>
+                  )}
+                  <label className="dlm-inline-label">
+                    成本
+                    <input
+                      type="number"
+                      step="0.001"
+                      value={p.cost}
+                      onChange={(e) => updatePosition(i, 'cost', e.target.value)}
+                    />
+                  </label>
+                  <label className="dlm-inline-label">
+                    数量
+                    <input
+                      type="number"
+                      value={p.shares}
+                      onChange={(e) => updatePosition(i, 'shares', e.target.value)}
+                    />
+                  </label>
+                  <label className="dlm-inline-label">
+                    现价
+                    <input
+                      type="number"
+                      step="0.001"
+                      value={p.price}
+                      placeholder="—"
+                      onChange={(e) => updatePosition(i, 'price', e.target.value)}
+                    />
+                  </label>
                   <button
                     type="button"
-                    className="dlm-add-btn dlm-gen-btn"
-                    onClick={generateTRecordsFromTrades}
+                    className="dlm-remove-btn"
+                    onClick={() => removePositionForm(i)}
                   >
-                    从操作生成
+                    ×
                   </button>
-                )}
-                <button type="button" className="dlm-add-btn" onClick={addTRecord}>
-                  + 手动添加
-                </button>
-              </div>
+                </div>
+              ))}
             </div>
-            {tRecords.length > 0 && (
-              <div className="dlm-trecord-head">
-                <span>股票</span>
-                <span>买入价</span>
-                <span>买入量</span>
-                <span>卖出价</span>
-                <span>卖出量</span>
-                <span className="dlm-calc-col">毛利</span>
-                <span className="dlm-calc-col">手续费</span>
-                <span className="dlm-calc-col">印花税</span>
-                <span className="dlm-calc-col dlm-net">净收益</span>
-                <span />
-              </div>
-            )}
-            {tRecords.map((r, i) => (
-              <div key={i} className="dlm-trecord-row">
-                <input
-                  list="dlm-positions-list"
-                  placeholder="股票"
-                  value={r.stock}
-                  onChange={(e) => updateTRecord(i, 'stock', e.target.value)}
-                />
-                <input
-                  placeholder="买价"
-                  type="number"
-                  step="0.001"
-                  value={r.buyPrice}
-                  onChange={(e) => updateTRecord(i, 'buyPrice', e.target.value)}
-                />
-                <input
-                  placeholder="买量"
-                  type="number"
-                  value={r.buyShares}
-                  onChange={(e) => updateTRecord(i, 'buyShares', e.target.value)}
-                />
-                <input
-                  placeholder="卖价"
-                  type="number"
-                  step="0.001"
-                  value={r.sellPrice}
-                  onChange={(e) => updateTRecord(i, 'sellPrice', e.target.value)}
-                />
-                <input
-                  placeholder="卖量"
-                  type="number"
-                  value={r.sellShares}
-                  onChange={(e) => updateTRecord(i, 'sellShares', e.target.value)}
-                />
-                <input
-                  className={`dlm-calc-input ${
-                    Number(r.grossProfit) >= 0 ? 'dlm-positive' : 'dlm-negative'
-                  }`}
-                  placeholder="毛利"
-                  type="number"
-                  value={r.grossProfit}
-                  onChange={(e) => updateTRecord(i, 'grossProfit', e.target.value)}
-                />
-                <input
-                  className="dlm-calc-input dlm-muted"
-                  placeholder="手续费"
-                  type="number"
-                  value={r.fee}
-                  onChange={(e) => updateTRecord(i, 'fee', e.target.value)}
-                />
-                <input
-                  className="dlm-calc-input dlm-muted"
-                  placeholder="印花税"
-                  type="number"
-                  value={r.tax}
-                  onChange={(e) => updateTRecord(i, 'tax', e.target.value)}
-                />
-                <input
-                  className={`dlm-calc-input dlm-net ${
-                    Number(r.netRevenue) >= 0 ? 'dlm-positive' : 'dlm-negative'
-                  }`}
-                  placeholder="净收益"
-                  type="number"
-                  value={r.netRevenue}
-                  onChange={(e) => updateTRecord(i, 'netRevenue', e.target.value)}
-                />
-                <button type="button" className="dlm-remove-btn" onClick={() => removeTRecord(i)}>
-                  ×
+
+            {/* 操作记录 */}
+            <div className="dlm-section">
+              <div className="dlm-section-header">
+                <span className="dlm-section-title">操作记录</span>
+                <button type="button" className="dlm-add-btn" onClick={addTrade}>
+                  + 添加
                 </button>
               </div>
-            ))}
-            {tRecords.length === 0 && <div className="dlm-empty">无做T</div>}
-            {tRecords.length > 0 && (
-              <div className="dlm-trecord-total">
-                今日T合计净收益：
-                <span className={todayTTotal >= 0 ? 'dlm-positive' : 'dlm-negative'}>
-                  {todayTTotal} 元
-                </span>
+              {trades.map((t, i) => (
+                <div key={i} className={`dlm-trade-row ${t.hasIssue ? 'dlm-trade-issue' : ''}`}>
+                  <select
+                    value={t.action}
+                    onChange={(e) => updateTrade(i, 'action', e.target.value)}
+                  >
+                    <option value="买入">买入</option>
+                    <option value="卖出">卖出</option>
+                  </select>
+                  <input
+                    list="dlm-positions-list"
+                    placeholder="股票"
+                    value={t.stock}
+                    onChange={(e) => updateTrade(i, 'stock', e.target.value)}
+                  />
+                  <input
+                    className="dlm-code-input"
+                    placeholder="代码"
+                    value={t.code.replace(/^(sh|sz)/i, '')}
+                    onChange={(e) => updateTrade(i, 'code', e.target.value)}
+                  />
+                  <input
+                    placeholder="价格"
+                    type="number"
+                    step="0.01"
+                    value={t.price}
+                    onChange={(e) => updateTrade(i, 'price', e.target.value)}
+                  />
+                  <input
+                    placeholder="数量"
+                    type="number"
+                    value={t.shares}
+                    onChange={(e) => updateTrade(i, 'shares', e.target.value)}
+                  />
+                  <label className="dlm-issue-label" title="标记为问题操作">
+                    <input
+                      type="checkbox"
+                      checked={t.hasIssue}
+                      onChange={(e) => updateTrade(i, 'hasIssue', e.target.checked)}
+                    />
+                    ⚠
+                  </label>
+                  <button type="button" className="dlm-remove-btn" onClick={() => removeTrade(i)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              {trades.length === 0 && <div className="dlm-empty">无操作</div>}
+            </div>
+
+            {/* 做T收益 */}
+            <div className="dlm-section">
+              <div className="dlm-section-header">
+                <span className="dlm-section-title">做T收益</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {trades.length > 0 && (
+                    <button
+                      type="button"
+                      className="dlm-add-btn dlm-gen-btn"
+                      onClick={generateTRecordsFromTrades}
+                    >
+                      从操作生成
+                    </button>
+                  )}
+                  <button type="button" className="dlm-add-btn" onClick={addTRecord}>
+                    + 手动添加
+                  </button>
+                </div>
               </div>
-            )}
-            <label className="dlm-label dlm-monthly">
-              本月T累计（元）
-              <input
-                type="number"
-                step="0.01"
-                placeholder={currentMonth ? String(currentMonth.tRevenue) : ''}
-                value={monthlyTRevenue}
-                onChange={(e) => set({ monthlyTRevenue: e.target.value })}
-              />
-            </label>
-          </div>
+              {tRecords.length > 0 && (
+                <div className="dlm-trecord-head">
+                  <span>股票</span>
+                  <span>买入价</span>
+                  <span>买入量</span>
+                  <span>卖出价</span>
+                  <span>卖出量</span>
+                  <span className="dlm-calc-col">毛利</span>
+                  <span className="dlm-calc-col">手续费</span>
+                  <span className="dlm-calc-col">印花税</span>
+                  <span className="dlm-calc-col dlm-net">净收益</span>
+                  <span />
+                </div>
+              )}
+              {tRecords.map((r, i) => (
+                <div key={i} className="dlm-trecord-row">
+                  <input
+                    list="dlm-positions-list"
+                    placeholder="股票"
+                    value={r.stock}
+                    onChange={(e) => updateTRecord(i, 'stock', e.target.value)}
+                  />
+                  <input
+                    placeholder="买价"
+                    type="number"
+                    step="0.001"
+                    value={r.buyPrice}
+                    onChange={(e) => updateTRecord(i, 'buyPrice', e.target.value)}
+                  />
+                  <input
+                    placeholder="买量"
+                    type="number"
+                    value={r.buyShares}
+                    onChange={(e) => updateTRecord(i, 'buyShares', e.target.value)}
+                  />
+                  <input
+                    placeholder="卖价"
+                    type="number"
+                    step="0.001"
+                    value={r.sellPrice}
+                    onChange={(e) => updateTRecord(i, 'sellPrice', e.target.value)}
+                  />
+                  <input
+                    placeholder="卖量"
+                    type="number"
+                    value={r.sellShares}
+                    onChange={(e) => updateTRecord(i, 'sellShares', e.target.value)}
+                  />
+                  <input
+                    className={`dlm-calc-input ${
+                      Number(r.grossProfit) >= 0 ? 'dlm-positive' : 'dlm-negative'
+                    }`}
+                    placeholder="毛利"
+                    type="number"
+                    value={r.grossProfit}
+                    onChange={(e) => updateTRecord(i, 'grossProfit', e.target.value)}
+                  />
+                  <input
+                    className="dlm-calc-input dlm-muted"
+                    placeholder="手续费"
+                    type="number"
+                    value={r.fee}
+                    onChange={(e) => updateTRecord(i, 'fee', e.target.value)}
+                  />
+                  <input
+                    className="dlm-calc-input dlm-muted"
+                    placeholder="印花税"
+                    type="number"
+                    value={r.tax}
+                    onChange={(e) => updateTRecord(i, 'tax', e.target.value)}
+                  />
+                  <input
+                    className={`dlm-calc-input dlm-net ${
+                      Number(r.netRevenue) >= 0 ? 'dlm-positive' : 'dlm-negative'
+                    }`}
+                    placeholder="净收益"
+                    type="number"
+                    value={r.netRevenue}
+                    onChange={(e) => updateTRecord(i, 'netRevenue', e.target.value)}
+                  />
+                  <button type="button" className="dlm-remove-btn" onClick={() => removeTRecord(i)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              {tRecords.length === 0 && <div className="dlm-empty">无做T</div>}
+              {tRecords.length > 0 && (
+                <div className="dlm-trecord-total">
+                  今日T合计净收益：
+                  <span className={todayTTotal >= 0 ? 'dlm-positive' : 'dlm-negative'}>
+                    {todayTTotal} 元
+                  </span>
+                </div>
+              )}
+              <label className="dlm-label dlm-monthly">
+                本月T累计（元）
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder={currentMonth ? String(currentMonth.tRevenue) : ''}
+                  value={monthlyTRevenue}
+                  onChange={(e) => set({ monthlyTRevenue: e.target.value })}
+                />
+              </label>
+            </div>
 
-          {/* 今日复盘 */}
-          <div className="dlm-section">
-            <div className="dlm-section-title">今日复盘</div>
-            <label className="dlm-label">
-              市场情绪
-              <input
-                placeholder="大盘表现、板块动向…"
-                value={market}
-                onChange={(e) => set({ market: e.target.value })}
-              />
-            </label>
-            <label className="dlm-label">
-              操作感受
-              <input
-                placeholder="执行情况、心态…"
-                value={feeling}
-                onChange={(e) => set({ feeling: e.target.value })}
-              />
-            </label>
-            <label className="dlm-label">
-              明日计划
-              <textarea
-                placeholder="每行一条计划…"
-                value={nextPlan}
-                onChange={(e) => set({ nextPlan: e.target.value })}
-                rows={3}
-              />
-            </label>
-          </div>
+            {/* 今日复盘 */}
+            <div className="dlm-section">
+              <div className="dlm-section-title">今日复盘</div>
+              <label className="dlm-label">
+                市场情绪
+                <input
+                  placeholder="大盘表现、板块动向…"
+                  value={market}
+                  onChange={(e) => set({ market: e.target.value })}
+                />
+              </label>
+              <label className="dlm-label">
+                操作感受
+                <input
+                  placeholder="执行情况、心态…"
+                  value={feeling}
+                  onChange={(e) => set({ feeling: e.target.value })}
+                />
+              </label>
+              <label className="dlm-label">
+                明日计划
+                <textarea
+                  placeholder="每行一条计划…"
+                  value={nextPlan}
+                  onChange={(e) => set({ nextPlan: e.target.value })}
+                  rows={3}
+                />
+              </label>
+            </div>
 
-          {error && <div className="dlm-error">{error}</div>}
+            {error && <div className="dlm-error">{error}</div>}
 
-          <div className="dlm-actions">
-            <button type="button" className="dlm-btn-cancel" onClick={onClose}>
-              取消
-            </button>
-            <button type="submit" className="dlm-btn-submit" disabled={loading}>
-              {loading ? '提交中…' : '提交记录'}
-            </button>
-          </div>
-        </form>
+            <div className="dlm-actions">
+              <button type="button" className="dlm-btn-cancel" onClick={onClose}>
+                取消
+              </button>
+              <button type="submit" className="dlm-btn-submit" disabled={loading}>
+                {loading ? '提交中…' : '提交记录'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

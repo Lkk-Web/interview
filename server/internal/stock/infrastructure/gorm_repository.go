@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Lkk-Web/interview/server/internal/stock/domain"
@@ -444,12 +445,20 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
-		// 更新持仓成本和数量
+		// 更新持仓成本和数量，同时保存当日持仓快照
+		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&DailyLogPositionModel{}).Error; err != nil {
+			return fmt.Errorf("clear position snapshots: %w", err)
+		}
 		for _, p := range log.PositionUpdates {
 			if err := tx.Model(&PositionModel{}).
 				Where("code = ?", p.Code).
 				Updates(map[string]any{"cost": p.Cost, "shares": p.Shares}).Error; err != nil {
 				return fmt.Errorf("update position %s: %w", p.Code, err)
+			}
+			if p.Shares > 0 {
+				if err := tx.Create(&DailyLogPositionModel{DailyLogID: savedLogID, Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price}).Error; err != nil {
+					return fmt.Errorf("insert position snapshot %s: %w", p.Code, err)
+				}
 			}
 		}
 
@@ -481,4 +490,102 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 		}
 	}
 	return nil
+}
+
+// GetDailyLog 按日期查询当日收盘记录，不存在时返回 nil。
+func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) (*domain.DailyLog, error) {
+	var model DailyLogModel
+	err := repository.db.WithContext(ctx).
+		Preload("Trades", func(db *gorm.DB) *gorm.DB { return db.Order("display_order ASC") }).
+		Preload("TRecords", func(db *gorm.DB) *gorm.DB { return db.Order("display_order ASC") }).
+		Preload("Positions").
+		Where("date = ?", date).
+		First(&model).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get daily log %s: %w", date, err)
+	}
+
+	trades := make([]domain.Trade, 0, len(model.Trades))
+	for _, t := range model.Trades {
+		trades = append(trades, domain.Trade{
+			Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares,
+		})
+	}
+	tRecords := make([]domain.TRecord, 0, len(model.TRecords))
+	for _, r := range model.TRecords {
+		tRecords = append(tRecords, domain.TRecord{
+			Stock: r.Stock, Desc: r.Description,
+			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
+		})
+	}
+	positions := make([]domain.PositionSnapshot, 0, len(model.Positions))
+	for _, p := range model.Positions {
+		positions = append(positions, domain.PositionSnapshot{Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price})
+	}
+	return &domain.DailyLog{
+		Date:            model.Date,
+		Marker:          model.Marker,
+		Positions:       positions,
+		Trades:          trades,
+		TRecords:        tRecords,
+		MonthlyTRevenue: model.MonthlyTRevenue,
+		Review: domain.DailyReview{
+			Market:   model.ReviewMarket,
+			Feeling:  model.ReviewFeeling,
+			NextPlan: model.ReviewNextPlan,
+		},
+	}, nil
+}
+
+// ImportDailyLogs 批量导入历史记录，不触发文件同步，幂等（重复导入安全）。
+func (repository *GormRepository) ImportDailyLogs(ctx context.Context, logs []domain.DailyLog) error {
+	return repository.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, log := range logs {
+			model := DailyLogModel{
+				Date:            log.Date,
+				Marker:          log.Marker,
+				ReviewMarket:    log.Review.Market,
+				ReviewFeeling:   log.Review.Feeling,
+				ReviewNextPlan:  log.Review.NextPlan,
+				MonthlyTRevenue: log.MonthlyTRevenue,
+			}
+			if err := tx.Where(DailyLogModel{Date: log.Date}).
+				Assign(DailyLogModel{Marker: log.Marker, ReviewMarket: log.Review.Market,
+					ReviewFeeling: log.Review.Feeling, ReviewNextPlan: log.Review.NextPlan,
+					MonthlyTRevenue: log.MonthlyTRevenue}).
+				FirstOrCreate(&model).Error; err != nil {
+				return fmt.Errorf("upsert daily log %s: %w", log.Date, err)
+			}
+
+			if err := tx.Where("daily_log_id = ?", model.ID).Delete(&TradeModel{}).Error; err != nil {
+				return fmt.Errorf("clear trades %s: %w", log.Date, err)
+			}
+			if err := tx.Where("daily_log_id = ?", model.ID).Delete(&TRecordModel{}).Error; err != nil {
+				return fmt.Errorf("clear t_records %s: %w", log.Date, err)
+			}
+			if err := tx.Where("daily_log_id = ?", model.ID).Delete(&DailyLogPositionModel{}).Error; err != nil {
+				return fmt.Errorf("clear positions %s: %w", log.Date, err)
+			}
+
+			for i, t := range log.Trades {
+				if err := tx.Create(&TradeModel{DailyLogID: model.ID, Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares, DisplayOrder: i}).Error; err != nil {
+					return fmt.Errorf("insert trade %s: %w", log.Date, err)
+				}
+			}
+			for i, r := range log.TRecords {
+				if err := tx.Create(&TRecordModel{DailyLogID: model.ID, Stock: r.Stock, Description: r.Desc, GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue, DisplayOrder: i}).Error; err != nil {
+					return fmt.Errorf("insert t_record %s: %w", log.Date, err)
+				}
+			}
+			for _, p := range log.Positions {
+				if err := tx.Create(&DailyLogPositionModel{DailyLogID: model.ID, Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price}).Error; err != nil {
+					return fmt.Errorf("insert position %s: %w", log.Date, err)
+				}
+			}
+		}
+		return nil
+	})
 }

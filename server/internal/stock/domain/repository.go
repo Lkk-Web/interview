@@ -14,6 +14,10 @@ type Repository interface {
 	AddAssetHistory(ctx context.Context, item AssetHistory) (AssetHistory, error)
 	// AddDailyLog 写入每日收盘记录，同时更新持仓、月度T收益，并追加 stock.md。
 	AddDailyLog(ctx context.Context, log DailyLog) error
+	// GetDailyLog 按日期查询当日收盘记录，不存在时返回 nil。
+	GetDailyLog(ctx context.Context, date string) (*DailyLog, error)
+	// ImportDailyLogs 批量导入历史记录（不触发文件同步，幂等）。
+	ImportDailyLogs(ctx context.Context, logs []DailyLog) error
 }
 
 // ImportSnapshot 是一次导入所需的完整股票数据快照。

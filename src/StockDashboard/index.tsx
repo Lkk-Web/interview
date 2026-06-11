@@ -111,6 +111,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
                       stock: p.stock,
                       cost: String(p.cost),
                       shares: String(p.shares),
+                      price: '',
                     })),
                   });
                 }

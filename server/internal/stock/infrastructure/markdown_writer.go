@@ -128,7 +128,7 @@ func buildMarkdownBlock(log domain.DailyLog) string {
 		b.WriteString("| ---- | ---- | ------ | -------- |\n")
 		for _, p := range log.PositionUpdates {
 			code := stripMarketPrefix(p.Code)
-			b.WriteString(fmt.Sprintf("| %s | %s | %g | %g |\n", stockNameByCode(log, p.Code), code, p.Cost, p.Shares))
+			b.WriteString(fmt.Sprintf("| %s | %s | %g | %g |\n", p.Stock, code, p.Cost, p.Shares))
 		}
 	} else {
 		b.WriteString("无\n")
@@ -196,15 +196,4 @@ func stripMarketPrefix(code string) string {
 		return code[2:]
 	}
 	return code
-}
-
-// stockNameByCode 在 PositionUpdates 里找股票名称；找不到返回 code。
-// 这里 PositionUpdates 只有 code，名称由前端传的 Trades 里带。
-func stockNameByCode(log domain.DailyLog, code string) string {
-	for _, t := range log.Trades {
-		if t.Code == code {
-			return t.Stock
-		}
-	}
-	return stripMarketPrefix(code)
 }

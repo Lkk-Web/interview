@@ -147,7 +147,22 @@ func (handler *Handler) CreateAssetHistory(c *gin.Context) {
 	})
 }
 
-// CreateDailyLog 提交每日收盘记录，一次写入持仓、操作、做T收益和复盘，并追加 stock.md。
+// GetDailyLog 按日期查询当日收盘记录。
+func (handler *Handler) GetDailyLog(c *gin.Context) {
+	date := c.Param("date")
+	log, err := handler.dailyLogService.GetByDate(c.Request.Context(), date)
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "daily_log_error", err.Error())
+		return
+	}
+	if log == nil {
+		httpx.Error(c, nethttp.StatusNotFound, "not_found", "no record for "+date)
+		return
+	}
+	httpx.OK(c, newDailyLogResponse(log))
+}
+
+// CreateDailyLog 提交每日收盘记录。
 // @Summary     提交每日收盘记录
 // @Tags        stock
 // @Accept      json
@@ -167,9 +182,7 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 	positions := make([]domain.PositionUpdate, 0, len(req.Positions))
 	for _, p := range req.Positions {
 		positions = append(positions, domain.PositionUpdate{
-			Code:   p.Code,
-			Cost:   p.Cost,
-			Shares: p.Shares,
+			Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price,
 		})
 	}
 

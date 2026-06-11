@@ -1,10 +1,22 @@
 package domain
 
+// PositionSnapshot 是某一天的持仓快照，与当日持仓变更一起存档。
+type PositionSnapshot struct {
+	Stock  string
+	Code   string
+	Cost   float64
+	Shares float64
+	Price  float64 // 当日收盘价（记录时填入）
+}
+
 // DailyLog 是每日收盘记录的聚合根，包含持仓更新、操作记录、做T收益和复盘。
 type DailyLog struct {
 	ID     uint
 	Date   string // YYYY-MM-DD
 	Marker string // "！" / "？" / ""
+
+	// Positions 是当日持仓快照，用于历史查询。
+	Positions []PositionSnapshot
 
 	// PositionUpdates 是当日收盘后各持仓的成本和数量，用于同步 positions.json。
 	PositionUpdates []PositionUpdate
@@ -20,9 +32,11 @@ type DailyLog struct {
 
 // PositionUpdate 仅包含更新持仓所需的字段，避免和完整 Position 混用。
 type PositionUpdate struct {
+	Stock  string
 	Code   string
 	Cost   float64
 	Shares float64
+	Price  float64 // 当日收盘价，随快照一起存档
 }
 
 // Trade 是单笔买卖操作记录。

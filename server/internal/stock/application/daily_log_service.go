@@ -19,3 +19,8 @@ func NewDailyLogService(repository domain.Repository) *DailyLogService {
 func (service *DailyLogService) Submit(ctx context.Context, log domain.DailyLog) error {
 	return service.repository.AddDailyLog(ctx, log)
 }
+
+// GetByDate 按日期查询当日收盘记录，不存在时返回 nil。
+func (service *DailyLogService) GetByDate(ctx context.Context, date string) (*domain.DailyLog, error) {
+	return service.repository.GetDailyLog(ctx, date)
+}

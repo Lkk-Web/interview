@@ -8,6 +8,7 @@ func RegisterRoutes(group *gin.RouterGroup, handler *Handler) {
 	group.GET("/monthly", handler.ListMonthly)
 	group.GET("/other-income", handler.ListOtherIncome)
 	group.GET("/positions", handler.ListPositions)
+	group.GET("/daily-log/:date", handler.GetDailyLog)
 	// 写接口通过 admin token middleware 保护，在 bootstrap 里单独挂载
 }
 

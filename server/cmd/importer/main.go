@@ -14,9 +14,8 @@ import (
 
 func main() {
 	dataDir := flag.String("data-dir", "../data/stock", "path to the frontend stock JSON directory")
+	stockMD := flag.String("stock-md", "", "path to stock.md to import daily logs (optional)")
 	flag.Parse()
-
-	// nil 表示不传自定义 HandlerOptions，slog 会使用默认日志配置。
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
@@ -40,24 +39,38 @@ func main() {
 		os.Exit(1)
 	}
 
+	repository := infrastructure.NewGormRepository(db)
+
+	// 导入 JSON 快照
 	loader := infrastructure.NewJSONSnapshotLoader(*dataDir)
 	snapshot, err := loader.Load()
 	if err != nil {
 		slog.Error("load stock json failed", "error", err)
 		os.Exit(1)
 	}
-
-	repository := infrastructure.NewGormRepository(db)
 	service := application.NewImportService(repository)
 	if err := service.ImportSnapshot(ctx, snapshot); err != nil {
 		slog.Error("import stock json failed", "error", err)
 		os.Exit(1)
 	}
-
 	slog.Info("stock json imported",
 		"assetHistories", len(snapshot.AssetHistories),
 		"monthlyRecords", len(snapshot.MonthlyRecords),
 		"otherIncomes", len(snapshot.OtherIncomes),
 		"positions", len(snapshot.Positions),
 	)
+
+	// 导入 stock.md 历史日志（可选）
+	if *stockMD != "" {
+		logs, err := infrastructure.ParseStockMD(*stockMD)
+		if err != nil {
+			slog.Error("parse stock.md failed", "error", err)
+			os.Exit(1)
+		}
+		if err := repository.ImportDailyLogs(ctx, logs); err != nil {
+			slog.Error("import daily logs failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("stock.md daily logs imported", "count", len(logs))
+	}
 }

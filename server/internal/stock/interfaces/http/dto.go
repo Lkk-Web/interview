@@ -2,6 +2,68 @@ package http
 
 import "github.com/Lkk-Web/interview/server/internal/stock/domain"
 
+// DailyLogResponse 是 GET /stock/daily-log/:date 的响应体。
+type DailyLogResponse struct {
+	Date            string                `json:"date"`
+	Marker          string                `json:"marker"`
+	Positions       []PositionSnapshotDTO `json:"positions"`
+	Trades          []TradeDTO            `json:"trades"`
+	TRecords        []TRecordDTO          `json:"tRecords"`
+	MonthlyTRevenue float64               `json:"monthlyTRevenue"`
+	Review          DailyReviewDTO        `json:"review"`
+}
+
+type PositionSnapshotDTO struct {
+	Stock  string  `json:"stock"`
+	Code   string  `json:"code"`
+	Cost   float64 `json:"cost"`
+	Shares float64 `json:"shares"`
+	Price  float64 `json:"price"`
+}
+
+type TradeDTO struct {
+	Action string  `json:"action"`
+	Stock  string  `json:"stock"`
+	Code   string  `json:"code"`
+	Price  float64 `json:"price"`
+	Shares float64 `json:"shares"`
+}
+
+type TRecordDTO struct {
+	Stock       string  `json:"stock"`
+	Desc        string  `json:"desc"`
+	GrossProfit float64 `json:"grossProfit"`
+	Fee         float64 `json:"fee"`
+	Tax         float64 `json:"tax"`
+	NetRevenue  float64 `json:"netRevenue"`
+}
+
+type DailyReviewDTO struct {
+	Market   string `json:"market"`
+	Feeling  string `json:"feeling"`
+	NextPlan string `json:"nextPlan"`
+}
+
+func newDailyLogResponse(log *domain.DailyLog) DailyLogResponse {
+	positions := make([]PositionSnapshotDTO, 0, len(log.Positions))
+	for _, p := range log.Positions {
+		positions = append(positions, PositionSnapshotDTO{Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price})
+	}
+	trades := make([]TradeDTO, 0, len(log.Trades))
+	for _, t := range log.Trades {
+		trades = append(trades, TradeDTO{Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares})
+	}
+	tRecords := make([]TRecordDTO, 0, len(log.TRecords))
+	for _, r := range log.TRecords {
+		tRecords = append(tRecords, TRecordDTO{Stock: r.Stock, Desc: r.Desc, GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue})
+	}
+	return DailyLogResponse{
+		Date: log.Date, Marker: log.Marker, Positions: positions, Trades: trades, TRecords: tRecords,
+		MonthlyTRevenue: log.MonthlyTRevenue,
+		Review:          DailyReviewDTO{Market: log.Review.Market, Feeling: log.Review.Feeling, NextPlan: log.Review.NextPlan},
+	}
+}
+
 // DashboardResponse 对应前端 StockDashboard 当前需要的整体数据结构。
 // 字段名保持 camelCase，是为了兼容 React 侧已有 JSON 使用方式。
 type DashboardResponse struct {
@@ -46,9 +108,11 @@ type CreateDailyLogRequest struct {
 }
 
 type PositionUpdateRequest struct {
+	Stock  string  `json:"stock"`
 	Code   string  `json:"code" binding:"required"`
 	Cost   float64 `json:"cost"`
 	Shares float64 `json:"shares"`
+	Price  float64 `json:"price"`
 }
 
 type TradeRequest struct {

@@ -199,6 +199,8 @@ definitions:
         type: number
       shares:
         type: number
+      stock:
+        type: string
     required:
     - code
     type: object

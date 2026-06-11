@@ -687,6 +687,9 @@ const docTemplate = `{
                 },
                 "shares": {
                     "type": "number"
+                },
+                "stock": {
+                    "type": "string"
                 }
             }
         },
