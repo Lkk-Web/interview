@@ -103,6 +103,7 @@ interface HistoryRecord {
   positions: HistoryPosition[];
   trades: HistoryTrade[];
   tRecords: HistoryTRecord[];
+  monthlyTRevenue: number;
   review: HistoryReview;
 }
 
@@ -188,20 +189,66 @@ const DailyLogModal: React.FC<Props> = ({
   const todayStr = new Date().toLocaleDateString('sv');
   const isToday = date === todayStr;
 
-  // 日期变化时：非今日则拉取历史记录
+  // 日期变化时：非今日显示只读历史；今日且草稿为空则把已提交记录带回
   useEffect(() => {
-    if (isToday) {
-      setHistoryRecord(null);
+    if (!isToday) {
+      setHistoryLoading(true);
+      fetch(`${API_BASE}/stock/daily-log/${date}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then((data) => {
+          setHistoryRecord(data);
+          setHistoryLoading(false);
+        });
       return;
     }
-    setHistoryLoading(true);
+
+    setHistoryRecord(null);
+
+    // 草稿为空（首次打开或提交后重置）才回填，避免覆盖用户已填内容
+    const isEmpty =
+      trades.length === 0 && tRecords.length === 0 && !market && !feeling && !nextPlan;
+    if (!isEmpty) return;
+
     fetch(`${API_BASE}/stock/daily-log/${date}`)
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
-      .then((data) => {
-        setHistoryRecord(data);
-        setHistoryLoading(false);
+      .then((rec: HistoryRecord | null) => {
+        if (!rec) return;
+        set({
+          positionForms: rec.positions.map((p) => ({
+            code: p.code,
+            stock: p.stock,
+            cost: String(p.cost),
+            shares: String(p.shares),
+            price: String(p.price || ''),
+          })),
+          trades: rec.trades.map((t) => ({
+            action: t.action,
+            stock: t.stock,
+            code: t.code,
+            price: String(t.price),
+            shares: String(t.shares),
+            hasIssue: false,
+          })),
+          tRecords: rec.tRecords.map((r) => ({
+            stock: r.stock,
+            buyPrice: '',
+            buyShares: '',
+            sellPrice: '',
+            sellShares: '',
+            grossProfit: '',
+            fee: '',
+            tax: '',
+            netRevenue: String(r.netRevenue),
+          })),
+          monthlyTRevenue: String(rec.monthlyTRevenue || ''),
+          market: rec.review?.market || '',
+          feeling: rec.review?.feeling || '',
+          nextPlan: rec.review?.nextPlan || '',
+        });
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, isToday]);
 
   const marker = trades.length === 0 ? '' : trades.some((t) => t.hasIssue) ? '？' : '！';
