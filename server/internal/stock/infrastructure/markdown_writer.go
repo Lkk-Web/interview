@@ -25,6 +25,7 @@ func NewMarkdownWriter(stockMDPath string) *MarkdownWriter {
 }
 
 // AppendDailyLog 找到正确位置后把新日条目插入 stock.md。
+// 若同一天已有记录，则替换（upsert 语义，和数据库写入保持一致）。
 func (w *MarkdownWriter) AppendDailyLog(log domain.DailyLog) error {
 	data, err := os.ReadFile(w.stockMDPath)
 	if err != nil {
@@ -37,15 +38,56 @@ func (w *MarkdownWriter) AppendDailyLog(log domain.DailyLog) error {
 		lines = lines[:len(lines)-1]
 	}
 
+	block := buildMarkdownBlock(log)
+
+	// 已存在同日记录：找到该块的范围并替换
+	if start, end, found := findExistingBlock(lines, log.Date); found {
+		lines = replaceBlock(lines, start, end, block)
+		return os.WriteFile(w.stockMDPath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+	}
+
+	// 不存在：正常插入
 	insertAfter, newSection, err := findInsertPosition(lines, log.Date)
 	if err != nil {
 		return err
 	}
-
-	block := buildMarkdownBlock(log)
 	lines = splice(lines, insertAfter, newSection, log.Date, block)
-
 	return os.WriteFile(w.stockMDPath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+}
+
+// findExistingBlock 查找 date 对应的日条目在 lines 中的范围（首行索引、末行索引）。
+// 范围是从 "### date" 开始，到下一个 "### " 或 "## " 标题之前的最后一个非空行。
+func findExistingBlock(lines []string, date string) (start, end int, found bool) {
+	dateHeading := "### " + date
+	start = -1
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if start == -1 {
+			if strings.HasPrefix(trimmed, dateHeading) {
+				start = i
+			}
+			continue
+		}
+		// 遇到下一个标题，块在前一行结束
+		if strings.HasPrefix(trimmed, "### ") || strings.HasPrefix(trimmed, "## ") {
+			end = i - 1
+			return start, end, true
+		}
+	}
+	if start != -1 {
+		return start, len(lines) - 1, true
+	}
+	return 0, 0, false
+}
+
+// replaceBlock 用新的 block 替换 lines[start:end+1] 的内容。
+func replaceBlock(lines []string, start, end int, block string) []string {
+	newLines := strings.Split(block, "\n")
+	result := make([]string, 0, len(lines)-(end-start+1)+len(newLines))
+	result = append(result, lines[:start]...)
+	result = append(result, newLines...)
+	result = append(result, lines[end+1:]...)
+	return result
 }
 
 // findInsertPosition 返回新条目应插入在哪一行之后（0-based）。
@@ -55,8 +97,14 @@ func findInsertPosition(lines []string, date string) (insertAfter int, newSectio
 	if err != nil {
 		return 0, false, err
 	}
-	sectionPrefix := fmt.Sprintf("## %d月操作计划", monthNum)
+	// 兼容 "## 6月操作计划" 和 "## 6 月操作计划" 两种历史格式
+	sectionPrefixNoSpace := fmt.Sprintf("## %d月", monthNum)
+	sectionPrefixSpace := fmt.Sprintf("## %d 月", monthNum)
 	dateHeading := "### " + date
+
+	isSectionHeader := func(s string) bool {
+		return strings.HasPrefix(s, sectionPrefixNoSpace) || strings.HasPrefix(s, sectionPrefixSpace)
+	}
 
 	sectionStart := -1
 	for i, line := range lines {
@@ -64,7 +112,7 @@ func findInsertPosition(lines []string, date string) (insertAfter int, newSectio
 		if strings.HasPrefix(trimmed, dateHeading) {
 			return 0, false, fmt.Errorf("%w: %s", ErrDateExists, date)
 		}
-		if strings.HasPrefix(trimmed, sectionPrefix) {
+		if isSectionHeader(trimmed) {
 			sectionStart = i
 		}
 		// 找到月份 section 后，遇到下一个 ## 说明当前月份 section 已结束
@@ -92,7 +140,7 @@ func splice(lines []string, insertAfter int, newSection bool, date string, block
 	var toInsert []string
 	if newSection {
 		monthNum, _ := parseMonthNum(date)
-		toInsert = append(toInsert, "", "---", "", fmt.Sprintf("## %d月操作计划", monthNum), "")
+		toInsert = append(toInsert, "", "---", "", fmt.Sprintf("## %d 月操作计划", monthNum), "")
 	}
 	toInsert = append(toInsert, "", block)
 
