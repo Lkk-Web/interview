@@ -685,6 +685,9 @@ const docTemplate = `{
                 "cost": {
                     "type": "number"
                 },
+                "price": {
+                    "type": "number"
+                },
                 "shares": {
                     "type": "number"
                 },

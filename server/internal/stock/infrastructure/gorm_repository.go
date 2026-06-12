@@ -14,6 +14,7 @@ type GormRepository struct {
 	db             *gorm.DB
 	exporter       *JSONExporter
 	markdownWriter *MarkdownWriter
+	gitCommitter   *GitCommitter
 }
 
 func NewGormRepository(db *gorm.DB) *GormRepository {
@@ -28,6 +29,11 @@ func (repository *GormRepository) SetExporter(exporter *JSONExporter) {
 // SetMarkdownWriter 注入 stock.md 写入器。
 func (repository *GormRepository) SetMarkdownWriter(writer *MarkdownWriter) {
 	repository.markdownWriter = writer
+}
+
+// SetGitCommitter 注入 git 自动提交器。
+func (repository *GormRepository) SetGitCommitter(committer *GitCommitter) {
+	repository.gitCommitter = committer
 }
 
 func (repository *GormRepository) ListAssetHistories(ctx context.Context) ([]domain.AssetHistory, error) {
@@ -356,6 +362,12 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 		if err := repository.exporter.ExportAssetHistory(ctx); err != nil {
 			return saved, fmt.Errorf("sync json after add: %w", err)
 		}
+		// 文件同步完成后自动 git commit + push
+		if repository.gitCommitter != nil {
+			repository.gitCommitter.CommitAndPush(saved.Date, "asset", []string{
+				"data/stock/asset-history.json",
+			})
+		}
 	}
 	return saved, nil
 }
@@ -480,13 +492,21 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 
 	// 事务提交后同步文件（非事务，尽力而为）
 	if repository.exporter != nil {
+		var changedFiles []string
 		if err := repository.exporter.ExportPositions(ctx); err != nil {
 			return fmt.Errorf("sync positions.json: %w", err)
 		}
+		changedFiles = append(changedFiles, "data/stock/positions.json")
+
 		if repository.markdownWriter != nil {
 			if err := repository.markdownWriter.AppendDailyLog(log); err != nil {
 				return fmt.Errorf("append stock.md: %w", err)
 			}
+			changedFiles = append(changedFiles, "docs/summary/stock/stock.md")
+		}
+		// 只提交实际被修改的文件
+		if repository.gitCommitter != nil {
+			repository.gitCommitter.CommitAndPush(log.Date, "stock", changedFiles)
 		}
 	}
 	return nil

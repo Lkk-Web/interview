@@ -27,6 +27,10 @@ type Config struct {
 	DataDir string
 	// StockMDPath 是操作日志 markdown 文件路径，每日收盘记录会追加写入这里。
 	StockMDPath string
+	// GitAutoCommit 控制写接口成功后是否自动 git commit + push。
+	GitAutoCommit bool
+	// RepoDir 是 git 仓库根目录，GitAutoCommit 为 true 时必须配置。
+	RepoDir string
 }
 
 // Load 读取配置并做最基本的必填校验。
@@ -43,6 +47,8 @@ func Load() (Config, error) {
 		MigrationsDir:  valueOrDefault("MIGRATIONS_DIR", "./migrations"),
 		DataDir:        valueOrDefault("DATA_DIR", "../data/stock"),
 		StockMDPath:    valueOrDefault("STOCK_MD_PATH", "../docs/summary/stock/stock.md"),
+		GitAutoCommit:  os.Getenv("GIT_AUTO_COMMIT") == "true",
+		RepoDir:        valueOrDefault("GIT_REPO_DIR", ".."),
 	}
 
 	if cfg.DatabaseDSN == "" {

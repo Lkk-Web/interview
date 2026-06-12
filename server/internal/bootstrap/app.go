@@ -77,6 +77,8 @@ func registerRoutes(router *gin.Engine, db *gorm.DB, cfg config.Config) {
 	stockRepository.SetExporter(stockinfra.NewJSONExporter(cfg.DataDir, stockRepository))
 	// 注入 markdown 写入器：AddDailyLog 后追加 stock.md。
 	stockRepository.SetMarkdownWriter(stockinfra.NewMarkdownWriter(cfg.StockMDPath))
+	// 注入 git 自动提交器：文件同步后自动 commit + push。
+	stockRepository.SetGitCommitter(stockinfra.NewGitCommitter(cfg.RepoDir, cfg.GitAutoCommit))
 	stockService := stockapp.NewDashboardService(stockRepository)
 	dailyLogService := stockapp.NewDailyLogService(stockRepository)
 	stockHandler := stockhttp.NewHandler(stockService, dailyLogService)
