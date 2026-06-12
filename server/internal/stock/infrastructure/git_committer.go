@@ -22,7 +22,8 @@ func NewGitCommitter(repoDir string, enabled bool) *GitCommitter {
 }
 
 // CommitAndPush 将指定文件 commit 并 push 到远程。
-// 使用 git commit <files> -m "..." 只提交指定文件，不会带走暂存区里的其他改动。
+// 使用 git commit --only 从工作区直接提交，不经过 index，
+// commit 后再 restore --staged 清掉隐式暂存，不影响用户自己的暂存区。
 // date 用于生成 commit message 里的日期部分（如 "6.12"）。
 // recordType 区分提交类型："stock" 或 "asset"。
 func (g *GitCommitter) CommitAndPush(date string, recordType string, files []string) {
@@ -38,10 +39,14 @@ func (g *GitCommitter) CommitAndPush(date string, recordType string, files []str
 		shortDate := formatShortDate(date)
 		msg := fmt.Sprintf("✨ feat: updata %s %s record", shortDate, recordType)
 
-		// git commit <files> -m "msg" 只提交这几个文件，不影响本地其他修改
-		if err := g.gitCommitFiles(msg, files); err != nil {
+		// --only 让 git 从工作区取文件内容提交，不碰用户的暂存区
+		if err := g.gitCommitOnly(msg, files); err != nil {
 			log.Printf("[GitCommitter] git commit failed: %v", err)
 			return
+		}
+		// commit 后清除这几个文件在 index 里可能残留的暂存状态
+		if err := g.gitRestoreStaged(files); err != nil {
+			log.Printf("[GitCommitter] git restore --staged failed: %v", err)
 		}
 		if err := g.gitPush(); err != nil {
 			log.Printf("[GitCommitter] git push failed: %v", err)
@@ -51,11 +56,17 @@ func (g *GitCommitter) CommitAndPush(date string, recordType string, files []str
 	}()
 }
 
-// gitCommitFiles 用 git commit <files> -m "msg"，只提交指定文件，
-// 不管暂存区有什么都不会误带。
-func (g *GitCommitter) gitCommitFiles(message string, files []string) error {
-	args := append([]string{"commit"}, files...)
-	args = append(args, "-m", message)
+// gitCommitOnly 用 git commit --only -m "msg" -- <files>，
+// 只提交这几个文件的工作区内容，不读也不写用户的 index。
+func (g *GitCommitter) gitCommitOnly(message string, files []string) error {
+	args := []string{"commit", "--only", "-m", message, "--"}
+	args = append(args, files...)
+	return g.run("git", args...)
+}
+
+// gitRestoreStaged 清除指定文件在暂存区里的残留状态。
+func (g *GitCommitter) gitRestoreStaged(files []string) error {
+	args := append([]string{"restore", "--staged"}, files...)
 	return g.run("git", args...)
 }
 
