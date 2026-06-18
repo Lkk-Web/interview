@@ -107,6 +107,28 @@ func (handler *Handler) ListPositions(c *gin.Context) {
 	httpx.OK(c, newPositionDTOs(items))
 }
 
+// GetAssetHistoryByDate 按日期查单条资产快照，供前端回填表单。
+func (handler *Handler) GetAssetHistoryByDate(c *gin.Context) {
+	date := c.Param("date")
+	item, err := handler.dashboardService.GetAssetHistoryByDate(c.Request.Context(), date)
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "asset_history_error", err.Error())
+		return
+	}
+	if item == nil {
+		httpx.Error(c, nethttp.StatusNotFound, "not_found", "no record for "+date)
+		return
+	}
+	httpx.OK(c, AssetHistoryDTO{
+		Date:       item.Date,
+		Cash:       item.Cash,
+		StockValue: item.StockValue,
+		Loan:       item.Loan,
+		Other:      item.Other,
+		Remark:     item.Remark,
+	})
+}
+
 // CreateAssetHistory 新增一条资产快照，写库成功后自动同步 JSON 文件。
 // @Summary     新增资产快照
 // @Tags        stock
@@ -229,4 +251,27 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 	}
 
 	httpx.Created(c, gin.H{"date": req.Date})
+}
+
+// UpsertOtherIncome 按日期 upsert 一条其他收入记录。
+func (handler *Handler) UpsertOtherIncome(c *gin.Context) {
+	var req struct {
+		Date   string  `json:"date" binding:"required"`
+		Amount float64 `json:"amount"`
+		Desc   string  `json:"desc"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.Error(c, nethttp.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+	item, err := handler.dashboardService.UpsertOtherIncome(c.Request.Context(), domain.OtherIncome{
+		Date:        req.Date,
+		Amount:      req.Amount,
+		Description: req.Desc,
+	})
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "upsert_other_income_error", err.Error())
+		return
+	}
+	httpx.OK(c, gin.H{"id": item.ID, "date": item.Date, "amount": item.Amount, "desc": item.Description})
 }

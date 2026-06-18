@@ -78,6 +78,12 @@ func (service *DashboardService) GetPositions(ctx context.Context) ([]domain.Pos
 func (service *DashboardService) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	return service.repository.AddAssetHistory(ctx, item)
 }
+
+// GetAssetHistoryByDate 按日期查单条资产快照，不存在时返回 nil。
+func (service *DashboardService) GetAssetHistoryByDate(ctx context.Context, date string) (*domain.AssetHistory, error) {
+	return service.repository.GetAssetHistoryByDate(ctx, date)
+}
+
 // UpsertOtherIncome 按日期+描述 upsert 一条其他收入记录，写库后同步 JSON 文件。
 func (service *DashboardService) UpsertOtherIncome(ctx context.Context, item domain.OtherIncome) (domain.OtherIncome, error) {
 	return service.repository.UpsertOtherIncome(ctx, item)

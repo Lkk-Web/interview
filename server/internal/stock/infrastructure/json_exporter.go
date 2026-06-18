@@ -64,7 +64,61 @@ func toAssetHistoryJSONSlice(items []domain.AssetHistory) []assetHistoryExportJS
 	return result
 }
 
-// ExportPositions 把 positions.json 更新为当前数据库内容。
+// ExportMonthly 把 monthly.json 更新为当前数据库内容。
+func (e *JSONExporter) ExportMonthly(ctx context.Context) error {
+	items, err := e.repository.ListMonthlyRecords(ctx)
+	if err != nil {
+		return fmt.Errorf("export monthly: %w", err)
+	}
+	return writeJSON(filepath.Join(e.dataDir, "monthly.json"), toMonthlyJSONSlice(items))
+}
+
+type monthlyExportJSON struct {
+	Month    string   `json:"month"`
+	TTarget  float64  `json:"tTarget"`
+	TRevenue float64  `json:"tRevenue"`
+	Remark   *string  `json:"remark,omitempty"`
+}
+
+func toMonthlyJSONSlice(items []domain.MonthlyRecord) []monthlyExportJSON {
+	result := make([]monthlyExportJSON, 0, len(items))
+	for _, item := range items {
+		result = append(result, monthlyExportJSON{
+			Month:    item.Month,
+			TTarget:  item.TTarget,
+			TRevenue: item.TRevenue,
+			Remark:   item.Remark,
+		})
+	}
+	return result
+}
+
+// ExportOtherIncome 把 other-income.json 更新为当前数据库内容。
+func (e *JSONExporter) ExportOtherIncome(ctx context.Context) error {
+	items, err := e.repository.ListOtherIncomes(ctx)
+	if err != nil {
+		return fmt.Errorf("export other income: %w", err)
+	}
+	return writeJSON(filepath.Join(e.dataDir, "other-income.json"), toOtherIncomeJSONSlice(items))
+}
+
+type otherIncomeExportJSON struct {
+	Date   string  `json:"date"`
+	Amount float64 `json:"amount"`
+	Desc   string  `json:"desc"`
+}
+
+func toOtherIncomeJSONSlice(items []domain.OtherIncome) []otherIncomeExportJSON {
+	result := make([]otherIncomeExportJSON, 0, len(items))
+	for _, item := range items {
+		result = append(result, otherIncomeExportJSON{
+			Date:   item.Date,
+			Amount: item.Amount,
+			Desc:   item.Description,
+		})
+	}
+	return result
+}
 func (e *JSONExporter) ExportPositions(ctx context.Context) error {
 	items, err := e.repository.ListActivePositions(ctx)
 	if err != nil {

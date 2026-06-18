@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE, ADMIN_TOKEN } from '../../../constants';
 import type { AssetPoint } from '../../types';
@@ -19,7 +19,7 @@ interface FormState {
   remark: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date().toLocaleDateString('sv');
 
 const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => {
   const [form, setForm] = useState<FormState>({
@@ -32,12 +32,34 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // 当前日期是否已有记录（用于提示"修改"）
+  const [existingRecord, setExistingRecord] = useState<AssetPoint | null>(null);
 
   const set =
     (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = e.target.value;
       setForm((f) => ({ ...f, [key]: value }));
     };
+
+  // 日期变化时查已有记录回填
+  useEffect(() => {
+    setExistingRecord(null);
+    fetch(`${API_BASE}/stock/asset-history/${form.date}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((rec: AssetPoint | null) => {
+        if (!rec) return;
+        setExistingRecord(rec);
+        setForm({
+          date: rec.date,
+          cash: String(rec.cash),
+          stockValue: String(rec.stockValue),
+          loan: String(rec.loan),
+          other: String(rec.other ?? ''),
+          remark: rec.remark ?? '',
+        });
+      });
+  }, [form.date]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +71,9 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN}` },
         body: JSON.stringify({
           date: form.date,
-          cash: form.cash !== '' ? Number(form.cash) : last?.cash ?? 0,
-          stockValue: form.stockValue !== '' ? Number(form.stockValue) : last?.stockValue ?? 0,
-          loan: form.loan !== '' ? Number(form.loan) : last?.loan ?? 0,
+          cash: Number(form.cash) || last?.cash || 0,
+          stockValue: Number(form.stockValue) || last?.stockValue || 0,
+          loan: Number(form.loan) || last?.loan || 0,
           other: form.other !== '' ? Number(form.other) : last?.other ?? 0,
           remark: form.remark || undefined,
         }),
@@ -89,7 +111,7 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
     <div className="aah-overlay" onClick={onClose}>
       <div className="aah-modal" onClick={(e) => e.stopPropagation()}>
         <div className="aah-header">
-          <span>新增资产快照</span>
+          <span>{existingRecord ? '修改资产快照' : '新增资产快照'}</span>
           <button className="aah-close" onClick={onClose}>
             ×
           </button>

@@ -377,15 +377,31 @@ func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionT
 	}
 }
 
-// AddAssetHistory 插入一条资产快照，成功后同步 JSON 文件。
+// AddAssetHistory 按日期 upsert 一条资产快照，成功后同步 JSON 文件。
 func (repository *GormRepository) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	model := fromAssetHistory(item)
-	// 按 date 唯一键 upsert：已存在则更新，否则插入。
-	if err := repository.db.WithContext(ctx).
+	result := repository.db.WithContext(ctx).
 		Where(AssetHistoryModel{Date: model.Date}).
-		Assign(AssetHistoryModel{Cash: model.Cash, StockValue: model.StockValue, Loan: model.Loan, Other: model.Other, Remark: model.Remark}).
-		FirstOrCreate(&model).Error; err != nil {
-		return domain.AssetHistory{}, fmt.Errorf("add asset history: %w", err)
+		FirstOrCreate(&model)
+	if result.Error != nil {
+		return domain.AssetHistory{}, fmt.Errorf("add asset history: %w", result.Error)
+	}
+	// 记录已存在时更新各字段
+	if result.RowsAffected == 0 {
+		if err := repository.db.WithContext(ctx).Model(&model).
+			Updates(map[string]any{
+				"cash":        item.Cash,
+				"stock_value": item.StockValue,
+				"loan":        item.Loan,
+				"other":       item.Other,
+				"remark":      item.Remark,
+			}).Error; err != nil {
+			return domain.AssetHistory{}, fmt.Errorf("update asset history: %w", err)
+		}
+		// 读回最新值
+		if err := repository.db.WithContext(ctx).First(&model, model.ID).Error; err != nil {
+			return domain.AssetHistory{}, fmt.Errorf("reload asset history: %w", err)
+		}
 	}
 	saved := toAssetHistory(model)
 
@@ -402,6 +418,19 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 		}
 	}
 	return saved, nil
+}
+
+func (repository *GormRepository) GetAssetHistoryByDate(ctx context.Context, date string) (*domain.AssetHistory, error) {
+	var model AssetHistoryModel
+	err := repository.db.WithContext(ctx).Where("date = ?", date).First(&model).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get asset history by date: %w", err)
+	}
+	item := toAssetHistory(model)
+	return &item, nil
 }
 
 func toAssetHistory(model AssetHistoryModel) domain.AssetHistory {
