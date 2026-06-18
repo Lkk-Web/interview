@@ -34,6 +34,8 @@ jobs:
           nvm use 16.19.1
           yarn install --registry https://registry.npmmirror.com --ignore-engines --network-timeout 300000
           MOBILE=1 npx dumi build
+        env:
+          REACT_APP_API_BASE: https://interview.kying.org/api
 
       - name: Cap sync (Node 22)
         run: |

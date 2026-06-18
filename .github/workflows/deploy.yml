@@ -17,6 +17,7 @@ jobs:
       - run: npm run docs:build
         env:
           NODE_OPTIONS: --openssl-legacy-provider
+          REACT_APP_API_BASE: https://interview.kying.org/api
       - run: npm run upload
         env:
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}

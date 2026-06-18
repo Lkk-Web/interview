@@ -56,6 +56,7 @@ export default {
   }),
   define: {
     REACT_APP_SERVER_SOURCE_URL: process.env.REACT_APP_SERVER_SOURCE_URL,
+    REACT_APP_API_BASE: process.env.REACT_APP_API_BASE,
   },
   // chunks: ['vendors', 'umi'],
   // chainWebpack: function (config, { webpack }) {
