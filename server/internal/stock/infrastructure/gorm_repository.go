@@ -313,6 +313,38 @@ func fromOtherIncome(item domain.OtherIncome) OtherIncomeModel {
 	}
 }
 
+// UpsertOtherIncome 按日期 + description 唯一标识 upsert 一条记录，写库后同步 JSON 文件。
+func (repository *GormRepository) UpsertOtherIncome(ctx context.Context, item domain.OtherIncome) (domain.OtherIncome, error) {
+	model := fromOtherIncome(item)
+	// 同一天同一 description 视为同一条记录，更新 amount；否则插入新行。
+	result := repository.db.WithContext(ctx).
+		Where(OtherIncomeModel{Date: item.Date, Description: item.Description}).
+		Assign(OtherIncomeModel{Amount: item.Amount, Remark: item.Remark}).
+		FirstOrCreate(&model)
+	if result.Error != nil {
+		return domain.OtherIncome{}, fmt.Errorf("upsert other income: %w", result.Error)
+	}
+	// 如果记录已存在（RowsAffected==0），需要手动更新 amount
+	if result.RowsAffected == 0 {
+		if err := repository.db.WithContext(ctx).Model(&model).
+			Updates(map[string]any{"amount": item.Amount, "remark": item.Remark}).Error; err != nil {
+			return domain.OtherIncome{}, fmt.Errorf("update other income: %w", err)
+		}
+	}
+	if repository.exporter != nil {
+		if err := repository.exporter.ExportOtherIncome(ctx); err != nil {
+			return domain.OtherIncome{}, fmt.Errorf("sync other-income.json: %w", err)
+		}
+	}
+	return domain.OtherIncome{
+		ID:          model.ID,
+		Date:        model.Date,
+		Amount:      model.Amount,
+		Description: model.Description,
+		Remark:      model.Remark,
+	}, nil
+}
+
 func fromPosition(item domain.Position) PositionModel {
 	model := PositionModel{
 		Stock:        item.Stock,

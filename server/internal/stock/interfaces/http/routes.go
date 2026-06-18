@@ -16,4 +16,5 @@ func RegisterRoutes(group *gin.RouterGroup, handler *Handler) {
 func RegisterAdminRoutes(group *gin.RouterGroup, handler *Handler) {
 	group.POST("/asset-history", handler.CreateAssetHistory)
 	group.POST("/daily-log", handler.CreateDailyLog)
+	group.POST("/other-income", handler.UpsertOtherIncome)
 }

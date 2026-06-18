@@ -12,6 +12,8 @@ type Repository interface {
 	ImportSnapshot(ctx context.Context, snapshot ImportSnapshot) error
 	// AddAssetHistory 新增一条资产快照并同步 JSON 文件。
 	AddAssetHistory(ctx context.Context, item AssetHistory) (AssetHistory, error)
+	// UpsertOtherIncome 按日期 upsert 一条其他收入记录并同步 JSON 文件。
+	UpsertOtherIncome(ctx context.Context, item OtherIncome) (OtherIncome, error)
 	// AddDailyLog 写入每日收盘记录，同时更新持仓、月度T收益，并追加 stock.md。
 	AddDailyLog(ctx context.Context, log DailyLog) error
 	// GetDailyLog 按日期查询当日收盘记录，不存在时返回 nil。

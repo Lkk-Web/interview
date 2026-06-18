@@ -78,3 +78,7 @@ func (service *DashboardService) GetPositions(ctx context.Context) ([]domain.Pos
 func (service *DashboardService) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	return service.repository.AddAssetHistory(ctx, item)
 }
+// UpsertOtherIncome 按日期+描述 upsert 一条其他收入记录，写库后同步 JSON 文件。
+func (service *DashboardService) UpsertOtherIncome(ctx context.Context, item domain.OtherIncome) (domain.OtherIncome, error) {
+	return service.repository.UpsertOtherIncome(ctx, item)
+}

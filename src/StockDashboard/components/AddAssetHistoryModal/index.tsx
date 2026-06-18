@@ -61,6 +61,20 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
         throw new Error(body.message || `HTTP ${res.status}`);
       }
       const item: AssetPoint = await res.json();
+
+      // 「其他」字段有值时，同步写入 other-income 记录
+      if (form.other !== '') {
+        await fetch(`${API_BASE}/admin/stock/other-income`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN}` },
+          body: JSON.stringify({
+            date: form.date,
+            amount: Number(form.other) - (last?.other ?? 0),
+            desc: form.remark || '其他资产',
+          }),
+        });
+      }
+
       onSuccess?.(item);
       toast.success('提交成功');
       onClose();
