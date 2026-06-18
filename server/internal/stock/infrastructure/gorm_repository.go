@@ -377,7 +377,7 @@ func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionT
 	}
 }
 
-// AddAssetHistory 按日期 upsert 一条资产快照，成功后同步 JSON 文件。
+// AddAssetHistory 按日期 upsert 一条资产快照，成功后自动计算 other 增量写入 other_incomes，并同步 JSON 文件。
 func (repository *GormRepository) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	model := fromAssetHistory(item)
 	result := repository.db.WithContext(ctx).
@@ -405,10 +405,37 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 	}
 	saved := toAssetHistory(model)
 
+	// 自动计算 other 增量：找该日期前一条记录，差值写入 other_incomes
+	if item.Other != 0 {
+		var prevModel AssetHistoryModel
+		err := repository.db.WithContext(ctx).
+			Where("date < ?", item.Date).
+			Order("date DESC").
+			First(&prevModel).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return saved, fmt.Errorf("find prev asset history: %w", err)
+		}
+		delta := item.Other - prevModel.Other
+		// 按日期唯一 upsert，description 固定为"其他资产变动"
+		otherModel := OtherIncomeModel{Date: item.Date, Description: "其他资产变动"}
+		if err := repository.db.WithContext(ctx).
+			Where(OtherIncomeModel{Date: item.Date, Description: "其他资产变动"}).
+			FirstOrCreate(&otherModel).Error; err != nil {
+			return saved, fmt.Errorf("upsert other income: %w", err)
+		}
+		if err := repository.db.WithContext(ctx).Model(&otherModel).
+			Update("amount", delta).Error; err != nil {
+			return saved, fmt.Errorf("update other income amount: %w", err)
+		}
+	}
+
 	// 写入成功后同步 JSON，exporter 可选（测试或未配置 dataDir 时为 nil）。
 	if repository.exporter != nil {
 		if err := repository.exporter.ExportAssetHistory(ctx); err != nil {
 			return saved, fmt.Errorf("sync json after add: %w", err)
+		}
+		if err := repository.exporter.ExportOtherIncome(ctx); err != nil {
+			return saved, fmt.Errorf("sync other-income.json: %w", err)
 		}
 		// 文件同步完成后自动 git commit + push
 		if repository.gitCommitter != nil {

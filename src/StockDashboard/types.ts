@@ -50,4 +50,6 @@ export interface StockDashboardProps {
   monthly: MonthlyRecord[];
   /** 其他收入记录 */
   otherIncome: OtherIncome[];
+  /** 提交成功后的回调，用于触发数据刷新 */
+  onDailyLogSubmitted?: () => void;
 }

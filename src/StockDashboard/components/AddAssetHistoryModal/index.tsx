@@ -5,7 +5,7 @@ import type { AssetPoint } from '../../types';
 import './index.less';
 
 interface Props {
-  last?: AssetPoint;
+  assetHistory: AssetPoint[];
   onSuccess?: (item: AssetPoint) => void;
   onClose: () => void;
 }
@@ -21,7 +21,8 @@ interface FormState {
 
 const today = () => new Date().toLocaleDateString('sv');
 
-const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => {
+const AddAssetHistoryModal: React.FC<Props> = ({ assetHistory, onSuccess, onClose }) => {
+  const last = assetHistory[assetHistory.length - 1];
   const [form, setForm] = useState<FormState>({
     date: today(),
     cash: '',
@@ -44,6 +45,8 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
   // 日期变化时查已有记录回填
   useEffect(() => {
     setExistingRecord(null);
+    // 先清空，再尝试回填，避免上一次的值残留
+    setForm((f) => ({ date: f.date, cash: '', stockValue: '', loan: '', other: '', remark: '' }));
     fetch(`${API_BASE}/stock/asset-history/${form.date}`)
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
@@ -71,9 +74,9 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN}` },
         body: JSON.stringify({
           date: form.date,
-          cash: Number(form.cash) || last?.cash || 0,
-          stockValue: Number(form.stockValue) || last?.stockValue || 0,
-          loan: Number(form.loan) || last?.loan || 0,
+          cash: form.cash !== '' ? Number(form.cash) : last?.cash ?? 0,
+          stockValue: form.stockValue !== '' ? Number(form.stockValue) : last?.stockValue ?? 0,
+          loan: form.loan !== '' ? Number(form.loan) : last?.loan ?? 0,
           other: form.other !== '' ? Number(form.other) : last?.other ?? 0,
           remark: form.remark || undefined,
         }),
@@ -83,20 +86,6 @@ const AddAssetHistoryModal: React.FC<Props> = ({ last, onSuccess, onClose }) => 
         throw new Error(body.message || `HTTP ${res.status}`);
       }
       const item: AssetPoint = await res.json();
-
-      // 「其他」字段有值时，同步写入 other-income 记录
-      if (form.other !== '') {
-        await fetch(`${API_BASE}/admin/stock/other-income`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN}` },
-          body: JSON.stringify({
-            date: form.date,
-            amount: Number(form.other) - (last?.other ?? 0),
-            desc: form.remark || '其他资产',
-          }),
-        });
-      }
-
       onSuccess?.(item);
       toast.success('提交成功');
       onClose();

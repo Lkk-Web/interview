@@ -11,6 +11,7 @@ interface Props {
   draft: DailyLogDraft;
   onDraftChange: (draft: DailyLogDraft) => void;
   onClose: () => void;
+  onSubmitted?: () => void;
 }
 
 // 草稿类型导出供父组件持有
@@ -176,6 +177,7 @@ const DailyLogModal: React.FC<Props> = ({
   draft,
   onDraftChange,
   onClose,
+  onSubmitted,
 }) => {
   const { date, positionForms, trades, tRecords, monthlyTRevenue, market, feeling, nextPlan } =
     draft;
@@ -415,6 +417,7 @@ const DailyLogModal: React.FC<Props> = ({
       }
       toast.success('记录已提交');
       onDraftChange(emptyDraft(positions, currentMonth));
+      onSubmitted?.();
       onClose();
     } catch (err: any) {
       setError(err.message ?? '提交失败');

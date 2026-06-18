@@ -14,6 +14,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
   positions: rawPositions,
   monthly,
   otherIncome,
+  onDailyLogSubmitted,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDailyLogModal, setShowDailyLogModal] = useState(false);
@@ -154,8 +155,12 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 
       {showAddModal && (
         <AddAssetHistoryModal
-          last={assetHistory[assetHistory.length - 1]}
+          assetHistory={assetHistory}
           onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            onDailyLogSubmitted?.();
+          }}
         />
       )}
       {showDailyLogModal && (
@@ -165,6 +170,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
           draft={dailyLogDraft}
           onDraftChange={setDraft}
           onClose={() => setShowDailyLogModal(false)}
+          onSubmitted={onDailyLogSubmitted}
         />
       )}
     </div>
