@@ -250,7 +250,7 @@ definitions:
       message:
         type: string
     type: object
-host: localhost:8080
+host: localhost:8888
 info:
   contact: {}
   description: 个人知识库后端服务，提供股票仪表盘和代码内容管理接口。

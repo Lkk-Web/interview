@@ -40,10 +40,10 @@ func Load() (Config, error) {
 
 	cfg := Config{
 		AppEnv:         valueOrDefault("APP_ENV", "development"),
-		HTTPAddr:       valueOrDefault("HTTP_ADDR", ":8080"),
+		HTTPAddr:       valueOrDefault("HTTP_ADDR", ":8888"),
 		DatabaseDSN:    os.Getenv("DATABASE_DSN"),
 		AdminToken:     os.Getenv("ADMIN_TOKEN"),
-		AllowedOrigins: splitCSV(valueOrDefault("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8080")),
+		AllowedOrigins: splitCSV(valueOrDefault("ALLOWED_ORIGINS", "http://localhost:8888,http://localhost:8888")),
 		MigrationsDir:  valueOrDefault("MIGRATIONS_DIR", "./migrations"),
 		DataDir:        valueOrDefault("DATA_DIR", "../data/stock"),
 		StockMDPath:    valueOrDefault("STOCK_MD_PATH", "../docs/summary/stock/stock.md"),

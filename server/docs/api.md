@@ -3,7 +3,7 @@
 服务默认监听：
 
 ```text
-http://localhost:8080
+http://localhost:8888
 ```
 
 ## 健康检查

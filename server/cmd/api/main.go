@@ -16,7 +16,7 @@ import (
 // @title          Interview Server API
 // @version        1.0
 // @description    个人知识库后端服务，提供股票仪表盘和代码内容管理接口。
-// @host           localhost:8080
+// @host           localhost:8888
 // @BasePath       /api
 // @schemes        http https
 func main() {

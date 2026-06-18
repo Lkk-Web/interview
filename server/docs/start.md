@@ -17,10 +17,10 @@ cp .env.example .env
 
 ```text
 APP_ENV=development
-HTTP_ADDR=:8080
+HTTP_ADDR=:8888
 DATABASE_DSN=host=localhost user=<postgres-user> password=<postgres-password> dbname=interview port=5432 sslmode=disable TimeZone=Asia/Shanghai
 ADMIN_TOKEN=<your-local-admin-token>
-ALLOWED_ORIGINS=http://localhost:8000,http://localhost:8080
+ALLOWED_ORIGINS=http://localhost:8000,http://localhost:8888
 MIGRATIONS_DIR=./migrations
 ```
 
@@ -58,12 +58,12 @@ GOTOOLCHAIN=local GOPROXY=https://goproxy.cn,direct GOSUMDB=sum.golang.google.cn
 启动成功后访问：
 
 ```bash
-curl http://localhost:8080/api/health
-curl http://localhost:8080/api/stock/dashboard
+curl http://localhost:8888/api/health
+curl http://localhost:8888/api/stock/dashboard
 ```
 
 管理接口需要 token：
 
 ```bash
-curl -H "Authorization: Bearer <your-local-admin-token>" http://localhost:8080/api/admin/health
+curl -H "Authorization: Bearer <your-local-admin-token>" http://localhost:8888/api/admin/health
 ```
