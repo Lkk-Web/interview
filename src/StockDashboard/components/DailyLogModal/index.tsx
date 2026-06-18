@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE, ADMIN_TOKEN } from '../../../constants';
 import type { Position, MonthlyRecord } from '../../types';
+import { fetchStockPrices } from '../../hooks/useStockPrice';
 import './index.less';
 
 interface Props {
@@ -188,6 +189,23 @@ const DailyLogModal: React.FC<Props> = ({
 
   const todayStr = new Date().toLocaleDateString('sv');
   const isToday = date === todayStr;
+
+  // positionForms 有股票代码时，自动拉行情填入现价（用户仍可手动覆盖）
+  useEffect(() => {
+    const codes = positionForms.map((p) => p.code).filter(Boolean);
+    if (codes.length === 0) return;
+    fetchStockPrices(codes)
+      .then((prices) => {
+        set({
+          positionForms: positionForms.map((p) =>
+            prices[p.code] ? { ...p, price: String(prices[p.code]) } : p,
+          ),
+        });
+      })
+      .catch(() => {});
+    // 只在弹窗初次挂载时拉一次，不随 positionForms 变化重复触发
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 日期变化时：非今日显示只读历史；今日且草稿为空则把已提交记录带回
   useEffect(() => {

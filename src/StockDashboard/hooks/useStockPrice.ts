@@ -8,7 +8,7 @@ import type { Position, PositionWithPrice } from '../types';
  * 第 3 个字段是当前价格
  */
 
-function fetchStockPrices(codes: string[]): Promise<Record<string, number>> {
+export function fetchStockPrices(codes: string[]): Promise<Record<string, number>> {
   return new Promise((resolve, reject) => {
     const callbackName = `stock_cb_${Date.now()}`;
     const script = document.createElement('script');
