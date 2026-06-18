@@ -344,6 +344,14 @@ const DailyLogModal: React.FC<Props> = ({
 
   const todayTTotal = round2(tRecords.reduce((sum, r) => sum + (Number(r.netRevenue) || 0), 0));
 
+  // tRecords 变化时，自动把今日合计叠加到本月基准值上
+  useEffect(() => {
+    const base = currentMonth?.tRevenue ?? 0;
+    const updated = round2(base + todayTTotal);
+    set({ monthlyTRevenue: todayTTotal !== 0 ? String(updated) : String(base || '') });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayTTotal]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -802,9 +810,10 @@ const DailyLogModal: React.FC<Props> = ({
                 <input
                   type="number"
                   step="0.01"
-                  placeholder={currentMonth ? String(currentMonth.tRevenue) : ''}
+                  readOnly
+                  placeholder={currentMonth ? String(currentMonth.tRevenue) : '0'}
                   value={monthlyTRevenue}
-                  onChange={(e) => set({ monthlyTRevenue: e.target.value })}
+                  style={{ background: '#fafafa', cursor: 'default' }}
                 />
               </label>
             </div>
