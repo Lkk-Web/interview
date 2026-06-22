@@ -303,42 +303,100 @@ const DailyLogModal: React.FC<Props> = ({
   const removeTRecord = (i: number) => set({ tRecords: tRecords.filter((_, idx) => idx !== i) });
 
   const generateTRecordsFromTrades = () => {
-    const sells = trades.filter((t) => t.action === '卖出' && t.stock && t.price && t.shares);
-    const buys = trades.filter((t) => t.action === '买入' && t.stock && t.price && t.shares);
+    type Lot = { price: number; remaining: number; totalShares: number; totalFee: number };
+    const buyQueues: Record<string, Lot[]> = {};
+    const sellQueues: Record<string, Lot[]> = {};
     const generated: TRecordRow[] = [];
 
-    for (const sell of sells) {
-      const matchingBuys = buys.filter((b) => b.stock === sell.stock);
-      if (matchingBuys.length === 0) continue;
+    for (const trade of trades) {
+      if (!trade.stock || !trade.price || !trade.shares) continue;
+      const price = Number(trade.price);
+      const shares = Number(trade.shares);
+      const tradeFee = Math.max(price * shares * COMMISSION_RATE, COMMISSION_MIN);
 
-      const totalBuyShares = matchingBuys.reduce((s, b) => s + Number(b.shares), 0);
-      const totalBuyCost = matchingBuys.reduce((s, b) => s + Number(b.price) * Number(b.shares), 0);
-      const avgBuyPrice = round2(totalBuyCost / totalBuyShares);
-      const sellAmount = Number(sell.price) * Number(sell.shares);
-      const matched = Math.min(totalBuyShares, Number(sell.shares));
-      const grossProfit = round2((Number(sell.price) - avgBuyPrice) * matched);
+      if (trade.action === '买入') {
+        // 先尝试匹配已挂起的卖出（先卖后买的T）
+        const sq = sellQueues[trade.stock] ?? [];
+        let toMatch = shares;
 
-      // 每笔买入各自计一次佣金，合并后只算一笔会少收
-      const buyFees = matchingBuys.reduce(
-        (sum, b) =>
-          sum + Math.max(Number(b.price) * Number(b.shares) * COMMISSION_RATE, COMMISSION_MIN),
-        0,
-      );
-      const fee = round2(buyFees + Math.max(sellAmount * COMMISSION_RATE, COMMISSION_MIN));
-      const tax = round2(sellAmount * STAMP_TAX_RATE);
+        for (const lot of sq) {
+          if (toMatch <= 0 || lot.remaining <= 0) continue;
+          const consume = Math.min(lot.remaining, toMatch);
+          const buyFeeShare = tradeFee * (consume / shares);
+          const sellFeeShare = lot.totalFee * (consume / lot.totalShares);
+          const sellAmt = lot.price * consume;
+          const gp = round2((lot.price - price) * consume);
+          const f = round2(buyFeeShare + sellFeeShare);
+          const tax = round2(sellAmt * STAMP_TAX_RATE);
+          generated.push({
+            stock: trade.stock,
+            buyPrice: String(price),
+            buyShares: String(consume),
+            sellPrice: String(lot.price),
+            sellShares: String(consume),
+            grossProfit: String(gp),
+            fee: String(f),
+            tax: String(tax),
+            netRevenue: String(round2(gp - f - tax)),
+          });
+          lot.remaining -= consume;
+          toMatch -= consume;
+        }
+        sellQueues[trade.stock] = sq.filter((l) => l.remaining > 0);
 
-      generated.push({
-        stock: sell.stock,
-        buyPrice: String(avgBuyPrice),
-        buyShares: String(totalBuyShares),
-        sellPrice: sell.price,
-        sellShares: sell.shares,
-        grossProfit: String(grossProfit),
-        fee: String(fee),
-        tax: String(tax),
-        netRevenue: String(round2(grossProfit - fee - tax)),
-      });
+        // 未匹配的余量入买入队列
+        if (toMatch > 0) {
+          if (!buyQueues[trade.stock]) buyQueues[trade.stock] = [];
+          buyQueues[trade.stock].push({
+            price,
+            remaining: toMatch,
+            totalShares: toMatch,
+            totalFee: tradeFee * (toMatch / shares),
+          });
+        }
+      } else {
+        // 卖出：先匹配已挂起的买入（先买后卖的T）
+        const bq = buyQueues[trade.stock] ?? [];
+        let toMatch = shares;
+
+        for (const lot of bq) {
+          if (toMatch <= 0 || lot.remaining <= 0) continue;
+          const consume = Math.min(lot.remaining, toMatch);
+          const buyFeeShare = lot.totalFee * (consume / lot.totalShares);
+          const sellFeeShare = tradeFee * (consume / shares);
+          const sellAmt = price * consume;
+          const gp = round2((price - lot.price) * consume);
+          const f = round2(buyFeeShare + sellFeeShare);
+          const tax = round2(sellAmt * STAMP_TAX_RATE);
+          generated.push({
+            stock: trade.stock,
+            buyPrice: String(lot.price),
+            buyShares: String(consume),
+            sellPrice: String(price),
+            sellShares: String(consume),
+            grossProfit: String(gp),
+            fee: String(f),
+            tax: String(tax),
+            netRevenue: String(round2(gp - f - tax)),
+          });
+          lot.remaining -= consume;
+          toMatch -= consume;
+        }
+        buyQueues[trade.stock] = bq.filter((l) => l.remaining > 0);
+
+        // 未匹配的余量入卖出队列（等后续买入来配对）
+        if (toMatch > 0) {
+          if (!sellQueues[trade.stock]) sellQueues[trade.stock] = [];
+          sellQueues[trade.stock].push({
+            price,
+            remaining: toMatch,
+            totalShares: toMatch,
+            totalFee: tradeFee * (toMatch / shares),
+          });
+        }
+      }
     }
+
     if (generated.length > 0) set({ tRecords: generated });
   };
 
