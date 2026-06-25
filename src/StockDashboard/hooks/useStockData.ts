@@ -23,7 +23,7 @@ export interface StockData {
 async function fetchJSON<T>(url: string, fallback: T): Promise<T> {
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('api error');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch {
     return fallback;
