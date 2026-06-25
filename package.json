@@ -71,7 +71,7 @@
     "father": "^4.0.0-rc.2",
     "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
-    "lint-staged": "^10.0.7",
+    "lint-staged": "^17.0.7",
     "prettier": "^2.2.1",
     "yorkie": "^2.0.0"
   },
