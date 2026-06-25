@@ -3,7 +3,7 @@
     "stock": "国际医学",
     "code": "sz000516",
     "cost": 4.821,
-    "shares": 30300,
+    "shares": 13900,
     "remark": "2026年目标股市15w",
     "base": {
       "cost": 5,
@@ -26,7 +26,7 @@
     "stock": "京城股份",
     "code": "sh600860",
     "cost": 23.677,
-    "shares": 100,
+    "shares": 8200,
     "base": {
       "cost": 9,
       "shares": 3000,
