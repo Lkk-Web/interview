@@ -377,7 +377,9 @@ func fromPositionTarget(positionID uint, target domain.PositionTarget) PositionT
 	}
 }
 
-// AddAssetHistory 按日期 upsert 一条资产快照，成功后自动计算 other 增量写入 other_incomes，并同步 JSON 文件。
+// AddAssetHistory 按日期 upsert 一条资产快照。
+// 若其他资产相对前一天有变动（delta != 0），自动写一条"其他资产变动"到 other_incomes，
+// 并把 asset-history.json 和 other-income.json 一起 commit；无变动时只提交 asset-history.json。
 func (repository *GormRepository) AddAssetHistory(ctx context.Context, item domain.AssetHistory) (domain.AssetHistory, error) {
 	model := fromAssetHistory(item)
 	result := repository.db.WithContext(ctx).
@@ -405,18 +407,22 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 	}
 	saved := toAssetHistory(model)
 
-	// 自动计算 other 增量：找该日期前一条记录，差值写入 other_incomes
-	if item.Other != 0 {
-		var prevModel AssetHistoryModel
-		err := repository.db.WithContext(ctx).
-			Where("date < ?", item.Date).
-			Order("date DESC").
-			First(&prevModel).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return saved, fmt.Errorf("find prev asset history: %w", err)
-		}
-		delta := item.Other - prevModel.Other
-		// 按日期唯一 upsert，description 固定为"其他资产变动"
+	// 自动计算 other 增量：找该日期前一条记录，与本次 other 求差。
+	// 只有当差值不为 0（即其他资产相对前一天确实变动）时，才写一条"其他资产变动"。
+	// 这样无变动的日子既不会在 other_incomes 表里多出一条 amount=0 的冗余记录，
+	// 也不会去改动 other-income.json 文件。
+	otherIncomeChanged := false
+	var prevModel AssetHistoryModel
+	prevErr := repository.db.WithContext(ctx).
+		Where("date < ?", item.Date).
+		Order("date DESC").
+		First(&prevModel).Error
+	if prevErr != nil && !errors.Is(prevErr, gorm.ErrRecordNotFound) {
+		return saved, fmt.Errorf("find prev asset history: %w", prevErr)
+	}
+	delta := item.Other - prevModel.Other
+	if delta != 0 {
+		// 按 日期+description 唯一 upsert，description 固定为"其他资产变动"
 		otherModel := OtherIncomeModel{Date: item.Date, Description: "其他资产变动"}
 		if err := repository.db.WithContext(ctx).
 			Where(OtherIncomeModel{Date: item.Date, Description: "其他资产变动"}).
@@ -427,6 +433,7 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 			Update("amount", delta).Error; err != nil {
 			return saved, fmt.Errorf("update other income amount: %w", err)
 		}
+		otherIncomeChanged = true
 	}
 
 	// 写入成功后同步 JSON，exporter 可选（测试或未配置 dataDir 时为 nil）。
@@ -434,14 +441,20 @@ func (repository *GormRepository) AddAssetHistory(ctx context.Context, item doma
 		if err := repository.exporter.ExportAssetHistory(ctx); err != nil {
 			return saved, fmt.Errorf("sync json after add: %w", err)
 		}
-		if err := repository.exporter.ExportOtherIncome(ctx); err != nil {
-			return saved, fmt.Errorf("sync other-income.json: %w", err)
+		// asset-history.json 一定变了，先放进待提交列表。
+		changedFiles := []string{"data/stock/asset-history.json"}
+
+		// 只有其他资产真有变动时，才同步并把 other-income.json 一起带进同一次 commit。
+		if otherIncomeChanged {
+			if err := repository.exporter.ExportOtherIncome(ctx); err != nil {
+				return saved, fmt.Errorf("sync other-income.json: %w", err)
+			}
+			changedFiles = append(changedFiles, "data/stock/other-income.json")
 		}
-		// 文件同步完成后自动 git commit + push
+
+		// 文件同步完成后自动 git commit + push（两个文件在同一次提交里）
 		if repository.gitCommitter != nil {
-			repository.gitCommitter.CommitAndPush(saved.Date, "asset", []string{
-				"data/stock/asset-history.json",
-			})
+			repository.gitCommitter.CommitAndPush(saved.Date, "asset", changedFiles)
 		}
 	}
 	return saved, nil
