@@ -43,7 +43,7 @@ func Load() (Config, error) {
 		HTTPAddr:       valueOrDefault("HTTP_ADDR", ":8888"),
 		DatabaseDSN:    os.Getenv("DATABASE_DSN"),
 		AdminToken:     os.Getenv("ADMIN_TOKEN"),
-		AllowedOrigins: splitCSV(valueOrDefault("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8080,capacitor://localhost")),
+		AllowedOrigins: splitCSV(valueOrDefault("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8888,capacitor://localhost")),
 		MigrationsDir:  valueOrDefault("MIGRATIONS_DIR", "./migrations"),
 		DataDir:        valueOrDefault("DATA_DIR", "../data/stock"),
 		StockMDPath:    valueOrDefault("STOCK_MD_PATH", "../docs/summary/stock/stock.md"),
