@@ -27,4 +27,6 @@ export interface CodeEditorProps {
   previewHeight?: number;
   /** 是否默认展开编辑器，默认 false */
   defaultOpen?: boolean;
+  /** 注入工具栏右侧的额外操作节点（如导出按钮） */
+  extraActions?: React.ReactNode;
 }

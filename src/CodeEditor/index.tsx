@@ -112,6 +112,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   namespace = DEFAULT_NAMESPACE,
   editorHeight = 300,
   defaultOpen = false,
+  extraActions,
 }) => {
   const effectiveCacheKey = cacheKey || `${lang}:${(initialCode || '').slice(0, 40)}`;
 
@@ -159,6 +160,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       <div className="code-editor-toolbar">
         <span className="code-editor-lang-badge">{LANG_LABEL[lang]}</span>
         <div className="code-editor-toolbar-actions">
+          {extraActions}
           {hasChanged && (
             <button
               className="code-editor-btn code-editor-btn-reset"
