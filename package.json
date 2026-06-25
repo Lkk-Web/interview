@@ -18,7 +18,7 @@
     "prepare": "husky install",
     "upload": "node upload-to-r2.js",
     "deploy": "NODE_OPTIONS=--openssl-legacy-provider npm run docs:build && npm run upload",
-    "mobile:build": "MOBILE=1 NODE_OPTIONS=--openssl-legacy-provider npm run docs:build && npx cap sync ios"
+    "mobile:build": "MOBILE=1 REACT_APP_API_BASE=https://interview.kying.org/api NODE_OPTIONS=--openssl-legacy-provider npm run docs:build && npx cap sync ios"
   },
   "files": [
     "dist"
