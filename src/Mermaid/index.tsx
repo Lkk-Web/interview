@@ -258,6 +258,12 @@ const Mermaid: React.FC<MermaidProps> = ({
       mermaid.initialize({
         startOnLoad: false,
         theme,
+        // 全局默认样式：subgraph 浅灰白背景，chart 里的 %%{init:}%% 优先级更高会自动覆盖
+        themeVariables: {
+          clusterBkg: '#f8fafc',
+          clusterBorder: '#94a3b8',
+          edgeLabelBackground: '#ffffff',
+        },
         securityLevel: 'loose',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       });
