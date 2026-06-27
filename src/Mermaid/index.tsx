@@ -14,6 +14,8 @@ interface MermaidProps {
   editable?: boolean;
   /** 本地缓存 key（editable 模式下使用） */
   cacheKey?: string;
+  /** 导出图片时写在左上角的标题 */
+  title?: string;
 }
 
 let mermaidInitialized = false;
@@ -25,7 +27,7 @@ let mermaidInitialized = false;
  * 注意：SVG 中引用的系统字体（如 -apple-system）在 canvas 里会回退为默认字体，
  * 这是浏览器安全限制，属于已知限制。
  */
-function exportSvgAsPng(svg: string, pixelRatio = 2) {
+function exportSvgAsPng(svg: string, pixelRatio = 2, title?: string) {
   const parser = new DOMParser();
   const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
   const svgEl = svgDoc.querySelector('svg');
@@ -43,9 +45,14 @@ function exportSvgAsPng(svg: string, pixelRatio = 2) {
   }
   if (!w || !h) return;
 
+  // 有标题时在顶部留出一行高度
+  const TITLE_FONT_SIZE = 24;
+  const TITLE_PADDING = 10;
+  const titleBarH = title ? TITLE_FONT_SIZE + TITLE_PADDING * 2 : 0;
+
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(w * pixelRatio);
-  canvas.height = Math.round(h * pixelRatio);
+  canvas.height = Math.round((h + titleBarH) * pixelRatio);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -54,6 +61,13 @@ function exportSvgAsPng(svg: string, pixelRatio = 2) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(pixelRatio, pixelRatio);
 
+  // 在左上角绘制标题
+  if (title) {
+    ctx.font = `600 ${TITLE_FONT_SIZE}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.fillStyle = '#333333';
+    ctx.fillText(title, TITLE_PADDING, TITLE_PADDING + TITLE_FONT_SIZE);
+  }
+
   // blob: URL 会让 canvas 被标记为 tainted（跨域），导致 toDataURL 报 SecurityError。
   // 改用 base64 data: URI，浏览器将其视为同源，绕过该限制。
   // btoa 不支持多字节字符；用 TextEncoder 将 UTF-8 字节数组转为 latin1 字符串再编码。
@@ -61,9 +75,10 @@ function exportSvgAsPng(svg: string, pixelRatio = 2) {
   const base64 = btoa(Array.from(bytes, (b) => String.fromCodePoint(b)).join(''));
   const img = new Image();
   img.onload = () => {
-    ctx.drawImage(img, 0, 0, w, h);
+    // 图表内容偏移到标题栏下方
+    ctx.drawImage(img, 0, titleBarH, w, h);
     const a = document.createElement('a');
-    a.download = `mermaid-${Date.now()}.png`;
+    a.download = `${title ?? 'mermaid'}-${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
     a.click();
   };
@@ -74,9 +89,11 @@ function exportSvgAsPng(svg: string, pixelRatio = 2) {
 const MermaidChart: React.FC<{
   chart: string;
   zoomable?: boolean;
+  /** 导出图片时写在左上角的标题 */
+  title?: string;
   /** SVG 渲染完成后回调，参数为导出函数；可供父组件将导出按钮放到外部工具栏 */
   onExportReady?: (exportFn: () => void) => void;
-}> = ({ chart, zoomable = false, onExportReady }) => {
+}> = ({ chart, zoomable = false, title, onExportReady }) => {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [scale, setScale] = useState(1);
@@ -167,7 +184,7 @@ const MermaidChart: React.FC<{
     lastTouchDist.current = 0;
   }, []);
 
-  const handleExport = useCallback(() => exportSvgAsPng(svg), [svg]);
+  const handleExport = useCallback(() => exportSvgAsPng(svg, 2, title), [svg, title]);
 
   // svg 就绪或更新时，把最新的导出函数通知父组件
   useEffect(() => {
@@ -248,6 +265,7 @@ const Mermaid: React.FC<MermaidProps> = ({
   zoomable = false,
   editable = false,
   cacheKey,
+  title,
 }) => {
   // editable 模式下，MermaidChart 渲染完成后会把导出函数传到这里，
   // 再通过 extraActions 注入到 CodeEditor 的工具栏。
@@ -298,6 +316,7 @@ const Mermaid: React.FC<MermaidProps> = ({
           <MermaidChart
             chart={code}
             zoomable={zoomable}
+            title={title}
             onExportReady={(fn) => setExportFn(() => fn)}
           />
         )}
@@ -305,7 +324,7 @@ const Mermaid: React.FC<MermaidProps> = ({
     );
   }
 
-  return <MermaidChart chart={chart} zoomable={zoomable} />;
+  return <MermaidChart chart={chart} zoomable={zoomable} title={title} />;
 };
 
 export default Mermaid;
