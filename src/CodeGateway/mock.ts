@@ -273,20 +273,16 @@ const handler = async (event) => {
     codeKey: 'style-demo',
     lang: 'mermaid',
     code: `flowchart LR
-    subgraph 监控告警
-        A[(数据采集)] --> B{阈值判断}
-        B -->|正常| C[正常]
-        B -->|超阈值| D[警告]
-        D --> E{持续超阈值?}
-        E -->|是| F[错误/告警]
-        E -->|否| C
-    end
-    classDef ok fill:#52c41a,color:#fff
-    classDef warn fill:#ffcc00,color:#000
-    classDef err fill:#ff4444,color:#fff
-    class C ok
-    class D warn
-    class F err`,
+    A[(数据采集)] --> B{阈值判断}
+    B -->|正常| C[正常]
+    B -->|超阈值| D[警告]
+    D --> E{持续超阈值?}
+    E -->|否| C
+    E -->|是| F[错误/告警]
+
+    style C fill:#52c41a,color:#fff,stroke:#52c41a
+    style D fill:#faad14,color:#fff,stroke:#faad14
+    style F fill:#ff4d4f,color:#fff,stroke:#ff4d4f`,
   },
   'home:knowledge-map': {
     pageKey: 'home',
@@ -581,6 +577,70 @@ const handler = async (event) => {
     AR-->>GW: 回复消息
     GW-->>CH: 出站消息
     CH-->>U: 显示回复`,
+  },
+  'architecture:copilot-memory': {
+    pageKey: 'architecture',
+    codeKey: 'copilot-memory',
+    lang: 'mermaid',
+    code: `flowchart TD
+    subgraph INPUT["输入源"]
+        U["用户消息"]
+        AI["AI 回复"]
+        SYS["系统事件\\n(工具调用/状态变更)"]
+    end
+
+    subgraph WRITE["1. Memory 写入流程（实时抽取与存储）"]
+        direction LR
+        W1["内容解析器\\n消息解析 · 结构化提取\\n意图识别 · 实体识别"]
+        W2["记忆抽取器\\n事实(Fact) · 偏好(Preference)\\n事件(Event) · 任务/待办(Task)"]
+        W3["记忆去重 & 合并\\n相似性检测 · 冲突检测\\n版本合并 · 置信度更新"]
+        W4["记忆分类 & 打标\\n类型标注 · 重要性评分\\n时间戳 · 来源标记"]
+        W1 --> W2 --> W3 --> W4
+        W4 -.->|"反馈优化（基于后续对话验证记忆质量）"| W2
+    end
+
+    subgraph STORE["2. Memory 存储层（多层存储）"]
+        direction TB
+        PM[("偏好记忆库 Preference Memory\\nMongoDB")]
+        EM[("事件记忆库 Event Memory\\nMongoDB\\n Purchase Context")]
+        SM[("会话记忆库 Session Memory\nMongoDB")]
+        HF[("历史事实库 History Facts\nMongoDB")]
+    end
+
+    subgraph RECALL["3. Memory 召回流程（跨Session记忆检索）"]
+        direction LR
+        R1["召回触发器\\n新会话启动 · 关键词触发\\n时间维度触发 · 上下文相似触发"]
+        R2["查询理解\\n意图理解 · 实体识别\\n时间解析(昨天/上午等) · 查询扩展"]
+        R3["结果排序 & 过滤\\n相关性排序 · 去重过滤\\n重要性加权 · Top-K 选择"]
+        R4["记忆融合\\n多源记忆融合 · 冲突消解\\n上下文组装 · 置信度标注"]
+    end
+
+    subgraph PROMPT["4. Memory 在 Prompt 中的使用"]
+        direction LR
+        P1["系统指令\\n(System Prompt)"]
+        P2["用户画像记忆\\n(User Profile)"]
+        P3["偏好记忆\\n(Preferences)"]
+        P4["近期事件记忆\\n(Recent Events)"]
+        P5["会话摘要\\n(Summary)"]
+        P6["当前对话历史\\n(History)"]
+        P7(["完整 Prompt"])
+        LLM["LLM 大模型\\n生成回复"]
+        P1 & P2 & P3 & P4 & P5 & P6 --> P7 --> LLM
+    end
+
+    subgraph CONS["5. 会话一致性保障"]
+        direction LR
+        C1["dialogue分布式 Session 管理\\n多节点状态同步 · 会话路由一致性"]
+        C2["记忆版本控制\\n记忆版本号 · 乐观锁控制\\n冲突检测与合并"]
+        C3["容错与降级\\n存储故障降级 · 缓存兜底\\n召回失败降级"]
+    end
+
+    INPUT -->|"写入"| W1
+    W4 -->|"写入存储"| STORE
+    STORE -->|"读取/召回"| R1 & R2 & R3
+    R1 & R2 & R3 --> R4
+    R4 --> P1 & P2 & P3 & P4 & P5 & P6
+    STORE <--> CONS`,
   },
   'ai-index:ai-overview': {
     pageKey: 'ai-index',

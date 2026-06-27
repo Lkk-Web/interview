@@ -47,6 +47,17 @@ export default () => <CodeGateway pageKey="architecture" codeKey="message-notify
 
 ---
 
+## Copilot Memory 架构
+
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="copilot-memory" />;
+```
+
+---
+
 ## OpenClaw 架构
 
 > OpenClaw 是一个 AI Agent 平台，采用 5 层分层架构设计，支持多渠道接入、多模型提供商、插件化扩展。
