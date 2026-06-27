@@ -599,7 +599,7 @@ const handler = async (event) => {
         W4 -.->|"反馈优化（基于后续对话验证记忆质量）"| W2
     end
 
-    subgraph STORE["2. Memory 存储层（多层存储）"]
+    subgraph STORE["3. Memory 存储层（多层存储）"]
         direction TB
         PM[("偏好记忆库 Preference Memory\\nMongoDB")]
         EM[("事件记忆库 Event Memory\\nMongoDB\\n Purchase Context")]
@@ -628,7 +628,7 @@ const handler = async (event) => {
         P1 & P2 & P3 & P4 & P5 & P6 --> P7 --> LLM
     end
 
-    subgraph CONS["5. 会话一致性保障"]
+    subgraph CONS["2. 会话一致性保障"]
         direction LR
         C1["dialogue分布式 Session 管理\\n多节点状态同步 · 会话路由一致性"]
         C2["记忆版本控制\\n记忆版本号 · 乐观锁控制\\n冲突检测与合并"]
@@ -636,11 +636,16 @@ const handler = async (event) => {
     end
 
     INPUT -->|"写入"| W1
-    W4 -->|"写入存储"| STORE
-    STORE -->|"读取/召回"| R1 & R2 & R3
-    R1 & R2 & R3 --> R4
+    CONS <--> STORE
+    W1 -->|"写入存储"| STORE
+    W4 -->|"触发"| INTENT["LLM 意图识别\\nSkill 调用 · 任务分解"]
+    INTENT -->|"需要召回"| R1
+    INTENT --> R2 & R3
+    R1 --> |"读取"|STORE
+    STORE -->|"召回"| R4
+    R2 & R3 --> R4
     R4 --> P1 & P2 & P3 & P4 & P5 & P6
-    STORE <--> CONS`,
+    `,
   },
   'ai-index:ai-overview': {
     pageKey: 'ai-index',
