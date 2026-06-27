@@ -52,7 +52,7 @@ jobs:
 
       - name: Wait for iPhone unlock
         run: |
-          osascript -e 'display dialog "请解锁 iPhone，30秒后自动继续安装。" buttons {"现在开始"} default button "现在开始" giving up after 30'
+          osascript -e 'display dialog "请解锁iPhone并XCode配对，30秒后自动继续安装。" buttons {"现在开始"} default button "现在开始" giving up after 30'
 
       - name: Unlock keychain
         run: |
