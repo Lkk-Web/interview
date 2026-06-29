@@ -342,7 +342,7 @@ const handler = async (event) => {
     pageKey: 'architecture',
     codeKey: 'copilot-system',
     lang: 'mermaid',
-    code: `graph LR
+    code: `flowchart LR
     subgraph 第三方系统服务
       IM[IM]
       WB[workbench]

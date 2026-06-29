@@ -27,6 +27,15 @@ import { CodeGateway } from 'interview';
 export default () => <CodeGateway pageKey="architecture" codeKey="copilot-purchase-context" />;
 ```
 
+## Copilot Memory 架构
+
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="copilot-memory" />;
+```
+
 ## 前端跨页面 websocket 方案
 
 ```tsx
@@ -43,17 +52,6 @@ import React from 'react';
 import { CodeGateway } from 'interview';
 
 export default () => <CodeGateway pageKey="architecture" codeKey="message-notify" />;
-```
-
----
-
-## Copilot Memory 架构
-
-```tsx
-import React from 'react';
-import { CodeGateway } from 'interview';
-
-export default () => <CodeGateway pageKey="architecture" codeKey="copilot-memory" />;
 ```
 
 ---
