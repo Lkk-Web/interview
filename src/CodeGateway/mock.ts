@@ -371,55 +371,101 @@ const handler = async (event) => {
     MS <--> |"微信消息\\n用户画像"| MS-DB
     MS ---> |POST Hook|Ai`,
   },
-  'architecture:micro-service': {
+  'architecture:copilot-purchase-context': {
     pageKey: 'architecture',
-    codeKey: 'micro-service',
+    codeKey: 'copilot-purchase-context',
     lang: 'mermaid',
-    code: `graph LR
-    Client --> GW
-
-    subgraph BIZ
-        US
-        OS
-        PS
-        NS
+    code: `flowchart TB
+    subgraph S1["业务系统"]
+      direction LR
+      INQUIRY[询价系统]
+      ORDER[订单系统]
+      IM[IM系统]
     end
 
-    subgraph INFRA
-        MQ
-        REG
-        CFG
-        LOG
+    SYNC["业务数据同步"]
+    S1 <--->|"节点流转"| SYNC
+
+
+    subgraph S2["Purchase Context 管理中心"]
+      CREATE["首次询价 创建 Purchase Context"]
+      CREATE --> STORE
+      UPDATE["更新 Purchase Context 节点"]
+      STORE[(Purchase Context)]
+      UPDATE --> STORE
     end
 
-    subgraph DATA
-        DB1
-        DB2
-        DB3
-        CACHE
+    subgraph STATE["状态机"]
+      direction LR
+      A[VIN]
+      B[配件]
+      C[询价]
+      D[报价]
+      E[下单]
+      F[已支付]
+      G[售后]
+      H[完成]
+    %%A --> B --> C --> D --> E --> F --> G --> H
     end
 
-    GW --> US
-    GW --> OS
-    GW --> PS
-    GW --> NS
+    C --> |"询价完成"| CREATE
+    UPDATE <--> |"主动查询\\n1.节点流转\\n2.超时查询"| SYNC
+    %%STATE --> |"1"| S2
 
-    US --> MQ
-    OS --> MQ
-    MQ --> NS
-    US --> REG
-    OS --> REG
-    PS --> REG
+    USER[用户消息]
+    USER --> SESSION
 
-    US --> DB1
-    OS --> DB2
-    PS --> DB3
-    PS --> CACHE
+    subgraph S3["Copilot Runtime"]
+      SESSION[Session Context]
+      SUMMARY[Summary]
+      PROMPT["Prompt 组装"]
+      LLM[Agent / LLM]
 
-    style Client fill:#e1f5fe
-    style GW fill:#fff3e0
-    style MQ fill:#e8f5e9
-    style CACHE fill:#fce4ec`,
+      SESSION --> PROMPT
+      SUMMARY --> PROMPT
+      STORE -.-> |"注入上下文"| PROMPT
+      PROMPT --> LLM
+      LLM --> UPDATE
+    end
+    
+    LLM --> STATE
+
+    subgraph S4["生命周期管理"]
+      TIMEOUT[lastActive 超时检查]
+      FINISH[业务完成]
+      DESTROY[注销 Purchase Context]
+
+      STORE --> TIMEOUT
+      STORE --> FINISH
+      TIMEOUT --> DESTROY
+      FINISH --> DESTROY
+    end
+
+    STORE --> DB
+    
+  	DB["string _Id 主键 
+        string userId 用户Id
+        string companyId  公司Id
+        string operatorId 空军Id
+        string operatorName 空军名
+        string bussinessId 群Id
+        string dialogueId 对话Id
+        string currentNode 当前节点
+        string status 状态
+
+        string vin 车架号
+        json parts 配件信息
+        string inquiryId 询价单Id
+        json order 订单信息
+        json quotation 报价信息
+        json afterSale 售后信息
+
+        datetime lastActive 上次激活时间
+        datetime lifetime 生命周期时间
+        datetime createdAt
+        datetime updatedAt"
+      ]
+    `,
   },
   'architecture:frontend-arch': {
     pageKey: 'architecture',

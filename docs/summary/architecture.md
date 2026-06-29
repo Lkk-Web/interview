@@ -18,13 +18,13 @@ import { CodeGateway } from 'interview';
 export default () => <CodeGateway pageKey="architecture" codeKey="copilot-system" />;
 ```
 
-## 微服务架构示例
+## Copilot Purchase Context
 
 ```tsx
 import React from 'react';
 import { CodeGateway } from 'interview';
 
-export default () => <CodeGateway pageKey="architecture" codeKey="micro-service" />;
+export default () => <CodeGateway pageKey="architecture" codeKey="copilot-purchase-context" />;
 ```
 
 ## 前端跨页面 websocket 方案
