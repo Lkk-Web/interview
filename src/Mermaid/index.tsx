@@ -278,8 +278,13 @@ const Mermaid: React.FC<MermaidProps> = ({
         theme,
         // 全局默认样式：subgraph 浅灰白背景，chart 里的 %%{init:}%% 优先级更高会自动覆盖
         themeVariables: {
+          // subgraph 背景
           clusterBkg: '#f8fafc',
           clusterBorder: '#94a3b8',
+          // 普通节点默认填充，与 subgraph 保持一致
+          primaryColor: '#f8fafc',
+          primaryBorderColor: '#94a3b8',
+          primaryTextColor: '#334155',
           edgeLabelBackground: '#ffffff',
         },
         securityLevel: 'loose',

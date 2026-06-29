@@ -9,13 +9,13 @@ toc: menu
 
 ---
 
-## 前后端分层架构
+## Copilot 系统架构
 
 ```tsx
 import React from 'react';
 import { CodeGateway } from 'interview';
 
-export default () => <CodeGateway pageKey="architecture" codeKey="layered-arch" />;
+export default () => <CodeGateway pageKey="architecture" codeKey="copilot-system" />;
 ```
 
 ## 微服务架构示例

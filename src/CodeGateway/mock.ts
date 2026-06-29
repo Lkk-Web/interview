@@ -338,30 +338,38 @@ const handler = async (event) => {
       手撕代码
       复盘总结`,
   },
-  'architecture:layered-arch': {
+  'architecture:copilot-system': {
     pageKey: 'architecture',
-    codeKey: 'layered-arch',
+    codeKey: 'copilot-system',
     lang: 'mermaid',
-    code: `graph TD
-    A["客户端 Browser/App"] --> B["CDN / Nginx"]
-    B --> C["前端应用 React/Vue"]
-    B --> D["API Gateway 网关层"]
-    D --> E["BFF 层 Node.js"]
-    D --> F["业务服务层"]
-    F --> G["用户服务"]
-    F --> H["订单服务"]
-    F --> I["支付服务"]
-    G --> J[("MySQL")]
-    H --> K[("Redis")]
-    H --> J
-    I --> L["第三方支付 API"]
+    code: `graph LR
+    subgraph 第三方系统服务
+      IM[IM]
+      WB[workbench]
+    end
 
-    style A fill:#e1f5fe
-    style C fill:#e8f5e9
-    style D fill:#fff3e0
-    style F fill:#fce4ec
-    style J fill:#f3e5f5
-    style K fill:#f3e5f5`,
+    B[copilot-bridge]
+    BD[(bridge-DB)]
+
+    subgraph Ai服务
+      Ai[copilot]
+      Ai-DB[(copilot-DB)]
+    end
+
+    subgraph Message服务
+      WxM[Wx-Message]
+      MS[message-center] 
+      MS-DB[(message-DB)] 
+    end
+
+    第三方系统服务 <---> |"产生/处理工单\\n消息通知"| B
+    B ---> |"业务数据"| Ai
+    Ai <--> |"Conversations\\nPurchase Context"| Ai-DB
+    Ai ---> |"处理任务"| B
+    B <--> BD
+    WxM ---> |"微信消息Kafka"| MS
+    MS <--> |"微信消息\\n用户画像"| MS-DB
+    MS ---> |POST Hook|Ai`,
   },
   'architecture:micro-service': {
     pageKey: 'architecture',
