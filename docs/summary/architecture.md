@@ -9,22 +9,22 @@ toc: menu
 
 ---
 
-## Copilot 系统架构
+## Intelligent Sale 架构
+
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="intelligent-sale" />;
+```
+
+## Copilot System 架构
 
 ```tsx
 import React from 'react';
 import { CodeGateway } from 'interview';
 
 export default () => <CodeGateway pageKey="architecture" codeKey="copilot-system" />;
-```
-
-## Copilot Purchase Context
-
-```tsx
-import React from 'react';
-import { CodeGateway } from 'interview';
-
-export default () => <CodeGateway pageKey="architecture" codeKey="copilot-purchase-context" />;
 ```
 
 ## Copilot Memory 架构
@@ -34,6 +34,15 @@ import React from 'react';
 import { CodeGateway } from 'interview';
 
 export default () => <CodeGateway pageKey="architecture" codeKey="copilot-memory" />;
+```
+
+## Copilot Purchase Context
+
+```tsx
+import React from 'react';
+import { CodeGateway } from 'interview';
+
+export default () => <CodeGateway pageKey="architecture" codeKey="copilot-purchase-context" />;
 ```
 
 ## 前端跨页面 websocket 方案

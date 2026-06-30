@@ -338,9 +338,9 @@ const handler = async (event) => {
       手撕代码
       复盘总结`,
   },
-  'architecture:copilot-system': {
+  'architecture:intelligent-sale': {
     pageKey: 'architecture',
-    codeKey: 'copilot-system',
+    codeKey: 'intelligent-sale',
     lang: 'mermaid',
     code: `flowchart LR
     subgraph 第三方系统服务
@@ -371,6 +371,12 @@ const handler = async (event) => {
     MS <--> |"微信消息\\n用户画像"| MS-DB
     MS ---> |POST Hook|Ai`,
   },
+  'architecture:copilot-system': {
+    pageKey: 'architecture',
+    codeKey: 'copilot-system',
+    lang: 'mermaid',
+    code: ``,
+  },
   'architecture:copilot-purchase-context': {
     pageKey: 'architecture',
     codeKey: 'copilot-purchase-context',
@@ -380,17 +386,18 @@ const handler = async (event) => {
       direction LR
       INQUIRY[询价系统]
       ORDER[订单系统]
-      IM[IM系统]
+      IM[IM]
     end
 
     SYNC["业务数据同步"]
     S1 <--->|"节点流转"| SYNC
 
-
     subgraph S2["Purchase Context 管理中心"]
-      CREATE["首次询价 创建 Purchase Context"]
+      CREATE["创建 Purchase Context\\n\\n「unactive」"]
+      ACTIVE["激活 Purchase Context\\n\\n「active」"]
       CREATE --> STORE
       UPDATE["更新 Purchase Context 节点"]
+      ACTIVE --> UPDATE
       STORE[(Purchase Context)]
       UPDATE --> STORE
     end
@@ -408,7 +415,9 @@ const handler = async (event) => {
     %%A --> B --> C --> D --> E --> F --> G --> H
     end
 
-    C --> |"询价完成"| CREATE
+    A --> |"发送vin"| CREATE
+    C --> |"询价完成"| ACTIVE
+    E --> |"「uncompleted」"| UPDATE
     UPDATE <--> |"主动查询\\n1.节点流转\\n2.超时查询"| SYNC
     %%STATE --> |"1"| S2
 
@@ -437,8 +446,8 @@ const handler = async (event) => {
 
       STORE --> TIMEOUT
       STORE --> FINISH
-      TIMEOUT --> DESTROY
-      FINISH --> DESTROY
+      TIMEOUT -->|"「completed」\\n「canceled」"| DESTROY
+      FINISH --> |"「completed」"| DESTROY
     end
 
     STORE --> DB
