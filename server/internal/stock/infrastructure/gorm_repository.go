@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// defaultMonthlyTTarget 是新月份第一次提交每日记录时，若月度记录尚不存在使用的默认做T目标。
+// 需要和前端 DEFAULT_MONTHLY_T_TARGET（src/StockDashboard/index.tsx）保持一致。
+const defaultMonthlyTTarget = 2500
+
 type GormRepository struct {
 	db             *gorm.DB
 	exporter       *JSONExporter
@@ -575,12 +579,17 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
-		// 更新月度T收益
+		// 更新月度T收益：跨月第一天提交时，当月记录还不存在，
+		// 需要先按默认目标创建，否则下面的 Update 会静默地什么都不改（RowsAffected=0）
 		if log.MonthlyTRevenue != 0 {
-			month := log.Date[:7] // "2026-06"
-			if err := tx.Model(&MonthlyRecordModel{}).
-				Where("month = ?", month).
-				Update("t_revenue", log.MonthlyTRevenue).Error; err != nil {
+			month := log.Date[:7] // "2026-07"
+			var monthlyModel MonthlyRecordModel
+			if err := tx.Where(MonthlyRecordModel{Month: month}).
+				Attrs(MonthlyRecordModel{TTarget: defaultMonthlyTTarget}).
+				FirstOrCreate(&monthlyModel).Error; err != nil {
+				return fmt.Errorf("find or create monthly record: %w", err)
+			}
+			if err := tx.Model(&monthlyModel).Update("t_revenue", log.MonthlyTRevenue).Error; err != nil {
 				return fmt.Errorf("update monthly t_revenue: %w", err)
 			}
 		}
@@ -598,6 +607,14 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			return fmt.Errorf("sync positions.json: %w", err)
 		}
 		changedFiles = append(changedFiles, "data/stock/positions.json")
+
+		// monthlyTRevenue 不为 0 时才可能改过 stock_monthly_records，才需要同步 monthly.json
+		if log.MonthlyTRevenue != 0 {
+			if err := repository.exporter.ExportMonthly(ctx); err != nil {
+				return fmt.Errorf("sync monthly.json: %w", err)
+			}
+			changedFiles = append(changedFiles, "data/stock/monthly.json")
+		}
 
 		if repository.markdownWriter != nil {
 			if err := repository.markdownWriter.AppendDailyLog(log); err != nil {

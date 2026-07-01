@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import type { StockDashboardProps } from './types';
+import type { StockDashboardProps, MonthlyRecord } from './types';
 import { useStockPrice } from './hooks/useStockPrice';
 import AssetChart from './components/AssetChart';
 import PositionPie from './components/PositionPie';
@@ -8,6 +8,9 @@ import AddAssetHistoryModal from './components/AddAssetHistoryModal';
 import DailyLogModal from './components/DailyLogModal';
 import { useDraftStore, setDraft } from '../store';
 import './index.less';
+
+// 新月份还没有提交任何记录时的默认做T目标（与后端 AddDailyLog 的默认值保持一致）
+const DEFAULT_MONTHLY_T_TARGET = 2500;
 
 const StockDashboard: React.FC<StockDashboardProps> = ({
   assetHistory,
@@ -35,8 +38,12 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
     const assetChange = assetEnd - assetStart;
     const assetChangePercent = assetStart > 0 ? ((assetChange / assetStart) * 100).toFixed(2) : '0';
 
-    // 当月做T
-    const currentMonth = monthly[monthly.length - 1];
+    // 当月做T：按“今天所在的年月”匹配，而不是数组最后一项
+    // （monthly 只在提交过记录后才会新增当月数据，跨月第一天时数组最后一项还是上月）
+    const currentMonthKey = new Date().toLocaleDateString('sv').slice(0, 7); // "2026-07"
+    const currentMonth =
+      monthly.find((m) => m.month === currentMonthKey) ??
+      ({ month: currentMonthKey, tTarget: DEFAULT_MONTHLY_T_TARGET, tRevenue: 0 } as MonthlyRecord);
 
     // 累计其他收入
     const totalOtherIncome = otherIncome.reduce((sum, d) => sum + d.amount, 0);
@@ -166,7 +173,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
       {showDailyLogModal && (
         <DailyLogModal
           positions={rawPositions}
-          currentMonth={monthly[monthly.length - 1]}
+          currentMonth={stats.currentMonth}
           draft={dailyLogDraft}
           onDraftChange={setDraft}
           onClose={() => setShowDailyLogModal(false)}
