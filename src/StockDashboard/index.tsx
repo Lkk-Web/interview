@@ -92,9 +92,15 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
             <div
               className="stock-stat-progress-bar"
               style={{
-                width: `${Math.min(
-                  ((stats.currentMonth?.tRevenue || 0) / (stats.currentMonth?.tTarget || 1)) * 100,
-                  100,
+                // 做T为负时 tRevenue/tTarget 会算出负百分比，CSS 里负宽度无效会被忽略，
+                // 需要下限 clamp 到 0，否则条看起来和实际负收益不符
+                width: `${Math.max(
+                  0,
+                  Math.min(
+                    ((stats.currentMonth?.tRevenue || 0) / (stats.currentMonth?.tTarget || 1)) *
+                      100,
+                    100,
+                  ),
                 )}%`,
               }}
             />
