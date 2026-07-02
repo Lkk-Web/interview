@@ -2,36 +2,43 @@
   {
     "month": "2026-01",
     "tTarget": 1000,
-    "tRevenue": 288.35
+    "tRevenue": 288.35,
+    "swingRevenue": 0
   },
   {
     "month": "2026-02",
     "tTarget": 1000,
-    "tRevenue": 87.51
+    "tRevenue": 87.51,
+    "swingRevenue": 0
   },
   {
     "month": "2026-03",
     "tTarget": 1000,
-    "tRevenue": 1005
+    "tRevenue": 1005,
+    "swingRevenue": 0
   },
   {
     "month": "2026-04",
     "tTarget": 1000,
-    "tRevenue": 1103.83
+    "tRevenue": 1103.83,
+    "swingRevenue": 0
   },
   {
     "month": "2026-05",
     "tTarget": 1500,
-    "tRevenue": 1519.1
+    "tRevenue": 1519.1,
+    "swingRevenue": 0
   },
   {
     "month": "2026-06",
     "tTarget": 2500,
-    "tRevenue": 5418.37
+    "tRevenue": 5418.37,
+    "swingRevenue": 0
   },
   {
     "month": "2026-07",
     "tTarget": 2500,
-    "tRevenue": -26.66
+    "tRevenue": 67.35,
+    "swingRevenue": 0
   }
 ]
