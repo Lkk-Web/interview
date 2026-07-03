@@ -7,6 +7,7 @@ import AlphaChart from './components/AlphaChart';
 import PositionPie from './components/PositionPie';
 import AddAssetHistoryModal from './components/AddAssetHistoryModal';
 import DailyLogModal from './components/DailyLogModal';
+import TargetCalcModal from './components/TargetCalcModal';
 import { useDraftStore, setDraft } from '../store';
 import './index.less';
 
@@ -22,6 +23,7 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDailyLogModal, setShowDailyLogModal] = useState(false);
+  const [showTargetCalcModal, setShowTargetCalcModal] = useState(false);
   const dailyLogDraft = useDraftStore();
 
   // 获取实时股价
@@ -183,6 +185,11 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
                 </button>
               </span>
             )}
+            {positions.length > 0 && (
+              <button className="stock-record-btn" onClick={() => setShowTargetCalcModal(true)}>
+                目标计算
+              </button>
+            )}
           </div>
         </div>
         {!loading && positions.some((p) => p.price > 0) ? (
@@ -211,6 +218,9 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
           onClose={() => setShowDailyLogModal(false)}
           onSubmitted={onDailyLogSubmitted}
         />
+      )}
+      {showTargetCalcModal && (
+        <TargetCalcModal positions={positions} onClose={() => setShowTargetCalcModal(false)} />
       )}
     </div>
   );

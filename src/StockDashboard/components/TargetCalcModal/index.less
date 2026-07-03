@@ -1,0 +1,138 @@
+.tcm-overlay {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  inset: 0;
+}
+
+.tcm-modal {
+  width: 420px;
+  max-width: 92vw;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.tcm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tcm-close {
+  padding: 0 4px;
+  color: #8c8c8c;
+  font-size: 20px;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: #262626;
+  }
+}
+
+.tcm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.tcm-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: #595959;
+  font-size: 13px;
+
+  select,
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: #595959;
+    }
+  }
+}
+
+.tcm-row {
+  display: flex;
+  gap: 10px;
+
+  .tcm-label {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.tcm-current {
+  padding: 8px 10px;
+  color: #595959;
+  font-size: 13px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.tcm-empty {
+  padding: 4px 0;
+  color: #bfbfbf;
+  font-size: 13px;
+  text-align: center;
+}
+
+.tcm-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.tcm-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.tcm-result-label {
+  color: #8c8c8c;
+}
+
+.tcm-result-value {
+  font-weight: 600;
+}
+
+.tcm-result-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: #e8e8e8;
+}
+
+.tcm-positive {
+  color: #c23531;
+}
+
+.tcm-negative {
+  color: #2f4554;
+}
