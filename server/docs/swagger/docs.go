@@ -352,6 +352,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/stock/position-snapshot-as-of/{date}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "获取某天或之前最近一次的持仓快照",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.PositionSnapshotAsOfDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/stock/position-snapshots": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "获取所有有持仓快照的日期明细",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.PositionSnapshotDatesDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/stock/positions": {
             "get": {
                 "produces": [
@@ -368,6 +433,34 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/http.PositionDTO"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/stock/unmatched-positions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock"
+                ],
+                "summary": "获取未匹配做T仓位",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.UnmatchedLegDTO"
                             }
                         }
                     },
@@ -474,6 +567,20 @@ const docTemplate = `{
                 }
             }
         },
+        "http.ConsumedLegRequest": {
+            "type": "object",
+            "required": [
+                "legId"
+            ],
+            "properties": {
+                "consumedShares": {
+                    "type": "number"
+                },
+                "legId": {
+                    "type": "integer"
+                }
+            }
+        },
         "http.CreateAssetHistoryRequest": {
             "type": "object",
             "required": [
@@ -506,16 +613,34 @@ const docTemplate = `{
                 "date"
             ],
             "properties": {
+                "consumedLegs": {
+                    "description": "ConsumedLegs 是本次提交消耗掉的历史未匹配腿，后端据此扣减 stock_unmatched_legs。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.ConsumedLegRequest"
+                    }
+                },
                 "date": {
                     "type": "string"
                 },
                 "marker": {
-                    "description": "\"！\" / \"？\" / \"\"",
+                    "description": "\"！\"=当日有操作 / \"\"=无操作",
                     "type": "string"
+                },
+                "monthlySwingRevenue": {
+                    "description": "MonthlySwingRevenue 是本月波段收益的最新累计净收益（由前端基于历史值+当日增量计算后传入）。",
+                    "type": "number"
                 },
                 "monthlyTRevenue": {
                     "description": "MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。",
                     "type": "number"
+                },
+                "newUnmatchedLegs": {
+                    "description": "NewUnmatchedLegs 是当日新产生、仍未匹配完的腿，会持久化等待未来撮合。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.UnmatchedLegRequest"
+                    }
                 },
                 "positions": {
                     "description": "Positions 是当日收盘后的最新持仓成本和数量。",
@@ -526,6 +651,13 @@ const docTemplate = `{
                 },
                 "review": {
                     "$ref": "#/definitions/http.ReviewRequest"
+                },
+                "swingRecords": {
+                    "description": "SwingRecords 是当日跨日撮合成功的波段收益明细，撮合计算在前端完成后提交。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.SwingRecordRequest"
+                    }
                 },
                 "tRecords": {
                     "type": "array",
@@ -578,6 +710,9 @@ const docTemplate = `{
                 },
                 "remark": {
                     "type": "string"
+                },
+                "swingRevenue": {
+                    "type": "number"
                 },
                 "tRevenue": {
                     "type": "number"
@@ -650,6 +785,49 @@ const docTemplate = `{
                 }
             }
         },
+        "http.PositionSnapshotAsOfDTO": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.PositionSnapshotDTO"
+                    }
+                }
+            }
+        },
+        "http.PositionSnapshotDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "cost": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "shares": {
+                    "type": "number"
+                },
+                "stock": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.PositionSnapshotDatesDTO": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/http.PositionSnapshotDTO"
+                }
+            }
+        },
         "http.PositionTargetDTO": {
             "type": "object",
             "properties": {
@@ -710,6 +888,35 @@ const docTemplate = `{
                 }
             }
         },
+        "http.SwingRecordRequest": {
+            "type": "object",
+            "properties": {
+                "buyDate": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "fee": {
+                    "type": "number"
+                },
+                "grossProfit": {
+                    "type": "number"
+                },
+                "netRevenue": {
+                    "type": "number"
+                },
+                "sellDate": {
+                    "type": "string"
+                },
+                "stock": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "number"
+                }
+            }
+        },
         "http.TRecordRequest": {
             "type": "object",
             "properties": {
@@ -742,6 +949,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "hasIssue": {
+                    "type": "boolean"
+                },
                 "price": {
                     "type": "number"
                 },
@@ -750,6 +960,64 @@ const docTemplate = `{
                 },
                 "stock": {
                     "type": "string"
+                }
+            }
+        },
+        "http.UnmatchedLegDTO": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "remainingShares": {
+                    "type": "number"
+                },
+                "stock": {
+                    "type": "string"
+                },
+                "totalFee": {
+                    "type": "number"
+                },
+                "totalShares": {
+                    "type": "number"
+                }
+            }
+        },
+        "http.UnmatchedLegRequest": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "remainingShares": {
+                    "type": "number"
+                },
+                "stock": {
+                    "type": "string"
+                },
+                "totalFee": {
+                    "type": "number"
+                },
+                "totalShares": {
+                    "type": "number"
                 }
             }
         },

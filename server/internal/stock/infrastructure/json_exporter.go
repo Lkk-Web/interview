@@ -74,20 +74,22 @@ func (e *JSONExporter) ExportMonthly(ctx context.Context) error {
 }
 
 type monthlyExportJSON struct {
-	Month    string   `json:"month"`
-	TTarget  float64  `json:"tTarget"`
-	TRevenue float64  `json:"tRevenue"`
-	Remark   *string  `json:"remark,omitempty"`
+	Month        string  `json:"month"`
+	TTarget      float64 `json:"tTarget"`
+	TRevenue     float64 `json:"tRevenue"`
+	SwingRevenue float64 `json:"swingRevenue"`
+	Remark       *string `json:"remark,omitempty"`
 }
 
 func toMonthlyJSONSlice(items []domain.MonthlyRecord) []monthlyExportJSON {
 	result := make([]monthlyExportJSON, 0, len(items))
 	for _, item := range items {
 		result = append(result, monthlyExportJSON{
-			Month:    item.Month,
-			TTarget:  item.TTarget,
-			TRevenue: item.TRevenue,
-			Remark:   item.Remark,
+			Month:        item.Month,
+			TTarget:      item.TTarget,
+			TRevenue:     item.TRevenue,
+			SwingRevenue: item.SwingRevenue,
+			Remark:       item.Remark,
 		})
 	}
 	return result
@@ -128,12 +130,12 @@ func (e *JSONExporter) ExportPositions(ctx context.Context) error {
 }
 
 type positionExportJSON struct {
-	Stock  string                    `json:"stock"`
-	Code   string                    `json:"code"`
-	Cost   float64                   `json:"cost"`
-	Shares float64                   `json:"shares"`
-	Remark *string                   `json:"remark,omitempty"`
-	Base   *positionBaseExportJSON   `json:"base,omitempty"`
+	Stock  string                     `json:"stock"`
+	Code   string                     `json:"code"`
+	Cost   float64                    `json:"cost"`
+	Shares float64                    `json:"shares"`
+	Remark *string                    `json:"remark,omitempty"`
+	Base   *positionBaseExportJSON    `json:"base,omitempty"`
 	Target []positionTargetExportJSON `json:"target,omitempty"`
 }
 

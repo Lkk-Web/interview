@@ -20,8 +20,25 @@ type Repository interface {
 	AddDailyLog(ctx context.Context, log DailyLog) error
 	// GetDailyLog 按日期查询当日收盘记录，不存在时返回 nil。
 	GetDailyLog(ctx context.Context, date string) (*DailyLog, error)
+	// GetPositionSnapshotAsOf 返回小于等于 date 的最近一次收盘持仓快照（不回退到"当前持仓"），
+	// 用于 Alpha 曲线：如果指定日期当天没提交每日记录，就用往前最近一次的真实历史持仓，
+	// 而不是用当前持仓掺进历史推算。找不到任何快照时返回 nil。
+	GetPositionSnapshotAsOf(ctx context.Context, date string) (*PositionSnapshotAsOf, error)
+	// ListPositionSnapshotDates 返回所有"当天确实提交过持仓快照"的日期集合，
+	// 用于资产曲线 tooltip：只有这些日期才在"股票"那一行后面展示持仓明细，
+	// 区别于 GetPositionSnapshotAsOf 那种会往前回退到最近一次的语义。
+	ListPositionSnapshotDates(ctx context.Context) (map[string][]PositionSnapshot, error)
 	// ImportDailyLogs 批量导入历史记录（不触发文件同步，幂等）。
 	ImportDailyLogs(ctx context.Context, logs []DailyLog) error
+	// ListUnmatchedLegs 返回当前所有跨日未匹配的买/卖腿（remaining_shares > 0），供前端展示待匹配仓位。
+	ListUnmatchedLegs(ctx context.Context) ([]UnmatchedLeg, error)
+}
+
+// PositionSnapshotAsOf 是某个实际交易日（≤ 请求日期的最近一次记录）的持仓快照。
+// Date 是真正找到快照的那一天，可能早于请求的日期。
+type PositionSnapshotAsOf struct {
+	Date      string
+	Positions []PositionSnapshot
 }
 
 // ImportSnapshot 是一次导入所需的完整股票数据快照。

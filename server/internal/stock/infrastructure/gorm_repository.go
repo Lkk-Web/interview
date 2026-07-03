@@ -216,11 +216,12 @@ func toMonthlyRecords(models []MonthlyRecordModel) []domain.MonthlyRecord {
 	result := make([]domain.MonthlyRecord, 0, len(models))
 	for _, model := range models {
 		result = append(result, domain.MonthlyRecord{
-			ID:       model.ID,
-			Month:    model.Month,
-			TTarget:  model.TTarget,
-			TRevenue: model.TRevenue,
-			Remark:   model.Remark,
+			ID:           model.ID,
+			Month:        model.Month,
+			TTarget:      model.TTarget,
+			TRevenue:     model.TRevenue,
+			SwingRevenue: model.SwingRevenue,
+			Remark:       model.Remark,
 		})
 	}
 	return result
@@ -256,13 +257,13 @@ func toPositions(models []PositionModel) []domain.Position {
 		}
 		if model.BaseCost != nil {
 			position.Base = &domain.PositionBase{
-				Cost:   *model.BaseCost,
+				Cost: *model.BaseCost,
 				Shares: func() float64 {
 					if model.BaseShares != nil {
 						return *model.BaseShares
 					}
 					return 0
-				}(),				Date:   model.BaseDate,
+				}(), Date: model.BaseDate,
 				Remark: model.BaseRemark,
 			}
 		}
@@ -301,10 +302,11 @@ func fromAssetHistory(item domain.AssetHistory) AssetHistoryModel {
 
 func fromMonthlyRecord(item domain.MonthlyRecord) MonthlyRecordModel {
 	return MonthlyRecordModel{
-		Month:    item.Month,
-		TTarget:  item.TTarget,
-		TRevenue: item.TRevenue,
-		Remark:   item.Remark,
+		Month:        item.Month,
+		TTarget:      item.TTarget,
+		TRevenue:     item.TRevenue,
+		SwingRevenue: item.SwingRevenue,
+		Remark:       item.Remark,
 	}
 }
 
@@ -497,20 +499,22 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 	err := repository.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// upsert daily_log 头记录
 		logModel := DailyLogModel{
-			Date:            log.Date,
-			Marker:          log.Marker,
-			ReviewMarket:    log.Review.Market,
-			ReviewFeeling:   log.Review.Feeling,
-			ReviewNextPlan:  log.Review.NextPlan,
-			MonthlyTRevenue: log.MonthlyTRevenue,
+			Date:                log.Date,
+			Marker:              log.Marker,
+			ReviewMarket:        log.Review.Market,
+			ReviewFeeling:       log.Review.Feeling,
+			ReviewNextPlan:      log.Review.NextPlan,
+			MonthlyTRevenue:     log.MonthlyTRevenue,
+			MonthlySwingRevenue: log.MonthlySwingRevenue,
 		}
 		if err := tx.Where(DailyLogModel{Date: log.Date}).
 			Assign(DailyLogModel{
-				Marker:          log.Marker,
-				ReviewMarket:    log.Review.Market,
-				ReviewFeeling:   log.Review.Feeling,
-				ReviewNextPlan:  log.Review.NextPlan,
-				MonthlyTRevenue: log.MonthlyTRevenue,
+				Marker:              log.Marker,
+				ReviewMarket:        log.Review.Market,
+				ReviewFeeling:       log.Review.Feeling,
+				ReviewNextPlan:      log.Review.NextPlan,
+				MonthlyTRevenue:     log.MonthlyTRevenue,
+				MonthlySwingRevenue: log.MonthlySwingRevenue,
 			}).
 			FirstOrCreate(&logModel).Error; err != nil {
 			return fmt.Errorf("upsert daily log: %w", err)
@@ -534,6 +538,7 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				Code:         t.Code,
 				Price:        t.Price,
 				Shares:       t.Shares,
+				HasIssue:     t.HasIssue,
 				DisplayOrder: i,
 			})
 		}
@@ -562,6 +567,68 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
+		// 波段收益（跨日撮合）明细：全量重插，幂等
+		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&SwingRecordModel{}).Error; err != nil {
+			return fmt.Errorf("clear swing records: %w", err)
+		}
+		swingModels := make([]SwingRecordModel, 0, len(log.SwingRecords))
+		for i, r := range log.SwingRecords {
+			swingModels = append(swingModels, SwingRecordModel{
+				DailyLogID:   savedLogID,
+				Stock:        r.Stock,
+				Description:  r.Desc,
+				BuyDate:      r.BuyDate,
+				SellDate:     r.SellDate,
+				GrossProfit:  r.GrossProfit,
+				Fee:          r.Fee,
+				Tax:          r.Tax,
+				NetRevenue:   r.NetRevenue,
+				DisplayOrder: i,
+			})
+		}
+		if len(swingModels) > 0 {
+			if err := tx.Create(&swingModels).Error; err != nil {
+				return fmt.Errorf("insert swing records: %w", err)
+			}
+		}
+
+		// 消耗历史未匹配腿：扣减 remaining_shares；扣到 0 时标记 status='matched'（软删除，不物理删除）
+		for _, consumed := range log.ConsumedLegs {
+			var leg UnmatchedLegModel
+			if err := tx.First(&leg, consumed.LegID).Error; err != nil {
+				return fmt.Errorf("find unmatched leg %d: %w", consumed.LegID, err)
+			}
+			remaining := leg.RemainingShares - consumed.ConsumedShares
+			updates := map[string]any{"remaining_shares": max(remaining, 0)}
+			if remaining <= 0 {
+				updates["status"] = "matched"
+			}
+			if err := tx.Model(&leg).Updates(updates).Error; err != nil {
+				return fmt.Errorf("update unmatched leg %d: %w", consumed.LegID, err)
+			}
+		}
+
+		// 当日未被完全匹配的新腿：写入 stock_unmatched_legs，等待未来某天再匹配
+		if len(log.NewUnmatchedLegs) > 0 {
+			newLegModels := make([]UnmatchedLegModel, 0, len(log.NewUnmatchedLegs))
+			for _, leg := range log.NewUnmatchedLegs {
+				newLegModels = append(newLegModels, UnmatchedLegModel{
+					DailyLogID:      savedLogID,
+					Date:            log.Date,
+					Stock:           leg.Stock,
+					Code:            leg.Code,
+					Action:          leg.Action,
+					Price:           leg.Price,
+					RemainingShares: leg.RemainingShares,
+					TotalShares:     leg.TotalShares,
+					TotalFee:        leg.TotalFee,
+				})
+			}
+			if err := tx.Create(&newLegModels).Error; err != nil {
+				return fmt.Errorf("insert unmatched legs: %w", err)
+			}
+		}
+
 		// 更新持仓成本和数量，同时保存当日持仓快照
 		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&DailyLogPositionModel{}).Error; err != nil {
 			return fmt.Errorf("clear position snapshots: %w", err)
@@ -579,9 +646,9 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
-		// 更新月度T收益：跨月第一天提交时，当月记录还不存在，
+		// 更新月度T收益/波段收益：跨月第一天提交时，当月记录还不存在，
 		// 需要先按默认目标创建，否则下面的 Update 会静默地什么都不改（RowsAffected=0）
-		if log.MonthlyTRevenue != 0 {
+		if log.MonthlyTRevenue != 0 || log.MonthlySwingRevenue != 0 {
 			month := log.Date[:7] // "2026-07"
 			var monthlyModel MonthlyRecordModel
 			if err := tx.Where(MonthlyRecordModel{Month: month}).
@@ -589,8 +656,15 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				FirstOrCreate(&monthlyModel).Error; err != nil {
 				return fmt.Errorf("find or create monthly record: %w", err)
 			}
-			if err := tx.Model(&monthlyModel).Update("t_revenue", log.MonthlyTRevenue).Error; err != nil {
-				return fmt.Errorf("update monthly t_revenue: %w", err)
+			updates := map[string]any{}
+			if log.MonthlyTRevenue != 0 {
+				updates["t_revenue"] = log.MonthlyTRevenue
+			}
+			if log.MonthlySwingRevenue != 0 {
+				updates["swing_revenue"] = log.MonthlySwingRevenue
+			}
+			if err := tx.Model(&monthlyModel).Updates(updates).Error; err != nil {
+				return fmt.Errorf("update monthly revenue: %w", err)
 			}
 		}
 
@@ -608,8 +682,8 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 		}
 		changedFiles = append(changedFiles, "data/stock/positions.json")
 
-		// monthlyTRevenue 不为 0 时才可能改过 stock_monthly_records，才需要同步 monthly.json
-		if log.MonthlyTRevenue != 0 {
+		// monthlyTRevenue/monthlySwingRevenue 不为 0 时才可能改过 stock_monthly_records，才需要同步 monthly.json
+		if log.MonthlyTRevenue != 0 || log.MonthlySwingRevenue != 0 {
 			if err := repository.exporter.ExportMonthly(ctx); err != nil {
 				return fmt.Errorf("sync monthly.json: %w", err)
 			}
@@ -636,6 +710,7 @@ func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) 
 	err := repository.db.WithContext(ctx).
 		Preload("Trades", func(db *gorm.DB) *gorm.DB { return db.Order("display_order ASC") }).
 		Preload("TRecords", func(db *gorm.DB) *gorm.DB { return db.Order("display_order ASC") }).
+		Preload("SwingRecords", func(db *gorm.DB) *gorm.DB { return db.Order("display_order ASC") }).
 		Preload("Positions").
 		Where("date = ?", date).
 		First(&model).Error
@@ -649,7 +724,7 @@ func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) 
 	trades := make([]domain.Trade, 0, len(model.Trades))
 	for _, t := range model.Trades {
 		trades = append(trades, domain.Trade{
-			Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares,
+			Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares, HasIssue: t.HasIssue,
 		})
 	}
 	tRecords := make([]domain.TRecord, 0, len(model.TRecords))
@@ -659,23 +734,120 @@ func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) 
 			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
 		})
 	}
+	swingRecords := make([]domain.SwingRecord, 0, len(model.SwingRecords))
+	for _, r := range model.SwingRecords {
+		swingRecords = append(swingRecords, domain.SwingRecord{
+			Stock: r.Stock, Desc: r.Description, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
+		})
+	}
 	positions := make([]domain.PositionSnapshot, 0, len(model.Positions))
 	for _, p := range model.Positions {
 		positions = append(positions, domain.PositionSnapshot{Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price})
 	}
 	return &domain.DailyLog{
-		Date:            model.Date,
-		Marker:          model.Marker,
-		Positions:       positions,
-		Trades:          trades,
-		TRecords:        tRecords,
-		MonthlyTRevenue: model.MonthlyTRevenue,
+		Date:                model.Date,
+		Marker:              model.Marker,
+		Positions:           positions,
+		Trades:              trades,
+		TRecords:            tRecords,
+		SwingRecords:        swingRecords,
+		MonthlyTRevenue:     model.MonthlyTRevenue,
+		MonthlySwingRevenue: model.MonthlySwingRevenue,
 		Review: domain.DailyReview{
 			Market:   model.ReviewMarket,
 			Feeling:  model.ReviewFeeling,
 			NextPlan: model.ReviewNextPlan,
 		},
 	}, nil
+}
+
+// GetPositionSnapshotAsOf 找 date 当天或之前最近一次收盘记录的持仓快照。
+// 用于 Alpha 曲线：绝不回退到"当前持仓"，只用真实历史数据，找不到就返回 nil 让上层照实展示缺失。
+func (repository *GormRepository) GetPositionSnapshotAsOf(ctx context.Context, date string) (*domain.PositionSnapshotAsOf, error) {
+	var logModel DailyLogModel
+	err := repository.db.WithContext(ctx).
+		Preload("Positions").
+		Where("date <= ?", date).
+		Order("date DESC").
+		First(&logModel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get position snapshot as of %s: %w", date, err)
+	}
+
+	positions := make([]domain.PositionSnapshot, 0, len(logModel.Positions))
+	for _, p := range logModel.Positions {
+		positions = append(positions, domain.PositionSnapshot{
+			Stock: p.Stock, Code: normalizeMarketCode(p.Code), Cost: p.Cost, Shares: p.Shares, Price: p.Price,
+		})
+	}
+	return &domain.PositionSnapshotAsOf{Date: logModel.Date, Positions: positions}, nil
+}
+
+// ListPositionSnapshotDates 返回所有实际提交过持仓快照的日期（date -> positions）。
+// 只包含当天真正有 DailyLogPositionModel 记录的日期，不做任何"往前回退"，
+// 供资产曲线 tooltip 判断"这天是否更新过持仓"。
+func (repository *GormRepository) ListPositionSnapshotDates(ctx context.Context) (map[string][]domain.PositionSnapshot, error) {
+	var logModels []DailyLogModel
+	if err := repository.db.WithContext(ctx).
+		Preload("Positions").
+		Where("EXISTS (SELECT 1 FROM stock_daily_log_positions WHERE daily_log_id = stock_daily_logs.id)").
+		Find(&logModels).Error; err != nil {
+		return nil, fmt.Errorf("list position snapshot dates: %w", err)
+	}
+
+	result := make(map[string][]domain.PositionSnapshot, len(logModels))
+	for _, logModel := range logModels {
+		positions := make([]domain.PositionSnapshot, 0, len(logModel.Positions))
+		for _, p := range logModel.Positions {
+			positions = append(positions, domain.PositionSnapshot{
+				Stock: p.Stock, Code: normalizeMarketCode(p.Code), Cost: p.Cost, Shares: p.Shares, Price: p.Price,
+			})
+		}
+		result[logModel.Date] = positions
+	}
+	return result, nil
+}
+
+// normalizeMarketCode 补全历史数据里缺失的市场前缀（早期记录只存了纯数字代码），
+// 供腾讯行情/K线接口使用——那些接口都要求 sz/sh 前缀。
+// 规则：6 开头是上交所（sh），0/3 开头是深交所（sz），已带前缀的原样返回。
+func normalizeMarketCode(code string) string {
+	if len(code) >= 2 && (code[:2] == "sz" || code[:2] == "sh") {
+		return code
+	}
+	if len(code) > 0 {
+		switch code[0] {
+		case '6':
+			return "sh" + code
+		case '0', '3':
+			return "sz" + code
+		}
+	}
+	return code
+}
+
+// ListUnmatchedLegs 只返回 status='pending' 的腿（已完全消耗的 matched 腿不展示），按日期升序。
+func (repository *GormRepository) ListUnmatchedLegs(ctx context.Context) ([]domain.UnmatchedLeg, error) {
+	var models []UnmatchedLegModel
+	if err := repository.db.WithContext(ctx).
+		Where("status = ? AND remaining_shares > 0", "pending").
+		Order("date ASC, id ASC").
+		Find(&models).Error; err != nil {
+		return nil, fmt.Errorf("list unmatched legs: %w", err)
+	}
+	result := make([]domain.UnmatchedLeg, 0, len(models))
+	for _, m := range models {
+		result = append(result, domain.UnmatchedLeg{
+			ID: m.ID, DailyLogID: m.DailyLogID, Date: m.Date, Stock: m.Stock, Code: m.Code,
+			Action: m.Action, Price: m.Price, RemainingShares: m.RemainingShares,
+			TotalShares: m.TotalShares, TotalFee: m.TotalFee, Status: m.Status,
+		})
+	}
+	return result, nil
 }
 
 // ImportDailyLogs 批量导入历史记录，不触发文件同步，幂等（重复导入安全）。

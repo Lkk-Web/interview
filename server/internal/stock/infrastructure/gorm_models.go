@@ -22,13 +22,14 @@ type AssetHistoryModel struct {
 func (AssetHistoryModel) TableName() string { return "stock_asset_histories" }
 
 type MonthlyRecordModel struct {
-	ID        uint      `gorm:"primaryKey"`
-	Month     string    `gorm:"column:month;uniqueIndex"`
-	TTarget   float64   `gorm:"column:t_target"`
-	TRevenue  float64   `gorm:"column:t_revenue"`
-	Remark    *string   `gorm:"column:remark"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
+	ID           uint      `gorm:"primaryKey"`
+	Month        string    `gorm:"column:month;uniqueIndex"`
+	TTarget      float64   `gorm:"column:t_target"`
+	TRevenue     float64   `gorm:"column:t_revenue"`
+	SwingRevenue float64   `gorm:"column:swing_revenue"`
+	Remark       *string   `gorm:"column:remark"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
 }
 
 func (MonthlyRecordModel) TableName() string { return "stock_monthly_records" }
@@ -83,31 +84,35 @@ func (PositionTargetModel) TableName() string { return "stock_position_targets" 
 
 // DailyLogModel 对应 stock_daily_logs 表，存储每日收盘记录的头信息和复盘。
 type DailyLogModel struct {
-	ID               uint             `gorm:"primaryKey"`
-	Date             string           `gorm:"column:date;uniqueIndex"`
-	Marker           string           `gorm:"column:marker"`
-	ReviewMarket     string           `gorm:"column:review_market"`
-	ReviewFeeling    string           `gorm:"column:review_feeling"`
-	ReviewNextPlan   string           `gorm:"column:review_next_plan"`
-	MonthlyTRevenue  float64          `gorm:"column:monthly_t_revenue"`
-	Trades           []TradeModel             `gorm:"foreignKey:DailyLogID"`
-	TRecords         []TRecordModel           `gorm:"foreignKey:DailyLogID"`
-	Positions        []DailyLogPositionModel  `gorm:"foreignKey:DailyLogID"`
-	CreatedAt        time.Time        `gorm:"column:created_at"`
-	UpdatedAt        time.Time        `gorm:"column:updated_at"`
+	ID                  uint                    `gorm:"primaryKey"`
+	Date                string                  `gorm:"column:date;uniqueIndex"`
+	Marker              string                  `gorm:"column:marker"`
+	ReviewMarket        string                  `gorm:"column:review_market"`
+	ReviewFeeling       string                  `gorm:"column:review_feeling"`
+	ReviewNextPlan      string                  `gorm:"column:review_next_plan"`
+	MonthlyTRevenue     float64                 `gorm:"column:monthly_t_revenue"`
+	MonthlySwingRevenue float64                 `gorm:"column:monthly_swing_revenue"`
+	Trades              []TradeModel            `gorm:"foreignKey:DailyLogID"`
+	TRecords            []TRecordModel          `gorm:"foreignKey:DailyLogID"`
+	SwingRecords        []SwingRecordModel      `gorm:"foreignKey:DailyLogID"`
+	Positions           []DailyLogPositionModel `gorm:"foreignKey:DailyLogID"`
+	CreatedAt           time.Time               `gorm:"column:created_at"`
+	UpdatedAt           time.Time               `gorm:"column:updated_at"`
 }
 
 func (DailyLogModel) TableName() string { return "stock_daily_logs" }
 
 // TradeModel 对应 stock_trades 表，每行是一笔买入或卖出操作。
 type TradeModel struct {
-	ID           uint      `gorm:"primaryKey"`
-	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
-	Action       string    `gorm:"column:action"`
-	Stock        string    `gorm:"column:stock"`
-	Code         string    `gorm:"column:code"`
-	Price        float64   `gorm:"column:price"`
-	Shares       float64   `gorm:"column:shares"`
+	ID         uint    `gorm:"primaryKey"`
+	DailyLogID uint    `gorm:"column:daily_log_id;index"`
+	Action     string  `gorm:"column:action"`
+	Stock      string  `gorm:"column:stock"`
+	Code       string  `gorm:"column:code"`
+	Price      float64 `gorm:"column:price"`
+	Shares     float64 `gorm:"column:shares"`
+	// HasIssue 为 true 时，该腿不参与当日自动撮合，作为跨日未匹配仓位挂起。
+	HasIssue     bool      `gorm:"column:has_issue"`
 	DisplayOrder int       `gorm:"column:display_order"`
 	CreatedAt    time.Time `gorm:"column:created_at"`
 	UpdatedAt    time.Time `gorm:"column:updated_at"`
@@ -144,3 +149,42 @@ type DailyLogPositionModel struct {
 }
 
 func (DailyLogPositionModel) TableName() string { return "stock_daily_log_positions" }
+
+// SwingRecordModel 对应 stock_swing_records 表，每行是一笔波段收益明细（买卖跨日撮合）。
+type SwingRecordModel struct {
+	ID           uint      `gorm:"primaryKey"`
+	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
+	Stock        string    `gorm:"column:stock"`
+	Description  string    `gorm:"column:description"`
+	BuyDate      string    `gorm:"column:buy_date"`
+	SellDate     string    `gorm:"column:sell_date"`
+	GrossProfit  float64   `gorm:"column:gross_profit"`
+	Fee          float64   `gorm:"column:fee"`
+	Tax          float64   `gorm:"column:tax"`
+	NetRevenue   float64   `gorm:"column:net_revenue"`
+	DisplayOrder int       `gorm:"column:display_order"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
+}
+
+func (SwingRecordModel) TableName() string { return "stock_swing_records" }
+
+// UnmatchedLegModel 对应 stock_unmatched_legs 表，存储跨日买/卖腿的状态。
+// status: "pending"=待匹配，"matched"=已完全消耗。软删除设计，不物理删除，便于历史追溯。
+type UnmatchedLegModel struct {
+	ID              uint      `gorm:"primaryKey"`
+	DailyLogID      uint      `gorm:"column:daily_log_id;index"`
+	Date            string    `gorm:"column:date"`
+	Stock           string    `gorm:"column:stock"`
+	Code            string    `gorm:"column:code;index"`
+	Action          string    `gorm:"column:action"`
+	Price           float64   `gorm:"column:price"`
+	RemainingShares float64   `gorm:"column:remaining_shares"`
+	TotalShares     float64   `gorm:"column:total_shares"`
+	TotalFee        float64   `gorm:"column:total_fee"`
+	Status          string    `gorm:"column:status;default:pending"` // "pending" | "matched"
+	CreatedAt       time.Time `gorm:"column:created_at"`
+	UpdatedAt       time.Time `gorm:"column:updated_at"`
+}
+
+func (UnmatchedLegModel) TableName() string { return "stock_unmatched_legs" }

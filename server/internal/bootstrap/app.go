@@ -81,6 +81,7 @@ func registerRoutes(router *gin.Engine, db *gorm.DB, cfg config.Config) {
 	stockRepository.SetGitCommitter(stockinfra.NewGitCommitter(cfg.RepoDir, cfg.GitAutoCommit))
 	stockService := stockapp.NewDashboardService(stockRepository)
 	dailyLogService := stockapp.NewDailyLogService(stockRepository)
+	// Alpha 曲线的历史收盘价改由前端直接请求腾讯接口（CORS 开放），不再经过后端代理。
 	stockHandler := stockhttp.NewHandler(stockService, dailyLogService)
 	stockhttp.RegisterRoutes(api.Group("/stock"), stockHandler)
 

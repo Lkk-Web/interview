@@ -212,6 +212,22 @@ func buildMarkdownBlock(log domain.DailyLog) string {
 		b.WriteString("无\n")
 	}
 
+	// 今日波段收益（买卖跨日撮合）
+	b.WriteString("\n**今日波段收益**\n\n")
+	if len(log.SwingRecords) > 0 {
+		b.WriteString("| 股票 | 操作 | 毛利 | 手续费 | 印花税 | 净收益 |\n")
+		b.WriteString("| ---- | ---- | ---- | ------ | ------ | ------ |\n")
+		totalNet := 0.0
+		for _, r := range log.SwingRecords {
+			b.WriteString(fmt.Sprintf("| %s | %s | %.2f元 | %.2f元 | %.2f元 | %.2f元 |\n",
+				r.Stock, r.Desc, r.GrossProfit, r.Fee, r.Tax, r.NetRevenue))
+			totalNet += r.NetRevenue
+		}
+		b.WriteString(fmt.Sprintf("| **合计** | | | | | **%.2f元** |\n", totalNet))
+	} else {
+		b.WriteString("无\n")
+	}
+
 	// 今日复盘
 	b.WriteString("\n**今日复盘**\n\n")
 	if log.Review.Market != "" {

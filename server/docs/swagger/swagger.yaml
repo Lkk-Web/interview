@@ -60,6 +60,15 @@ definitions:
       version:
         type: integer
     type: object
+  http.ConsumedLegRequest:
+    properties:
+      consumedShares:
+        type: number
+      legId:
+        type: integer
+    required:
+    - legId
+    type: object
   http.CreateAssetHistoryRequest:
     properties:
       cash:
@@ -79,14 +88,27 @@ definitions:
     type: object
   http.CreateDailyLogRequest:
     properties:
+      consumedLegs:
+        description: ConsumedLegs 是本次提交消耗掉的历史未匹配腿，后端据此扣减 stock_unmatched_legs。
+        items:
+          $ref: '#/definitions/http.ConsumedLegRequest'
+        type: array
       date:
         type: string
       marker:
-        description: '"！" / "？" / ""'
+        description: '"！"=当日有操作 / ""=无操作'
         type: string
+      monthlySwingRevenue:
+        description: MonthlySwingRevenue 是本月波段收益的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
+        type: number
       monthlyTRevenue:
         description: MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
         type: number
+      newUnmatchedLegs:
+        description: NewUnmatchedLegs 是当日新产生、仍未匹配完的腿，会持久化等待未来撮合。
+        items:
+          $ref: '#/definitions/http.UnmatchedLegRequest'
+        type: array
       positions:
         description: Positions 是当日收盘后的最新持仓成本和数量。
         items:
@@ -94,6 +116,11 @@ definitions:
         type: array
       review:
         $ref: '#/definitions/http.ReviewRequest'
+      swingRecords:
+        description: SwingRecords 是当日跨日撮合成功的波段收益明细，撮合计算在前端完成后提交。
+        items:
+          $ref: '#/definitions/http.SwingRecordRequest'
+        type: array
       tRecords:
         items:
           $ref: '#/definitions/http.TRecordRequest'
@@ -130,6 +157,8 @@ definitions:
         type: string
       remark:
         type: string
+      swingRevenue:
+        type: number
       tRevenue:
         type: number
       tTarget:
@@ -176,6 +205,34 @@ definitions:
           $ref: '#/definitions/http.PositionTargetDTO'
         type: array
     type: object
+  http.PositionSnapshotAsOfDTO:
+    properties:
+      date:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/http.PositionSnapshotDTO'
+        type: array
+    type: object
+  http.PositionSnapshotDTO:
+    properties:
+      code:
+        type: string
+      cost:
+        type: number
+      price:
+        type: number
+      shares:
+        type: number
+      stock:
+        type: string
+    type: object
+  http.PositionSnapshotDatesDTO:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/http.PositionSnapshotDTO'
+      type: array
+    type: object
   http.PositionTargetDTO:
     properties:
       cost:
@@ -215,6 +272,25 @@ definitions:
       nextPlan:
         type: string
     type: object
+  http.SwingRecordRequest:
+    properties:
+      buyDate:
+        type: string
+      desc:
+        type: string
+      fee:
+        type: number
+      grossProfit:
+        type: number
+      netRevenue:
+        type: number
+      sellDate:
+        type: string
+      stock:
+        type: string
+      tax:
+        type: number
+    type: object
   http.TRecordRequest:
     properties:
       desc:
@@ -236,12 +312,52 @@ definitions:
         type: string
       code:
         type: string
+      hasIssue:
+        type: boolean
       price:
         type: number
       shares:
         type: number
       stock:
         type: string
+    type: object
+  http.UnmatchedLegDTO:
+    properties:
+      action:
+        type: string
+      code:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      remainingShares:
+        type: number
+      stock:
+        type: string
+      totalFee:
+        type: number
+      totalShares:
+        type: number
+    type: object
+  http.UnmatchedLegRequest:
+    properties:
+      action:
+        type: string
+      code:
+        type: string
+      price:
+        type: number
+      remainingShares:
+        type: number
+      stock:
+        type: string
+      totalFee:
+        type: number
+      totalShares:
+        type: number
     type: object
   httpx.ErrorResponse:
     properties:
@@ -477,6 +593,48 @@ paths:
       summary: 获取其他收入/支出
       tags:
       - stock
+  /stock/position-snapshot-as-of/{date}:
+    get:
+      parameters:
+      - description: YYYY-MM-DD
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.PositionSnapshotAsOfDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: 获取某天或之前最近一次的持仓快照
+      tags:
+      - stock
+  /stock/position-snapshots:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.PositionSnapshotDatesDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: 获取所有有持仓快照的日期明细
+      tags:
+      - stock
   /stock/positions:
     get:
       produces:
@@ -493,6 +651,24 @@ paths:
           schema:
             $ref: '#/definitions/httpx.ErrorResponse'
       summary: 获取当前持仓
+      tags:
+      - stock
+  /stock/unmatched-positions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.UnmatchedLegDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: 获取未匹配做T仓位
       tags:
       - stock
 schemes:

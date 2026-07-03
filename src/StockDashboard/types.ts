@@ -33,6 +33,8 @@ export interface MonthlyRecord {
   month: string;
   tTarget: number;
   tRevenue: number;
+  /** 当月波段收益（买卖跨日撮合）累计净收益 */
+  swingRevenue: number;
 }
 
 export interface OtherIncome {

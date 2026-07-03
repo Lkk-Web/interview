@@ -10,5 +10,7 @@ type MonthlyRecord struct {
 	TTarget float64
 	// TRevenue 是当月已实现 T 操作收益。
 	TRevenue float64
-	Remark   *string
+	// SwingRevenue 是当月已实现的波段收益（买卖跨日撮合）累计净收益。
+	SwingRevenue float64
+	Remark       *string
 }

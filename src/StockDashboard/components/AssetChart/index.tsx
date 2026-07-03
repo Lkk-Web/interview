@@ -11,6 +11,7 @@ import {
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { AssetPoint } from '../../types';
+import { usePositionSnapshots } from '../../hooks/usePositionSnapshots';
 
 echarts.use([
   LineChart,
@@ -32,6 +33,9 @@ const formatMoney = (val: number) => {
 };
 
 const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
+  // 只有真正提交过持仓更新的日期才有明细，供 tooltip 里"股票"那一行后面追加显示
+  const positionSnapshots = usePositionSnapshots();
+
   const option = useMemo(() => {
     const calcTotal = (d: AssetPoint) => d.cash + d.stockValue + d.loan;
 
@@ -90,6 +94,21 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
               <div style="color:#666;font-size:12px;line-height:1.8;padding-left:4px;border-left:2px solid #e8e8e8;margin-left:2px">
                 现金：${formatMoney(point.cash)}<br/>
                 股票：${formatMoney(point.stockValue)}<br/>
+                ${
+                  positionSnapshots[point.date]?.length
+                    ? positionSnapshots[point.date]
+                        .map((p) => {
+                          const percent =
+                            p.price > 0 && point.stockValue > 0
+                              ? `　${(((p.price * p.shares) / point.stockValue) * 100).toFixed(1)}%`
+                              : '';
+                          return `<span style="color:#999;font-size:11px;padding-left:8px">${
+                            p.stock
+                          } ${p.shares.toLocaleString()}股${percent}</span>`;
+                        })
+                        .join('<br/>') + '<br/>'
+                    : ''
+                }
                 贷款：${formatMoney(point.loan)}<br/>
                 其他：${formatMoney(point.other)}
               </div>
@@ -233,7 +252,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ data }) => {
         },
       ],
     };
-  }, [data]);
+  }, [data, positionSnapshots]);
 
   return (
     <ReactEChartsCore

@@ -4,13 +4,15 @@ import "github.com/Lkk-Web/interview/server/internal/stock/domain"
 
 // DailyLogResponse 是 GET /stock/daily-log/:date 的响应体。
 type DailyLogResponse struct {
-	Date            string                `json:"date"`
-	Marker          string                `json:"marker"`
-	Positions       []PositionSnapshotDTO `json:"positions"`
-	Trades          []TradeDTO            `json:"trades"`
-	TRecords        []TRecordDTO          `json:"tRecords"`
-	MonthlyTRevenue float64               `json:"monthlyTRevenue"`
-	Review          DailyReviewDTO        `json:"review"`
+	Date                string                `json:"date"`
+	Marker              string                `json:"marker"`
+	Positions           []PositionSnapshotDTO `json:"positions"`
+	Trades              []TradeDTO            `json:"trades"`
+	TRecords            []TRecordDTO          `json:"tRecords"`
+	SwingRecords        []SwingRecordDTO      `json:"swingRecords"`
+	MonthlyTRevenue     float64               `json:"monthlyTRevenue"`
+	MonthlySwingRevenue float64               `json:"monthlySwingRevenue"`
+	Review              DailyReviewDTO        `json:"review"`
 }
 
 type PositionSnapshotDTO struct {
@@ -22,11 +24,12 @@ type PositionSnapshotDTO struct {
 }
 
 type TradeDTO struct {
-	Action string  `json:"action"`
-	Stock  string  `json:"stock"`
-	Code   string  `json:"code"`
-	Price  float64 `json:"price"`
-	Shares float64 `json:"shares"`
+	Action   string  `json:"action"`
+	Stock    string  `json:"stock"`
+	Code     string  `json:"code"`
+	Price    float64 `json:"price"`
+	Shares   float64 `json:"shares"`
+	HasIssue bool    `json:"hasIssue"`
 }
 
 type TRecordDTO struct {
@@ -36,6 +39,43 @@ type TRecordDTO struct {
 	Fee         float64 `json:"fee"`
 	Tax         float64 `json:"tax"`
 	NetRevenue  float64 `json:"netRevenue"`
+}
+
+// SwingRecordDTO 是一笔波段收益明细（买卖跨日撮合）。
+type SwingRecordDTO struct {
+	Stock       string  `json:"stock"`
+	Desc        string  `json:"desc"`
+	BuyDate     string  `json:"buyDate"`
+	SellDate    string  `json:"sellDate"`
+	GrossProfit float64 `json:"grossProfit"`
+	Fee         float64 `json:"fee"`
+	Tax         float64 `json:"tax"`
+	NetRevenue  float64 `json:"netRevenue"`
+}
+
+// PositionSnapshotAsOfDTO 是 GET /stock/position-snapshot-as-of/:date 的响应体。
+// Date 是真正找到快照的那一天（可能早于请求日期），前端据此知道数据实际来自哪天。
+type PositionSnapshotAsOfDTO struct {
+	Date      string                `json:"date"`
+	Positions []PositionSnapshotDTO `json:"positions"`
+}
+
+// PositionSnapshotDatesDTO 是 GET /stock/position-snapshots 的响应体，
+// key 是日期，value 是该日期实际提交的持仓快照——只包含真正有记录的日期，不做"往前回退"。
+type PositionSnapshotDatesDTO map[string][]PositionSnapshotDTO
+
+// UnmatchedLegDTO 是一条尚未被匹配的买/卖腿，供前端「未匹配做T仓位」区块展示。
+// TotalShares/TotalFee 一并返回，前端跨日撮合时需要按比例分摊该腿原始的手续费。
+type UnmatchedLegDTO struct {
+	ID              uint    `json:"id"`
+	Date            string  `json:"date"`
+	Stock           string  `json:"stock"`
+	Code            string  `json:"code"`
+	Action          string  `json:"action"`
+	Price           float64 `json:"price"`
+	RemainingShares float64 `json:"remainingShares"`
+	TotalShares     float64 `json:"totalShares"`
+	TotalFee        float64 `json:"totalFee"`
 }
 
 type DailyReviewDTO struct {
@@ -51,16 +91,25 @@ func newDailyLogResponse(log *domain.DailyLog) DailyLogResponse {
 	}
 	trades := make([]TradeDTO, 0, len(log.Trades))
 	for _, t := range log.Trades {
-		trades = append(trades, TradeDTO{Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares})
+		trades = append(trades, TradeDTO{Action: t.Action, Stock: t.Stock, Code: t.Code, Price: t.Price, Shares: t.Shares, HasIssue: t.HasIssue})
 	}
 	tRecords := make([]TRecordDTO, 0, len(log.TRecords))
 	for _, r := range log.TRecords {
 		tRecords = append(tRecords, TRecordDTO{Stock: r.Stock, Desc: r.Desc, GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue})
 	}
+	swingRecords := make([]SwingRecordDTO, 0, len(log.SwingRecords))
+	for _, r := range log.SwingRecords {
+		swingRecords = append(swingRecords, SwingRecordDTO{
+			Stock: r.Stock, Desc: r.Desc, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
+		})
+	}
 	return DailyLogResponse{
 		Date: log.Date, Marker: log.Marker, Positions: positions, Trades: trades, TRecords: tRecords,
-		MonthlyTRevenue: log.MonthlyTRevenue,
-		Review:          DailyReviewDTO{Market: log.Review.Market, Feeling: log.Review.Feeling, NextPlan: log.Review.NextPlan},
+		SwingRecords:        swingRecords,
+		MonthlyTRevenue:     log.MonthlyTRevenue,
+		MonthlySwingRevenue: log.MonthlySwingRevenue,
+		Review:              DailyReviewDTO{Market: log.Review.Market, Feeling: log.Review.Feeling, NextPlan: log.Review.NextPlan},
 	}
 }
 
@@ -96,15 +145,23 @@ type CreateAssetHistoryRequest struct {
 
 // CreateDailyLogRequest 是每日收盘记录的请求体，一次提交四类数据。
 type CreateDailyLogRequest struct {
-	Date    string `json:"date" binding:"required"`
-	Marker  string `json:"marker"` // "！" / "？" / ""
+	Date   string `json:"date" binding:"required"`
+	Marker string `json:"marker"` // "！"=当日有操作 / ""=无操作
 	// Positions 是当日收盘后的最新持仓成本和数量。
 	Positions []PositionUpdateRequest `json:"positions"`
 	Trades    []TradeRequest          `json:"trades"`
 	TRecords  []TRecordRequest        `json:"tRecords"`
+	// SwingRecords 是当日跨日撮合成功的波段收益明细，撮合计算在前端完成后提交。
+	SwingRecords []SwingRecordRequest `json:"swingRecords"`
+	// ConsumedLegs 是本次提交消耗掉的历史未匹配腿，后端据此扣减 stock_unmatched_legs。
+	ConsumedLegs []ConsumedLegRequest `json:"consumedLegs"`
+	// NewUnmatchedLegs 是当日新产生、仍未匹配完的腿，会持久化等待未来撮合。
+	NewUnmatchedLegs []UnmatchedLegRequest `json:"newUnmatchedLegs"`
 	// MonthlyTRevenue 是本月做T的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
-	MonthlyTRevenue float64    `json:"monthlyTRevenue"`
-	Review          ReviewRequest `json:"review"`
+	MonthlyTRevenue float64 `json:"monthlyTRevenue"`
+	// MonthlySwingRevenue 是本月波段收益的最新累计净收益（由前端基于历史值+当日增量计算后传入）。
+	MonthlySwingRevenue float64       `json:"monthlySwingRevenue"`
+	Review              ReviewRequest `json:"review"`
 }
 
 type PositionUpdateRequest struct {
@@ -116,11 +173,12 @@ type PositionUpdateRequest struct {
 }
 
 type TradeRequest struct {
-	Action string  `json:"action"`
-	Stock  string  `json:"stock"`
-	Code   string  `json:"code"`
-	Price  float64 `json:"price"`
-	Shares float64 `json:"shares"`
+	Action   string  `json:"action"`
+	Stock    string  `json:"stock"`
+	Code     string  `json:"code"`
+	Price    float64 `json:"price"`
+	Shares   float64 `json:"shares"`
+	HasIssue bool    `json:"hasIssue"`
 }
 
 type TRecordRequest struct {
@@ -132,6 +190,32 @@ type TRecordRequest struct {
 	NetRevenue  float64 `json:"netRevenue"`
 }
 
+type SwingRecordRequest struct {
+	Stock       string  `json:"stock"`
+	Desc        string  `json:"desc"`
+	BuyDate     string  `json:"buyDate"`
+	SellDate    string  `json:"sellDate"`
+	GrossProfit float64 `json:"grossProfit"`
+	Fee         float64 `json:"fee"`
+	Tax         float64 `json:"tax"`
+	NetRevenue  float64 `json:"netRevenue"`
+}
+
+type ConsumedLegRequest struct {
+	LegID          uint    `json:"legId" binding:"required"`
+	ConsumedShares float64 `json:"consumedShares"`
+}
+
+type UnmatchedLegRequest struct {
+	Stock           string  `json:"stock"`
+	Code            string  `json:"code"`
+	Action          string  `json:"action"`
+	Price           float64 `json:"price"`
+	RemainingShares float64 `json:"remainingShares"`
+	TotalShares     float64 `json:"totalShares"`
+	TotalFee        float64 `json:"totalFee"`
+}
+
 type ReviewRequest struct {
 	Market   string `json:"market"`
 	Feeling  string `json:"feeling"`
@@ -140,10 +224,11 @@ type ReviewRequest struct {
 
 // MonthlyDTO 保持当前 monthly.json 的字段命名。
 type MonthlyDTO struct {
-	Month    string  `json:"month"`
-	TTarget  float64 `json:"tTarget"`
-	TRevenue float64 `json:"tRevenue"`
-	Remark   *string `json:"remark,omitempty"`
+	Month        string  `json:"month"`
+	TTarget      float64 `json:"tTarget"`
+	TRevenue     float64 `json:"tRevenue"`
+	SwingRevenue float64 `json:"swingRevenue"`
+	Remark       *string `json:"remark,omitempty"`
 }
 
 // OtherIncomeDTO 中 desc 是为了兼容现有前端字段；domain 层使用 Description 更易懂。
@@ -210,10 +295,11 @@ func newMonthlyDTOs(items []domain.MonthlyRecord) []MonthlyDTO {
 	result := make([]MonthlyDTO, 0, len(items))
 	for _, item := range items {
 		result = append(result, MonthlyDTO{
-			Month:    item.Month,
-			TTarget:  item.TTarget,
-			TRevenue: item.TRevenue,
-			Remark:   item.Remark,
+			Month:        item.Month,
+			TTarget:      item.TTarget,
+			TRevenue:     item.TRevenue,
+			SwingRevenue: item.SwingRevenue,
+			Remark:       item.Remark,
 		})
 	}
 	return result

@@ -211,11 +211,12 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 	trades := make([]domain.Trade, 0, len(req.Trades))
 	for _, t := range req.Trades {
 		trades = append(trades, domain.Trade{
-			Action: t.Action,
-			Stock:  t.Stock,
-			Code:   t.Code,
-			Price:  t.Price,
-			Shares: t.Shares,
+			Action:   t.Action,
+			Stock:    t.Stock,
+			Code:     t.Code,
+			Price:    t.Price,
+			Shares:   t.Shares,
+			HasIssue: t.HasIssue,
 		})
 	}
 
@@ -231,13 +232,38 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 		})
 	}
 
+	swingRecords := make([]domain.SwingRecord, 0, len(req.SwingRecords))
+	for _, r := range req.SwingRecords {
+		swingRecords = append(swingRecords, domain.SwingRecord{
+			Stock: r.Stock, Desc: r.Desc, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
+		})
+	}
+
+	consumedLegs := make([]domain.ConsumedLeg, 0, len(req.ConsumedLegs))
+	for _, c := range req.ConsumedLegs {
+		consumedLegs = append(consumedLegs, domain.ConsumedLeg{LegID: c.LegID, ConsumedShares: c.ConsumedShares})
+	}
+
+	newUnmatchedLegs := make([]domain.UnmatchedLeg, 0, len(req.NewUnmatchedLegs))
+	for _, l := range req.NewUnmatchedLegs {
+		newUnmatchedLegs = append(newUnmatchedLegs, domain.UnmatchedLeg{
+			Stock: l.Stock, Code: l.Code, Action: l.Action, Price: l.Price,
+			RemainingShares: l.RemainingShares, TotalShares: l.TotalShares, TotalFee: l.TotalFee,
+		})
+	}
+
 	log := domain.DailyLog{
-		Date:            req.Date,
-		Marker:          req.Marker,
-		PositionUpdates: positions,
-		Trades:          trades,
-		TRecords:        tRecords,
-		MonthlyTRevenue: req.MonthlyTRevenue,
+		Date:                req.Date,
+		Marker:              req.Marker,
+		PositionUpdates:     positions,
+		Trades:              trades,
+		TRecords:            tRecords,
+		SwingRecords:        swingRecords,
+		ConsumedLegs:        consumedLegs,
+		NewUnmatchedLegs:    newUnmatchedLegs,
+		MonthlyTRevenue:     req.MonthlyTRevenue,
+		MonthlySwingRevenue: req.MonthlySwingRevenue,
 		Review: domain.DailyReview{
 			Market:   req.Review.Market,
 			Feeling:  req.Review.Feeling,
@@ -251,6 +277,83 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 	}
 
 	httpx.Created(c, gin.H{"date": req.Date})
+}
+
+// ListUnmatchedPositions 返回当前所有跨日未匹配的买/卖腿，供前端「未匹配做T仓位」区块展示。
+// @Summary     获取未匹配做T仓位
+// @Tags        stock
+// @Produce     json
+// @Success     200  {array}   UnmatchedLegDTO
+// @Failure     500  {object}  httpx.ErrorResponse
+// @Router      /stock/unmatched-positions [get]
+func (handler *Handler) ListUnmatchedPositions(c *gin.Context) {
+	items, err := handler.dailyLogService.ListUnmatchedLegs(c.Request.Context())
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "unmatched_positions_error", err.Error())
+		return
+	}
+	result := make([]UnmatchedLegDTO, 0, len(items))
+	for _, item := range items {
+		result = append(result, UnmatchedLegDTO{
+			ID: item.ID, Date: item.Date, Stock: item.Stock, Code: item.Code,
+			Action: item.Action, Price: item.Price, RemainingShares: item.RemainingShares,
+			TotalShares: item.TotalShares, TotalFee: item.TotalFee,
+		})
+	}
+	httpx.OK(c, result)
+}
+
+// GetPositionSnapshotAsOf 返回 date 当天或之前最近一次收盘记录的持仓快照，供 Alpha 曲线使用。
+// 绝不回退到"当前持仓"：找不到任何历史快照时返回 404，交给前端决定怎么处理缺失。
+// @Summary     获取某天或之前最近一次的持仓快照
+// @Tags        stock
+// @Produce     json
+// @Param       date  path      string  true  "YYYY-MM-DD"
+// @Success     200   {object}  PositionSnapshotAsOfDTO
+// @Failure     404   {object}  httpx.ErrorResponse
+// @Failure     500   {object}  httpx.ErrorResponse
+// @Router      /stock/position-snapshot-as-of/{date} [get]
+func (handler *Handler) GetPositionSnapshotAsOf(c *gin.Context) {
+	date := c.Param("date")
+	snapshot, err := handler.dailyLogService.GetPositionSnapshotAsOf(c.Request.Context(), date)
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "position_snapshot_error", err.Error())
+		return
+	}
+	if snapshot == nil {
+		httpx.Error(c, nethttp.StatusNotFound, "not_found", "no position snapshot on or before "+date)
+		return
+	}
+	positions := make([]PositionSnapshotDTO, 0, len(snapshot.Positions))
+	for _, p := range snapshot.Positions {
+		positions = append(positions, PositionSnapshotDTO{Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price})
+	}
+	httpx.OK(c, PositionSnapshotAsOfDTO{Date: snapshot.Date, Positions: positions})
+}
+
+// ListPositionSnapshots 返回所有实际提交过持仓快照的日期（date -> positions）。
+// 供资产曲线 tooltip 使用：只有这些日期才在"股票"那一行后面追加持仓明细。
+// @Summary     获取所有有持仓快照的日期明细
+// @Tags        stock
+// @Produce     json
+// @Success     200  {object}  PositionSnapshotDatesDTO
+// @Failure     500  {object}  httpx.ErrorResponse
+// @Router      /stock/position-snapshots [get]
+func (handler *Handler) ListPositionSnapshots(c *gin.Context) {
+	snapshots, err := handler.dailyLogService.ListPositionSnapshotDates(c.Request.Context())
+	if err != nil {
+		httpx.Error(c, nethttp.StatusInternalServerError, "position_snapshots_error", err.Error())
+		return
+	}
+	result := make(PositionSnapshotDatesDTO, len(snapshots))
+	for date, positions := range snapshots {
+		dtos := make([]PositionSnapshotDTO, 0, len(positions))
+		for _, p := range positions {
+			dtos = append(dtos, PositionSnapshotDTO{Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price})
+		}
+		result[date] = dtos
+	}
+	httpx.OK(c, result)
 }
 
 // UpsertOtherIncome 按日期 upsert 一条其他收入记录。

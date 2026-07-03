@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import type { StockDashboardProps, MonthlyRecord } from './types';
 import { useStockPrice } from './hooks/useStockPrice';
 import AssetChart from './components/AssetChart';
+import AlphaChart from './components/AlphaChart';
 import PositionPie from './components/PositionPie';
 import AddAssetHistoryModal from './components/AddAssetHistoryModal';
 import DailyLogModal from './components/DailyLogModal';
@@ -30,6 +31,8 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
   const stats = useMemo(() => {
     // 累计做T收益：从 monthly 的 tRevenue 累加
     const totalTProfit = monthly.reduce((sum, m) => sum + (m.tRevenue || 0), 0);
+    // 累计波段收益：从 monthly 的 swingRevenue 累加
+    const totalSwingProfit = monthly.reduce((sum, m) => sum + (m.swingRevenue || 0), 0);
 
     // 资产变化（自动计算 totalAsset）
     const calcTotal = (d: any) => (d.cash || 0) + (d.stockValue || 0) + (d.loan || 0);
@@ -43,13 +46,19 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
     const currentMonthKey = new Date().toLocaleDateString('sv').slice(0, 7); // "2026-07"
     const currentMonth =
       monthly.find((m) => m.month === currentMonthKey) ??
-      ({ month: currentMonthKey, tTarget: DEFAULT_MONTHLY_T_TARGET, tRevenue: 0 } as MonthlyRecord);
+      ({
+        month: currentMonthKey,
+        tTarget: DEFAULT_MONTHLY_T_TARGET,
+        tRevenue: 0,
+        swingRevenue: 0,
+      } as MonthlyRecord);
 
     // 累计其他收入
     const totalOtherIncome = otherIncome.reduce((sum, d) => sum + d.amount, 0);
 
     return {
       totalTProfit,
+      totalSwingProfit,
       assetEnd,
       assetChange,
       assetChangePercent,
@@ -76,6 +85,15 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
           <div className="stock-stat-label">累计做T收益</div>
           <div className="stock-stat-value positive">¥{stats.totalTProfit.toFixed(2)}</div>
           <div className="stock-stat-sub">累计{monthly.length}个月</div>
+        </div>
+        <div className="stock-stat-card">
+          <div className="stock-stat-label">累计波段收益</div>
+          <div
+            className={`stock-stat-value ${stats.totalSwingProfit >= 0 ? 'positive' : 'negative'}`}
+          >
+            ¥{stats.totalSwingProfit.toFixed(2)}
+          </div>
+          <div className="stock-stat-sub">买卖跨日撮合</div>
         </div>
         <div className="stock-stat-card">
           <div className="stock-stat-label">累计其他收入</div>
@@ -140,6 +158,14 @@ const StockDashboard: React.FC<StockDashboardProps> = ({
           </div>
         </div>
         <AssetChart data={assetHistory} />
+      </div>
+
+      {/* Alpha 曲线：股票市值 vs 假设某天起不再操作的市值，用来评判操作好坏 */}
+      <div className="stock-chart-section">
+        <div className="stock-section-header">
+          <h3 className="stock-section-title">Alpha 曲线</h3>
+        </div>
+        <AlphaChart assetHistory={assetHistory} />
       </div>
 
       {/* 持仓分布 */}

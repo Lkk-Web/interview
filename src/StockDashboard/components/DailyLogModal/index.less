@@ -92,13 +92,8 @@
   background: #e6f4ff;
   border-color: #1677ff;
 }
-.dlm-marker-warn {
-  color: #fa8c16;
-  background: #fff7e6;
-  border-color: #fa8c16;
-}
 
-// 操作记录行——问题操作高亮
+// 操作记录行——跨日挂起（未匹配）高亮，不代表操作有问题
 .dlm-trade-issue {
   padding: 2px 4px;
   background: #fff7e6;
@@ -443,4 +438,15 @@
   padding: 2px 0;
   color: #595959;
   font-size: 13px;
+}
+
+/* 波段收益：比做T收益多一列买卖日期，需要单独的列宽（selector 顺序在后，覆盖 .dlm-trecord-head/row 的默认列宽） */
+.dlm-swing-head,
+.dlm-swing-row {
+  grid-template-columns: 80px 100px 62px 62px 100px 62px 62px 62px 62px 62px 70px 28px;
+}
+
+/* 未匹配做T仓位：区别于操作记录的“待匹配”标签行，浅黄底提示这是挂起状态 */
+.dlm-unmatched-row {
+  background: #fffbe6;
 }
