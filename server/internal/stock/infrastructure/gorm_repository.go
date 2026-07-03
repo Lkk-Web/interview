@@ -554,6 +554,10 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				DailyLogID:   savedLogID,
 				Stock:        r.Stock,
 				Description:  r.Desc,
+				BuyPrice:     r.BuyPrice,
+				BuyShares:    r.BuyShares,
+				SellPrice:    r.SellPrice,
+				SellShares:   r.SellShares,
 				GrossProfit:  r.GrossProfit,
 				Fee:          r.Fee,
 				Tax:          r.Tax,
@@ -579,6 +583,10 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				Description:  r.Desc,
 				BuyDate:      r.BuyDate,
 				SellDate:     r.SellDate,
+				BuyPrice:     r.BuyPrice,
+				BuyShares:    r.BuyShares,
+				SellPrice:    r.SellPrice,
+				SellShares:   r.SellShares,
 				GrossProfit:  r.GrossProfit,
 				Fee:          r.Fee,
 				Tax:          r.Tax,
@@ -731,6 +739,7 @@ func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) 
 	for _, r := range model.TRecords {
 		tRecords = append(tRecords, domain.TRecord{
 			Stock: r.Stock, Desc: r.Description,
+			BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
 			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
 		})
 	}
@@ -738,6 +747,7 @@ func (repository *GormRepository) GetDailyLog(ctx context.Context, date string) 
 	for _, r := range model.SwingRecords {
 		swingRecords = append(swingRecords, domain.SwingRecord{
 			Stock: r.Stock, Desc: r.Description, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
 			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
 		})
 	}
@@ -886,7 +896,11 @@ func (repository *GormRepository) ImportDailyLogs(ctx context.Context, logs []do
 				}
 			}
 			for i, r := range log.TRecords {
-				if err := tx.Create(&TRecordModel{DailyLogID: model.ID, Stock: r.Stock, Description: r.Desc, GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue, DisplayOrder: i}).Error; err != nil {
+				if err := tx.Create(&TRecordModel{
+					DailyLogID: model.ID, Stock: r.Stock, Description: r.Desc,
+					BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
+					GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue, DisplayOrder: i,
+				}).Error; err != nil {
 					return fmt.Errorf("insert t_record %s: %w", log.Date, err)
 				}
 			}

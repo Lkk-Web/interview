@@ -126,6 +126,10 @@ type TRecordModel struct {
 	DailyLogID   uint      `gorm:"column:daily_log_id;index"`
 	Stock        string    `gorm:"column:stock"`
 	Description  string    `gorm:"column:description"`
+	BuyPrice     float64   `gorm:"column:buy_price"`
+	BuyShares    float64   `gorm:"column:buy_shares"`
+	SellPrice    float64   `gorm:"column:sell_price"`
+	SellShares   float64   `gorm:"column:sell_shares"`
 	GrossProfit  float64   `gorm:"column:gross_profit"`
 	Fee          float64   `gorm:"column:fee"`
 	Tax          float64   `gorm:"column:tax"`
@@ -158,6 +162,10 @@ type SwingRecordModel struct {
 	Description  string    `gorm:"column:description"`
 	BuyDate      string    `gorm:"column:buy_date"`
 	SellDate     string    `gorm:"column:sell_date"`
+	BuyPrice     float64   `gorm:"column:buy_price"`
+	BuyShares    float64   `gorm:"column:buy_shares"`
+	SellPrice    float64   `gorm:"column:sell_price"`
+	SellShares   float64   `gorm:"column:sell_shares"`
 	GrossProfit  float64   `gorm:"column:gross_profit"`
 	Fee          float64   `gorm:"column:fee"`
 	Tax          float64   `gorm:"column:tax"`

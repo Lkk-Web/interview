@@ -78,6 +78,10 @@ type Trade struct {
 type TRecord struct {
 	Stock       string
 	Desc        string  // 如 "4.24买3800→4.28卖4000"
+	BuyPrice    float64 // 买入价，用于历史记录回填时还原编辑表单
+	BuyShares   float64 // 买入量
+	SellPrice   float64 // 卖出价
+	SellShares  float64 // 卖出量
 	GrossProfit float64 // 毛利
 	Fee         float64 // 手续费
 	Tax         float64 // 印花税
@@ -90,6 +94,10 @@ type SwingRecord struct {
 	Desc        string // 如 "5.10买3800→6.02卖4000"
 	BuyDate     string
 	SellDate    string
+	BuyPrice    float64 // 买入价，用于历史记录回填时还原编辑表单
+	BuyShares   float64 // 买入量
+	SellPrice   float64 // 卖出价
+	SellShares  float64 // 卖出量
 	GrossProfit float64
 	Fee         float64
 	Tax         float64

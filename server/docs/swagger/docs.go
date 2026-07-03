@@ -894,6 +894,12 @@ const docTemplate = `{
                 "buyDate": {
                     "type": "string"
                 },
+                "buyPrice": {
+                    "type": "number"
+                },
+                "buyShares": {
+                    "type": "number"
+                },
                 "desc": {
                     "type": "string"
                 },
@@ -909,6 +915,12 @@ const docTemplate = `{
                 "sellDate": {
                     "type": "string"
                 },
+                "sellPrice": {
+                    "type": "number"
+                },
+                "sellShares": {
+                    "type": "number"
+                },
                 "stock": {
                     "type": "string"
                 },
@@ -920,6 +932,12 @@ const docTemplate = `{
         "http.TRecordRequest": {
             "type": "object",
             "properties": {
+                "buyPrice": {
+                    "type": "number"
+                },
+                "buyShares": {
+                    "type": "number"
+                },
                 "desc": {
                     "type": "string"
                 },
@@ -930,6 +948,12 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "netRevenue": {
+                    "type": "number"
+                },
+                "sellPrice": {
+                    "type": "number"
+                },
+                "sellShares": {
                     "type": "number"
                 },
                 "stock": {

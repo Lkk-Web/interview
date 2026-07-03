@@ -825,6 +825,12 @@
         "buyDate": {
           "type": "string"
         },
+        "buyPrice": {
+          "type": "number"
+        },
+        "buyShares": {
+          "type": "number"
+        },
         "desc": {
           "type": "string"
         },
@@ -840,6 +846,12 @@
         "sellDate": {
           "type": "string"
         },
+        "sellPrice": {
+          "type": "number"
+        },
+        "sellShares": {
+          "type": "number"
+        },
         "stock": {
           "type": "string"
         },
@@ -851,6 +863,12 @@
     "http.TRecordRequest": {
       "type": "object",
       "properties": {
+        "buyPrice": {
+          "type": "number"
+        },
+        "buyShares": {
+          "type": "number"
+        },
         "desc": {
           "type": "string"
         },
@@ -861,6 +879,12 @@
           "type": "number"
         },
         "netRevenue": {
+          "type": "number"
+        },
+        "sellPrice": {
+          "type": "number"
+        },
+        "sellShares": {
           "type": "number"
         },
         "stock": {

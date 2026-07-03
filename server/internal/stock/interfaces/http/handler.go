@@ -225,6 +225,10 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 		tRecords = append(tRecords, domain.TRecord{
 			Stock:       r.Stock,
 			Desc:        r.Desc,
+			BuyPrice:    r.BuyPrice,
+			BuyShares:   r.BuyShares,
+			SellPrice:   r.SellPrice,
+			SellShares:  r.SellShares,
 			GrossProfit: r.GrossProfit,
 			Fee:         r.Fee,
 			Tax:         r.Tax,
@@ -236,6 +240,7 @@ func (handler *Handler) CreateDailyLog(c *gin.Context) {
 	for _, r := range req.SwingRecords {
 		swingRecords = append(swingRecords, domain.SwingRecord{
 			Stock: r.Stock, Desc: r.Desc, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
 			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
 		})
 	}

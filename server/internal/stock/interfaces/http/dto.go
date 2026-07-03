@@ -35,6 +35,10 @@ type TradeDTO struct {
 type TRecordDTO struct {
 	Stock       string  `json:"stock"`
 	Desc        string  `json:"desc"`
+	BuyPrice    float64 `json:"buyPrice"`
+	BuyShares   float64 `json:"buyShares"`
+	SellPrice   float64 `json:"sellPrice"`
+	SellShares  float64 `json:"sellShares"`
 	GrossProfit float64 `json:"grossProfit"`
 	Fee         float64 `json:"fee"`
 	Tax         float64 `json:"tax"`
@@ -47,6 +51,10 @@ type SwingRecordDTO struct {
 	Desc        string  `json:"desc"`
 	BuyDate     string  `json:"buyDate"`
 	SellDate    string  `json:"sellDate"`
+	BuyPrice    float64 `json:"buyPrice"`
+	BuyShares   float64 `json:"buyShares"`
+	SellPrice   float64 `json:"sellPrice"`
+	SellShares  float64 `json:"sellShares"`
 	GrossProfit float64 `json:"grossProfit"`
 	Fee         float64 `json:"fee"`
 	Tax         float64 `json:"tax"`
@@ -95,12 +103,17 @@ func newDailyLogResponse(log *domain.DailyLog) DailyLogResponse {
 	}
 	tRecords := make([]TRecordDTO, 0, len(log.TRecords))
 	for _, r := range log.TRecords {
-		tRecords = append(tRecords, TRecordDTO{Stock: r.Stock, Desc: r.Desc, GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue})
+		tRecords = append(tRecords, TRecordDTO{
+			Stock: r.Stock, Desc: r.Desc,
+			BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
+			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
+		})
 	}
 	swingRecords := make([]SwingRecordDTO, 0, len(log.SwingRecords))
 	for _, r := range log.SwingRecords {
 		swingRecords = append(swingRecords, SwingRecordDTO{
 			Stock: r.Stock, Desc: r.Desc, BuyDate: r.BuyDate, SellDate: r.SellDate,
+			BuyPrice: r.BuyPrice, BuyShares: r.BuyShares, SellPrice: r.SellPrice, SellShares: r.SellShares,
 			GrossProfit: r.GrossProfit, Fee: r.Fee, Tax: r.Tax, NetRevenue: r.NetRevenue,
 		})
 	}
@@ -184,6 +197,10 @@ type TradeRequest struct {
 type TRecordRequest struct {
 	Stock       string  `json:"stock"`
 	Desc        string  `json:"desc"`
+	BuyPrice    float64 `json:"buyPrice"`
+	BuyShares   float64 `json:"buyShares"`
+	SellPrice   float64 `json:"sellPrice"`
+	SellShares  float64 `json:"sellShares"`
 	GrossProfit float64 `json:"grossProfit"`
 	Fee         float64 `json:"fee"`
 	Tax         float64 `json:"tax"`
@@ -195,6 +212,10 @@ type SwingRecordRequest struct {
 	Desc        string  `json:"desc"`
 	BuyDate     string  `json:"buyDate"`
 	SellDate    string  `json:"sellDate"`
+	BuyPrice    float64 `json:"buyPrice"`
+	BuyShares   float64 `json:"buyShares"`
+	SellPrice   float64 `json:"sellPrice"`
+	SellShares  float64 `json:"sellShares"`
 	GrossProfit float64 `json:"grossProfit"`
 	Fee         float64 `json:"fee"`
 	Tax         float64 `json:"tax"`

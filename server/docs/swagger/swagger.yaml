@@ -276,6 +276,10 @@ definitions:
     properties:
       buyDate:
         type: string
+      buyPrice:
+        type: number
+      buyShares:
+        type: number
       desc:
         type: string
       fee:
@@ -286,6 +290,10 @@ definitions:
         type: number
       sellDate:
         type: string
+      sellPrice:
+        type: number
+      sellShares:
+        type: number
       stock:
         type: string
       tax:
@@ -293,6 +301,10 @@ definitions:
     type: object
   http.TRecordRequest:
     properties:
+      buyPrice:
+        type: number
+      buyShares:
+        type: number
       desc:
         type: string
       fee:
@@ -300,6 +312,10 @@ definitions:
       grossProfit:
         type: number
       netRevenue:
+        type: number
+      sellPrice:
+        type: number
+      sellShares:
         type: number
       stock:
         type: string

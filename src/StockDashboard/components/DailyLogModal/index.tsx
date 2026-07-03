@@ -150,6 +150,13 @@ interface HistoryTrade {
 interface HistoryTRecord {
   stock: string;
   desc: string;
+  buyPrice: number;
+  buyShares: number;
+  sellPrice: number;
+  sellShares: number;
+  grossProfit: number;
+  fee: number;
+  tax: number;
   netRevenue: number;
 }
 interface HistorySwingRecord {
@@ -157,6 +164,13 @@ interface HistorySwingRecord {
   desc: string;
   buyDate: string;
   sellDate: string;
+  buyPrice: number;
+  buyShares: number;
+  sellPrice: number;
+  sellShares: number;
+  grossProfit: number;
+  fee: number;
+  tax: number;
   netRevenue: number;
 }
 interface HistoryReview {
@@ -347,26 +361,26 @@ const DailyLogModal: React.FC<Props> = ({
           })),
           tRecords: rec.tRecords.map((r) => ({
             stock: r.stock,
-            buyPrice: '',
-            buyShares: '',
-            sellPrice: '',
-            sellShares: '',
-            grossProfit: '',
-            fee: '',
-            tax: '',
+            buyPrice: r.buyPrice ? String(r.buyPrice) : '',
+            buyShares: r.buyShares ? String(r.buyShares) : '',
+            sellPrice: r.sellPrice ? String(r.sellPrice) : '',
+            sellShares: r.sellShares ? String(r.sellShares) : '',
+            grossProfit: r.grossProfit !== 0 ? String(r.grossProfit) : '',
+            fee: r.fee !== 0 ? String(r.fee) : '',
+            tax: r.tax !== 0 ? String(r.tax) : '',
             netRevenue: String(r.netRevenue),
           })),
           swingRecords: (rec.swingRecords || []).map((r) => ({
             stock: r.stock,
             buyDate: r.buyDate,
-            buyPrice: '',
-            buyShares: '',
+            buyPrice: r.buyPrice ? String(r.buyPrice) : '',
+            buyShares: r.buyShares ? String(r.buyShares) : '',
             sellDate: r.sellDate,
-            sellPrice: '',
-            sellShares: '',
-            grossProfit: '',
-            fee: '',
-            tax: '',
+            sellPrice: r.sellPrice ? String(r.sellPrice) : '',
+            sellShares: r.sellShares ? String(r.sellShares) : '',
+            grossProfit: r.grossProfit !== 0 ? String(r.grossProfit) : '',
+            fee: r.fee !== 0 ? String(r.fee) : '',
+            tax: r.tax !== 0 ? String(r.tax) : '',
             netRevenue: String(r.netRevenue),
           })),
           consumedLegs: [],
@@ -747,6 +761,10 @@ const DailyLogModal: React.FC<Props> = ({
       tRecords: tRecords.map((r) => ({
         stock: r.stock,
         desc: calcTRecord(r).desc,
+        buyPrice: Number(r.buyPrice) || 0,
+        buyShares: Number(r.buyShares) || 0,
+        sellPrice: Number(r.sellPrice) || 0,
+        sellShares: Number(r.sellShares) || 0,
         grossProfit: Number(r.grossProfit) || 0,
         fee: Number(r.fee) || 0,
         tax: Number(r.tax) || 0,
@@ -760,6 +778,10 @@ const DailyLogModal: React.FC<Props> = ({
             : '',
         buyDate: r.buyDate,
         sellDate: r.sellDate,
+        buyPrice: Number(r.buyPrice) || 0,
+        buyShares: Number(r.buyShares) || 0,
+        sellPrice: Number(r.sellPrice) || 0,
+        sellShares: Number(r.sellShares) || 0,
         grossProfit: Number(r.grossProfit) || 0,
         fee: Number(r.fee) || 0,
         tax: Number(r.tax) || 0,
