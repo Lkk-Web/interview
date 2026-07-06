@@ -616,6 +616,11 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
+		// 幂等：先删本日 daily_log 产生的 pending 腿，再重新写入，避免重复提交时出现重复行
+		if err := tx.Where("daily_log_id = ? AND status = ?", savedLogID, "pending").Delete(&UnmatchedLegModel{}).Error; err != nil {
+			return fmt.Errorf("clear unmatched legs: %w", err)
+		}
+
 		// 当日未被完全匹配的新腿：写入 stock_unmatched_legs，等待未来某天再匹配
 		if len(log.NewUnmatchedLegs) > 0 {
 			newLegModels := make([]UnmatchedLegModel, 0, len(log.NewUnmatchedLegs))
