@@ -1,6 +1,7 @@
 ---
-order: 7
-toc: menu
+group:
+  order: 1
+order: 1
 ---
 
 # 代码编辑器
@@ -59,22 +60,20 @@ export default () => <CodeGateway codeKey="demo-json" />;
 
 在任意 md 文件中引入：
 
-```text
-// Mermaid 开启编辑模式
-<CodeGateway codeKey="demo-mermaid" />
-
-// 通用编辑器
+```html
+<CodeGateway pageKey="summary-editor" ,codeKey="demo-mermaid" ,lang="mermaid" />,
 <CodeGateway codeKey="demo-markdown" />
 <CodeGateway codeKey="demo-html" />
 <CodeGateway codeKey="demo-json" />
 ```
 
-| prop           | 说明                         | 默认值           |
-| -------------- | ---------------------------- | ---------------- |
-| `codeKey`      | 代码内容 key                 | 必填             |
-| `pageKey`      | 页面/业务域 key              | `summary-editor` |
-| `cacheKey`     | 本地缓存 key                 | mock 中的 key    |
-| `defaultOpen`  | 默认展开编辑器               | mock 中的配置    |
-| `editorHeight` | 编辑区高度                   | `300`            |
-| `editable`     | Mermaid 是否开启编辑模式     | mock 中的配置    |
-| `zoomable`     | Mermaid 是否开启缩放/拖拽    | mock 中的配置    |
+| prop           | 说明                            | 默认值           |
+| -------------- | ------------------------------- | ---------------- |
+| `codeKey`      | 代码内容 key                    | 必填             |
+| `pageKey`      | 页面/业务域 key                 | `summary-editor` |
+| `lang`         | mermaid 、markdow 、html 、json | markdow          |
+| `cacheKey`     | 本地缓存 key                    | mock 中的 key    |
+| `defaultOpen`  | 默认展开编辑器                  | mock 中的配置    |
+| `editorHeight` | 编辑区高度                      | `300`            |
+| `editable`     | Mermaid 是否开启编辑模式        | mock 中的配置    |
+| `zoomable`     | Mermaid 是否开启缩放/拖拽       | mock 中的配置    |

@@ -28,7 +28,7 @@ export default () => <CodeGateway pageKey="home" codeKey="knowledge-map" />;
 
 - 大前端
 
-这是我在前端领域的主站，日常维护 ing
+前端领域的主站，我的来时路
 
 - 面试
 
@@ -52,9 +52,9 @@ export default () => <CodeGateway pageKey="home" codeKey="knowledge-map" />;
 
 ## 个人反思
 
-为什么很多人在互联网撑不到 35 岁？
+本文始于 19 岁初，从校园到职场，从开始的记录学习、技术到面试、总结等各个领域
 
-因为工作压力、企业氛围、个人成长在让所有人以为互联网在奔向年轻人。互联网的前辈我并不认为是技术或者思想上不如年轻人，很多人掉入了行业旋涡。这个行业不该是这样的，我认为技术本就是沉淀，我们只不过是在汲取前辈的经验。
+存在稚嫩的地方，是我想尽量保留之前的痕迹
 
 希望我们能在技术领域保持初心，一心向前。
 
@@ -66,10 +66,10 @@ export default () => <CodeGateway pageKey="home" codeKey="knowledge-map" />;
 
 ## 鸣谢
 
-在此鸣谢 😊
+在此鸣谢
 
-@oy
+xf@oy
 
-师父 牛客@猫屎不是咖啡
+sf@csf
 
-知乎 mentor@罗老师
+zh-mentor@lcj
