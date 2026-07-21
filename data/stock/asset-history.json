@@ -368,5 +368,12 @@
     "stockValue": 117406,
     "loan": -52402,
     "other": -5820
+  },
+  {
+    "date": "2026-07-21",
+    "cash": 0,
+    "stockValue": 118851,
+    "loan": -52402,
+    "other": -5820
   }
 ]
