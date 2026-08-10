@@ -439,6 +439,7 @@
     "cash": 5000,
     "stockValue": 120800,
     "loan": -50111,
-    "other": -5820
+    "other": -5820,
+    "remark": "工资到账"
   }
 ]
