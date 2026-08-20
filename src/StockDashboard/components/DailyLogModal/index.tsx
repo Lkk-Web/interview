@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE, ADMIN_TOKEN } from '../../../constants';
 import type { Position, MonthlyRecord } from '../../types';
@@ -284,6 +284,12 @@ const DailyLogModal: React.FC<Props> = ({
   // 当前所有跨日未匹配的买/卖腿（待匹配做T仓位），从后端拉取
   const [unmatchedLegs, setUnmatchedLegs] = useState<UnmatchedLegItem[]>([]);
 
+  // 本月 T/波段收益的「不含今日」基准值。
+  // 每次加载历史记录时从 rec.monthly* 中减去今日部分来初始化，
+  // 避免 useEffect 里再叠加今日合计时重复计算。
+  const tBaseRef = useRef<number>(currentMonth?.tRevenue ?? 0);
+  const swingBaseRef = useRef<number>(currentMonth?.swingRevenue ?? 0);
+
   const todayStr = new Date().toLocaleDateString('sv');
   const isToday = date === todayStr;
 
@@ -343,6 +349,12 @@ const DailyLogModal: React.FC<Props> = ({
       .catch(() => null)
       .then((rec: HistoryRecord | null) => {
         if (!rec) return;
+        // rec.monthlyTRevenue / rec.monthlySwingRevenue 已经含了今日那笔，
+        // 用它们减去今日合计，得到"不含今日"的月基准，避免 useEffect 里再叠加一遍。
+        const loadedTTotal = rec.tRecords.reduce((s, r) => s + r.netRevenue, 0);
+        const loadedSwingTotal = (rec.swingRecords || []).reduce((s, r) => s + r.netRevenue, 0);
+        tBaseRef.current = round2((rec.monthlyTRevenue || 0) - loadedTTotal);
+        swingBaseRef.current = round2((rec.monthlySwingRevenue || 0) - loadedSwingTotal);
         set({
           positionForms: rec.positions.map((p) => ({
             code: p.code,
@@ -658,8 +670,9 @@ const DailyLogModal: React.FC<Props> = ({
   const todayTTotal = round2(tRecords.reduce((sum, r) => sum + (Number(r.netRevenue) || 0), 0));
 
   // tRecords 变化时，自动把今日合计叠加到本月基准值上
+  // base 用 tBaseRef（不含今日的月累计），避免回填历史记录时重复叠加
   useEffect(() => {
-    const base = currentMonth?.tRevenue ?? 0;
+    const base = tBaseRef.current;
     const updated = round2(base + todayTTotal);
     set({ monthlyTRevenue: todayTTotal !== 0 ? String(updated) : String(base || '') });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -712,8 +725,9 @@ const DailyLogModal: React.FC<Props> = ({
   );
 
   // swingRecords 变化时，自动把今日合计叠加到本月波段收益基准值上
+  // base 用 swingBaseRef（不含今日的月累计），避免回填历史记录时重复叠加
   useEffect(() => {
-    const base = currentMonth?.swingRevenue ?? 0;
+    const base = swingBaseRef.current;
     const updated = round2(base + todaySwingTotal);
     set({ monthlySwingRevenue: todaySwingTotal !== 0 ? String(updated) : String(base || '') });
     // eslint-disable-next-line react-hooks/exhaustive-deps
