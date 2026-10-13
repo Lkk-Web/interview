@@ -48,7 +48,7 @@
     "@commitlint/config-conventional": "^17.1.0",
     "@types/codemirror": "^5.60.17",
     "codemirror": "^5.65.21",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.4.2",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
     "marked": "^4.3.0",
