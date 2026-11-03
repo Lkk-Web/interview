@@ -23,25 +23,9 @@
     ]
   },
   {
-    "stock": "京城股份",
-    "code": "sh600860",
-    "cost": 8.578,
-    "shares": 13200,
-    "base": {
-      "cost": 9,
-      "shares": 3000,
-      "date": "2026-05",
-      "remark": "底仓"
-    },
-    "target": [
-      {
-        "cost": 8.5,
-        "price": 16,
-        "shares": 6000,
-        "date": "2026-12",
-        "remark": "还没止跌的感觉，慢慢捡筹码",
-        "status": "planned"
-      }
-    ]
+    "stock": "建科院",
+    "code": "300675",
+    "cost": 12,
+    "shares": 9000
   }
 ]
