@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE, ADMIN_TOKEN } from '../../../constants';
 import type { Position, MonthlyRecord } from '../../types';
-import { fetchStockPrices } from '../../hooks/useStockPrice';
+import { fetchStockPrices, normalizeStockCode } from '../../hooks/useStockPrice';
 import './index.less';
 
 interface Props {
@@ -62,6 +62,18 @@ interface PositionForm {
   cost: string;
   shares: string;
   price: string; // 当日收盘价
+}
+
+const isBlankPositionForm = (position: PositionForm) =>
+  !position.stock.trim() &&
+  !position.code.trim() &&
+  !position.cost.trim() &&
+  !position.shares.trim() &&
+  !position.price.trim();
+
+interface StockOption {
+  stock: string;
+  code: string;
 }
 
 interface TradeRow {
@@ -293,6 +305,19 @@ const DailyLogModal: React.FC<Props> = ({
   const todayStr = new Date().toLocaleDateString('sv');
   const isToday = date === todayStr;
 
+  // 快捷选择不仅要包含服务端当前持仓，也要包含本次表单刚新建、尚未提交的仓位。
+  // 否则用户刚加完一只股票，在下面的操作记录/收益记录里还无法直接选中它。
+  const stockOptions = (() => {
+    const options = new Map<string, StockOption>();
+    for (const position of [...positions, ...positionForms]) {
+      const code = normalizeStockCode(position.code);
+      if (!position.stock || !code) continue;
+      options.set(code, { stock: position.stock, code });
+    }
+    return Array.from(options.values());
+  })();
+  const findStockOption = (stock: string) => stockOptions.find((option) => option.stock === stock);
+
   // positionForms 有股票代码时，自动拉行情填入现价（用户仍可手动覆盖）
   useEffect(() => {
     const codes = positionForms.map((p) => p.code).filter(Boolean);
@@ -413,10 +438,23 @@ const DailyLogModal: React.FC<Props> = ({
 
   const addPositionForm = () =>
     set({
-      positionForms: [...positionForms, { code: '', stock: '', cost: '', shares: '', price: '' }],
+      // 新建前先清掉未填写的空行，避免连续点击后积攒多个空行。
+      positionForms: [
+        ...positionForms.filter((position) => !isBlankPositionForm(position)),
+        { code: '', stock: '', cost: '', shares: '', price: '' },
+      ],
     });
   const removePositionForm = (i: number) =>
     set({ positionForms: positionForms.filter((_, idx) => idx !== i) });
+
+  const handleClose = () => {
+    // 空的新建行只是编辑占位，不应作为草稿常驻到下一次打开。
+    const filledPositionForms = positionForms.filter((position) => !isBlankPositionForm(position));
+    if (filledPositionForms.length !== positionForms.length) {
+      set({ positionForms: filledPositionForms });
+    }
+    onClose();
+  };
 
   const updatePosition = (i: number, key: keyof PositionForm, value: string) => {
     set({ positionForms: positionForms.map((p, idx) => (idx === i ? { ...p, [key]: value } : p)) });
@@ -429,7 +467,7 @@ const DailyLogModal: React.FC<Props> = ({
       trades: trades.map((t, idx) => {
         if (idx !== i) return t;
         if (key === 'stock') {
-          const pos = positions.find((p) => p.stock === String(value));
+          const pos = findStockOption(String(value));
           return { ...t, stock: String(value), code: pos ? pos.code : t.code };
         }
         return { ...t, [key]: value };
@@ -735,6 +773,15 @@ const DailyLogModal: React.FC<Props> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const filledPositionForms = positionForms.filter((position) => !isBlankPositionForm(position));
+    const incompletePosition = filledPositionForms.find(
+      (position) => !position.stock.trim() || !position.code.trim(),
+    );
+    if (incompletePosition) {
+      setError('请完整填写新建仓的股票名称和代码；不需要的空行可直接删除。');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -756,9 +803,9 @@ const DailyLogModal: React.FC<Props> = ({
     const body = {
       date,
       marker,
-      positions: positionForms.map((p) => ({
+      positions: filledPositionForms.map((p) => ({
         stock: p.stock,
-        code: p.code,
+        code: normalizeStockCode(p.code),
         cost: Number(p.cost) || 0,
         shares: Number(p.shares) || 0,
         price: Number(p.price) || 0,
@@ -766,7 +813,7 @@ const DailyLogModal: React.FC<Props> = ({
       trades: trades.map((t) => ({
         action: t.action,
         stock: t.stock,
-        code: t.code,
+        code: normalizeStockCode(t.code),
         price: Number(t.price) || 0,
         shares: Number(t.shares) || 0,
         hasIssue: t.hasIssue,
@@ -807,7 +854,7 @@ const DailyLogModal: React.FC<Props> = ({
       })),
       newUnmatchedLegs: finalNewUnmatched.map((l) => ({
         stock: l.stock,
-        code: l.code,
+        code: normalizeStockCode(l.code),
         action: l.action,
         price: l.price,
         remainingShares: l.remainingShares,
@@ -829,7 +876,9 @@ const DailyLogModal: React.FC<Props> = ({
         throw new Error(data.message || `HTTP ${res.status}`);
       }
       toast.success('记录已提交');
-      onDraftChange(emptyDraft(positions, currentMonth));
+      // 不把提交前的旧持仓写回草稿。下一次打开会用刷新后的当前持仓重新初始化，
+      // 这样刚新建的仓位也会出现在列表里。
+      onDraftChange(emptyDraft([], currentMonth));
       onSubmitted?.();
       onClose();
     } catch (err: any) {
@@ -840,18 +889,18 @@ const DailyLogModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="dlm-overlay" onClick={onClose}>
+    <div className="dlm-overlay" onClick={handleClose}>
       <div className="dlm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="dlm-header">
           <span>每日收盘记录</span>
-          <button className="dlm-close" onClick={onClose}>
+          <button className="dlm-close" onClick={handleClose}>
             ×
           </button>
         </div>
 
         {/* datalist 供操作记录和T记录复用 */}
         <datalist id="dlm-positions-list">
-          {positions.map((p) => (
+          {stockOptions.map((p) => (
             <option key={p.code} value={p.stock} />
           ))}
         </datalist>
@@ -1001,7 +1050,7 @@ const DailyLogModal: React.FC<Props> = ({
                         placeholder="股票"
                         value={p.stock}
                         onChange={(e) => {
-                          const pos = positions.find((x) => x.stock === e.target.value);
+                          const pos = findStockOption(e.target.value);
                           const next = {
                             ...p,
                             stock: e.target.value,
@@ -1449,7 +1498,7 @@ const DailyLogModal: React.FC<Props> = ({
             {error && <div className="dlm-error">{error}</div>}
 
             <div className="dlm-actions">
-              <button type="button" className="dlm-btn-cancel" onClick={onClose}>
+              <button type="button" className="dlm-btn-cancel" onClick={handleClose}>
                 取消
               </button>
               <button type="submit" className="dlm-btn-submit" disabled={loading}>

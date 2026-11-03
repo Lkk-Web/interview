@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../../constants';
 import type { AssetPoint, MonthlyRecord, OtherIncome, Position } from '../types';
 
@@ -18,6 +18,8 @@ export interface StockData {
   positions: Position[];
   monthly: MonthlyRecord[];
   otherIncome: OtherIncome[];
+  /** 重新拉取仪表盘数据，提交每日记录后调用以拿到最新持仓和收益。 */
+  refresh: () => void;
 }
 
 async function fetchJSON<T>(url: string, fallback: T): Promise<T> {
@@ -36,13 +38,17 @@ export function useStockData({ apiBase = API_BASE, fallback }: StockDataOptions)
   const [monthly, setMonthly] = useState<MonthlyRecord[]>(fallback.monthly);
   const [otherIncome, setOtherIncome] = useState<OtherIncome[]>(fallback.otherIncome);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     // 并发请求，各自到达各自更新，不互相阻塞
     fetchJSON(`${apiBase}/stock/asset-history`, fallback.assetHistory).then(setAssetHistory);
     fetchJSON(`${apiBase}/stock/positions`, fallback.positions).then(setPositions);
     fetchJSON(`${apiBase}/stock/monthly`, fallback.monthly).then(setMonthly);
     fetchJSON(`${apiBase}/stock/other-income`, fallback.otherIncome).then(setOtherIncome);
-  }, [apiBase]);
+  }, [apiBase, fallback.assetHistory, fallback.monthly, fallback.otherIncome, fallback.positions]);
 
-  return { assetHistory, positions, monthly, otherIncome };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { assetHistory, positions, monthly, otherIncome, refresh };
 }

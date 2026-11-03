@@ -8,11 +8,22 @@ import type { Position, PositionWithPrice } from '../types';
  * 第 3 个字段是当前价格
  */
 
+/** 补全腾讯行情接口要求的市场前缀；已经带前缀的代码保持不变。 */
+export function normalizeStockCode(code: string): string {
+  const normalized = code.trim().toLowerCase();
+  if (/^(sh|sz|bj)\d{6}$/.test(normalized)) return normalized;
+  if (/^6\d{5}$/.test(normalized)) return `sh${normalized}`;
+  if (/^[03]\d{5}$/.test(normalized)) return `sz${normalized}`;
+  if (/^[48]\d{5}$/.test(normalized)) return `bj${normalized}`;
+  return normalized;
+}
+
 export function fetchStockPrices(codes: string[]): Promise<Record<string, number>> {
   return new Promise((resolve, reject) => {
     const callbackName = `stock_cb_${Date.now()}`;
     const script = document.createElement('script');
-    const codesStr = codes.join(',');
+    const requestCodes = Array.from(new Set(codes.map(normalizeStockCode).filter(Boolean)));
+    const codesStr = requestCodes.join(',');
 
     // 腾讯接口不支持 JSONP callback，返回的是赋值语句
     // 用 script 标签加载，解析全局变量
@@ -24,13 +35,15 @@ export function fetchStockPrices(codes: string[]): Promise<Record<string, number
       codes.forEach((code) => {
         try {
           // 腾讯接口会在 window 上挂 v_sz000516 这样的变量
-          const varName = `v_${code}`;
+          const normalizedCode = normalizeStockCode(code);
+          const varName = `v_${normalizedCode}`;
           const data = (window as any)[varName];
           if (data) {
             const parts = data.split('~');
             // parts[3] 是当前价格
             const price = parseFloat(parts[3]);
             if (!isNaN(price) && price > 0) {
+              // 以调用方传入的原始代码作为 key，旧数据没有市场前缀也能正确合并行情。
               prices[code] = price;
             }
           }

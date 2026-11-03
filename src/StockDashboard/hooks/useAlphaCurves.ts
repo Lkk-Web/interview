@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../../constants';
-import { fetchStockPrices } from './useStockPrice';
+import { fetchStockPrices, normalizeStockCode } from './useStockPrice';
 import type { AssetPoint } from '../types';
 
 /**
  * 腾讯日K线接口，直接从浏览器请求（该接口 CORS 是开放的，允许跨域），
  * 不经过我们自己的后端代理，避免多一层转发。
+ * 使用新的 proxy.finance.qq.com 地址：旧的 web.ifzq.gtimg.cn/fqkline
+ * 目前会被腾讯 WAF 返回 501，导致曲线所有历史点都算成 0。
  * 注意：这个接口实测不支持一次带多个 param 批量查询多只股票——
  * 传多个 param 时只会返回参数列表里最后一只的数据，其他股票被静默丢弃，
  * 因此下面按股票代码逐个单独请求。
  */
-const KLINE_BASE = 'https://web.ifzq.gtimg.cn/appstock/app/fqkline/get';
+const KLINE_BASE = 'https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get';
 
 /**
  * Alpha 曲线：假设从某天起不再操作（股票持仓数量不变），股票市值会怎样。
@@ -91,11 +93,12 @@ async function getHistoricalCloseOne(
   start: string,
   end: string,
 ): Promise<Record<string, number>> {
-  const param = encodeURIComponent(`${code},day,${start},${end},320,qfq`);
+  const normalizedCode = normalizeStockCode(code);
+  const param = encodeURIComponent(`${normalizedCode},day,${start},${end},320,qfq`);
   const data = await fetchJSON<KlineResponse>(`${KLINE_BASE}?param=${param}`);
   if (!data || data.code !== 0 || !data.data) return {};
 
-  const rows = data.data[code]?.qfqday ?? data.data[code]?.day ?? [];
+  const rows = data.data[normalizedCode]?.qfqday ?? data.data[normalizedCode]?.day ?? [];
   const closeByDate: Record<string, number> = {};
   for (const row of rows) {
     // row: [date, open, close, high, low, volume]

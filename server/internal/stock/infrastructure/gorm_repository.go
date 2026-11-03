@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Lkk-Web/interview/server/internal/stock/domain"
 	"gorm.io/gorm"
@@ -65,6 +66,23 @@ func (repository *GormRepository) ListOtherIncomes(ctx context.Context) ([]domai
 }
 
 func (repository *GormRepository) ListActivePositions(ctx context.Context) ([]domain.Position, error) {
+	// 每日收盘记录中的持仓快照代表当日收盘后的实际仓位，优先用最新一条每日记录。
+	// 这样即使旧版本服务在新建仓时只写入了快照、没有同步 stock_positions，
+	// 仪表盘也能立刻展示最新持仓，而不是继续显示过期的主体表数据。
+	// 最新记录的快照为空时，表示已经全部清仓，不能退回前一天的旧仓位。
+	var latestLog DailyLogModel
+	err := repository.db.WithContext(ctx).
+		Preload("Positions").
+		Order("date DESC, id DESC").
+		First(&latestLog).Error
+	if err == nil {
+		return repository.positionsFromLatestSnapshot(ctx, latestLog.Positions)
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("find latest position snapshot: %w", err)
+	}
+
+	// 还没有提交过每日收盘记录时，回退到持仓主体表。
 	var models []PositionModel
 	if err := repository.db.WithContext(ctx).
 		Preload("Targets", func(db *gorm.DB) *gorm.DB {
@@ -76,6 +94,60 @@ func (repository *GormRepository) ListActivePositions(ctx context.Context) ([]do
 		return nil, fmt.Errorf("list active positions: %w", err)
 	}
 	return toPositions(models), nil
+}
+
+// positionsFromLatestSnapshot 用最新收盘快照更新成本和股数，同时保留主体表中的备注、底仓和目标计划。
+// 某只股票若只存在于快照中（旧版本新建仓的历史数据），也照样返回它，避免当前持仓漏项。
+func (repository *GormRepository) positionsFromLatestSnapshot(
+	ctx context.Context,
+	snapshots []DailyLogPositionModel,
+) ([]domain.Position, error) {
+	if len(snapshots) == 0 {
+		return []domain.Position{}, nil
+	}
+
+	codes := make([]string, 0, len(snapshots))
+	for _, snapshot := range snapshots {
+		codes = append(codes, normalizeMarketCode(snapshot.Code))
+	}
+
+	var models []PositionModel
+	if err := repository.db.WithContext(ctx).
+		Preload("Targets", func(db *gorm.DB) *gorm.DB {
+			return db.Order("display_order ASC, id ASC")
+		}).
+		Where("code IN ?", codes).
+		Find(&models).Error; err != nil {
+		return nil, fmt.Errorf("load position metadata for latest snapshot: %w", err)
+	}
+
+	byCode := make(map[string]domain.Position, len(models))
+	for _, position := range toPositions(models) {
+		byCode[normalizeMarketCode(position.Code)] = position
+	}
+
+	result := make([]domain.Position, 0, len(snapshots))
+	for _, snapshot := range snapshots {
+		code := normalizeMarketCode(snapshot.Code)
+		position, exists := byCode[code]
+		if !exists {
+			position = domain.Position{
+				Stock:  snapshot.Stock,
+				Code:   code,
+				Cost:   snapshot.Cost,
+				Shares: snapshot.Shares,
+				Active: true,
+			}
+		} else {
+			position.Stock = snapshot.Stock
+			position.Code = code
+			position.Cost = snapshot.Cost
+			position.Shares = snapshot.Shares
+			position.Active = true
+		}
+		result = append(result, position)
+	}
+	return result, nil
 }
 
 // ImportSnapshot 把一次完整的股票 JSON 快照导入数据库。
@@ -247,7 +319,7 @@ func toPositions(models []PositionModel) []domain.Position {
 		position := domain.Position{
 			ID:           model.ID,
 			Stock:        model.Stock,
-			Code:         model.Code,
+			Code:         normalizeMarketCode(model.Code),
 			Cost:         model.Cost,
 			Shares:       model.Shares,
 			Remark:       model.Remark,
@@ -354,7 +426,7 @@ func (repository *GormRepository) UpsertOtherIncome(ctx context.Context, item do
 func fromPosition(item domain.Position) PositionModel {
 	model := PositionModel{
 		Stock:        item.Stock,
-		Code:         item.Code,
+		Code:         normalizeMarketCode(item.Code),
 		Cost:         item.Cost,
 		Shares:       item.Shares,
 		Remark:       item.Remark,
@@ -492,11 +564,28 @@ func toAssetHistory(model AssetHistoryModel) domain.AssetHistory {
 }
 
 // AddDailyLog 在一个事务里完成：写 daily_log + trades + t_records，
-// 更新持仓成本/数量，更新月度T收益，提交后同步文件和 stock.md。
+// 更新/创建持仓，更新月度收益，提交后同步文件和 stock.md。
 func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.DailyLog) error {
 	var savedLogID uint
+	var monthlyUpdated bool
 
 	err := repository.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 编辑已经提交过的日期时，也要能把该日收益改回 0。
+		// 旧实现只在传入收益非 0 时更新月度表，导致清空收益记录后旧累计值仍留在库里。
+		var previousLog DailyLogModel
+		previousLogResult := tx.Where("date = ?", log.Date).First(&previousLog)
+		if previousLogResult.Error != nil && !errors.Is(previousLogResult.Error, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("find previous daily log: %w", previousLogResult.Error)
+		}
+		previousLogFound := previousLogResult.Error == nil
+		shouldUpdateMonthly :=
+			(previousLogFound &&
+				(previousLog.MonthlyTRevenue != 0 || previousLog.MonthlySwingRevenue != 0)) ||
+				log.MonthlyTRevenue != 0 ||
+				log.MonthlySwingRevenue != 0 ||
+				len(log.TRecords) > 0 ||
+				len(log.SwingRecords) > 0
+
 		// upsert daily_log 头记录
 		logModel := DailyLogModel{
 			Date:                log.Date,
@@ -535,7 +624,7 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				DailyLogID:   savedLogID,
 				Action:       t.Action,
 				Stock:        t.Stock,
-				Code:         t.Code,
+				Code:         normalizeMarketCode(t.Code),
 				Price:        t.Price,
 				Shares:       t.Shares,
 				HasIssue:     t.HasIssue,
@@ -629,7 +718,7 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 					DailyLogID:      savedLogID,
 					Date:            log.Date,
 					Stock:           leg.Stock,
-					Code:            leg.Code,
+					Code:            normalizeMarketCode(leg.Code),
 					Action:          leg.Action,
 					Price:           leg.Price,
 					RemainingShares: leg.RemainingShares,
@@ -642,26 +731,41 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 			}
 		}
 
-		// 更新持仓成本和数量，同时保存当日持仓快照
+		// 更新持仓成本和数量，同时保存当日持仓快照。
+		// 新建仓此前只执行 UPDATE：找不到旧记录时 GORM 不会报错，却也不会创建股票，
+		// 造成每日记录里有该股票、当前持仓和快捷选项里却没有它。这里改为按 code upsert；
+		// 清仓（shares=0）会保留历史主体并标为 inactive，后续再次建仓时会自动重新启用。
 		if err := tx.Where("daily_log_id = ?", savedLogID).Delete(&DailyLogPositionModel{}).Error; err != nil {
 			return fmt.Errorf("clear position snapshots: %w", err)
 		}
 		for _, p := range log.PositionUpdates {
-			if err := tx.Model(&PositionModel{}).
-				Where("code = ?", p.Code).
-				Updates(map[string]any{"cost": p.Cost, "shares": p.Shares}).Error; err != nil {
-				return fmt.Errorf("update position %s: %w", p.Code, err)
+			code := normalizeMarketCode(p.Code)
+			positionModel := PositionModel{
+				Stock:  p.Stock,
+				Code:   code,
+				Cost:   p.Cost,
+				Shares: p.Shares,
+				Active: p.Shares > 0,
+			}
+			if err := tx.Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "code"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"stock", "cost", "shares", "active", "updated_at",
+				}),
+			}).Create(&positionModel).Error; err != nil {
+				return fmt.Errorf("upsert position %s: %w", code, err)
 			}
 			if p.Shares > 0 {
-				if err := tx.Create(&DailyLogPositionModel{DailyLogID: savedLogID, Stock: p.Stock, Code: p.Code, Cost: p.Cost, Shares: p.Shares, Price: p.Price}).Error; err != nil {
-					return fmt.Errorf("insert position snapshot %s: %w", p.Code, err)
+				if err := tx.Create(&DailyLogPositionModel{DailyLogID: savedLogID, Stock: p.Stock, Code: code, Cost: p.Cost, Shares: p.Shares, Price: p.Price}).Error; err != nil {
+					return fmt.Errorf("insert position snapshot %s: %w", code, err)
 				}
 			}
 		}
 
 		// 更新月度T收益/波段收益：跨月第一天提交时，当月记录还不存在，
-		// 需要先按默认目标创建，否则下面的 Update 会静默地什么都不改（RowsAffected=0）
-		if log.MonthlyTRevenue != 0 || log.MonthlySwingRevenue != 0 {
+		// 需要先按默认目标创建，否则下面的 Update 会静默地什么都不改（RowsAffected=0）。
+		// shouldUpdateMonthly 同时覆盖“编辑后收益归零”的情况。
+		if shouldUpdateMonthly {
 			month := log.Date[:7] // "2026-07"
 			var monthlyModel MonthlyRecordModel
 			if err := tx.Where(MonthlyRecordModel{Month: month}).
@@ -669,16 +773,13 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 				FirstOrCreate(&monthlyModel).Error; err != nil {
 				return fmt.Errorf("find or create monthly record: %w", err)
 			}
-			updates := map[string]any{}
-			if log.MonthlyTRevenue != 0 {
-				updates["t_revenue"] = log.MonthlyTRevenue
-			}
-			if log.MonthlySwingRevenue != 0 {
-				updates["swing_revenue"] = log.MonthlySwingRevenue
-			}
-			if err := tx.Model(&monthlyModel).Updates(updates).Error; err != nil {
+			if err := tx.Model(&monthlyModel).Updates(map[string]any{
+				"t_revenue":     log.MonthlyTRevenue,
+				"swing_revenue": log.MonthlySwingRevenue,
+			}).Error; err != nil {
 				return fmt.Errorf("update monthly revenue: %w", err)
 			}
+			monthlyUpdated = true
 		}
 
 		return nil
@@ -695,8 +796,8 @@ func (repository *GormRepository) AddDailyLog(ctx context.Context, log domain.Da
 		}
 		changedFiles = append(changedFiles, "data/stock/positions.json")
 
-		// monthlyTRevenue/monthlySwingRevenue 不为 0 时才可能改过 stock_monthly_records，才需要同步 monthly.json
-		if log.MonthlyTRevenue != 0 || log.MonthlySwingRevenue != 0 {
+		// 收益编辑为 0 也会影响 stock_monthly_records，因此需要一并导出。
+		if monthlyUpdated {
 			if err := repository.exporter.ExportMonthly(ctx); err != nil {
 				return fmt.Errorf("sync monthly.json: %w", err)
 			}
@@ -831,15 +932,18 @@ func (repository *GormRepository) ListPositionSnapshotDates(ctx context.Context)
 // 供腾讯行情/K线接口使用——那些接口都要求 sz/sh 前缀。
 // 规则：6 开头是上交所（sh），0/3 开头是深交所（sz），已带前缀的原样返回。
 func normalizeMarketCode(code string) string {
-	if len(code) >= 2 && (code[:2] == "sz" || code[:2] == "sh") {
+	code = strings.ToLower(strings.TrimSpace(code))
+	if strings.HasPrefix(code, "sh") || strings.HasPrefix(code, "sz") || strings.HasPrefix(code, "bj") {
 		return code
 	}
-	if len(code) > 0 {
+	if len(code) == 6 {
 		switch code[0] {
 		case '6':
 			return "sh" + code
 		case '0', '3':
 			return "sz" + code
+		case '4', '8':
+			return "bj" + code
 		}
 	}
 	return code

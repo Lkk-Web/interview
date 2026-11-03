@@ -20,5 +20,5 @@ export default () => {
     },
   });
 
-  return <StockDashboard {...data} />;
+  return <StockDashboard {...data} onDailyLogSubmitted={data.refresh} />;
 };
