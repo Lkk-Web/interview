@@ -811,5 +811,13 @@
     "stockValue": 113913,
     "loan": -47238,
     "other": -9820
+  },
+  {
+    "date": "2026-11-09",
+    "cash": 0,
+    "stockValue": 114242,
+    "loan": -47238,
+    "other": -5820,
+    "remark": "f给了4k"
   }
 ]
