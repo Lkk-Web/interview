@@ -887,8 +887,8 @@
   },
   {
     "date": "2026-11-24",
-    "cash": 0,
-    "stockValue": 80038,
+    "cash": 1500,
+    "stockValue": 81595,
     "loan": -40000,
     "other": -4820,
     "remark": "休息3天"
